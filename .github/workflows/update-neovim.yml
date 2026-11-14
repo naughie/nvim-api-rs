@@ -58,9 +58,9 @@ jobs:
           cargo test --workspace --all-features --locked
           cargo doc --workspace --all-features --no-deps --locked
           cargo test -p rmp-bytes --no-default-features --locked
-          cargo test -p nvim-api --no-default-features --locked
-          cargo test -p nvim-api --test live --locked -- --ignored --test-threads=1
-          cargo test -p nvim-api-plugin --test live --locked -- --ignored
+          cargo test -p nvim-rpc --no-default-features --locked
+          cargo test -p nvim-rpc --test live --locked -- --ignored --test-threads=1
+          cargo test -p nvim-rpc-plugin --test live --locked -- --ignored
 
       - name: Open or update the release PR
         if: steps.release.outputs.update == 'true'
@@ -73,7 +73,7 @@ jobs:
           body: |
             Regenerate the bindings against [Neovim v${{ steps.release.outputs.version }}](https://github.com/neovim/neovim/releases/tag/v${{ steps.release.outputs.version }}).
 
-            Align `nvim-api-sys` with Neovim and increment the patch versions of the other crates under `crates/`. Update workspace dependency requirements and `Cargo.lock` together.
+            Align `nvim-rpc-sys` with Neovim and increment the patch versions of the other crates under `crates/`. Update workspace dependency requirements and `Cargo.lock` together.
 
             Validation passed before this PR was created or updated: formatting, workspace tests with default and all features, rustdoc, core tests without default features, and both live integration test suites against this Neovim release.
 
@@ -84,5 +84,5 @@ jobs:
             Cargo.toml
             Cargo.lock
             crates/*/Cargo.toml
-            crates/nvim-api/src/generated.rs
-            crates/nvim-api-sys/src/generated.rs
+            crates/nvim-rpc/src/generated.rs
+            crates/nvim-rpc-sys/src/generated.rs

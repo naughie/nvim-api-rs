@@ -719,27 +719,27 @@ dependencies = [
 ]
 
 [[package]]
-name = "nvim-api"
+name = "nvim-rpc"
 version = "0.1.0"
 dependencies = [
  "futures",
  "futures-io",
- "nvim-api-sys",
+ "nvim-rpc-sys",
  "rmp-bytes",
  "tokio",
 ]
 
 [[package]]
-name = "nvim-api-plugin"
+name = "nvim-rpc-plugin"
 version = "0.1.0"
 dependencies = [
  "bytes",
- "nvim-api",
+ "nvim-rpc",
  "tokio",
 ]
 
 [[package]]
-name = "nvim-api-sys"
+name = "nvim-rpc-sys"
 version = "0.12.6"
 
 [[package]]

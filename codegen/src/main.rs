@@ -1,5 +1,5 @@
-const NVIM_API: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../crates/nvim-api");
-const NVIM_API_SYS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../crates/nvim-api-sys");
+const NVIM_RPC: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../crates/nvim-rpc");
+const NVIM_RPC_SYS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../crates/nvim-rpc-sys");
 const WORKSPACE_MANIFEST: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../Cargo.toml");
 
 mod install;
@@ -21,7 +21,7 @@ type Error = Box<dyn std::error::Error + 'static>;
 
 async fn update_versions(version: &Version) -> Result<(), Error> {
     let version = format!("{}.{}.{}", version.major, version.minor, version.patch);
-    let sys_path = Path::new(NVIM_API_SYS).join("Cargo.toml");
+    let sys_path = Path::new(NVIM_RPC_SYS).join("Cargo.toml");
     let mut sys = tokio::fs::read_to_string(&sys_path)
         .await?
         .parse::<toml_edit::DocumentMut>()?;
@@ -29,7 +29,7 @@ async fn update_versions(version: &Version) -> Result<(), Error> {
         .await?
         .parse::<toml_edit::DocumentMut>()?;
     sys["package"]["version"] = toml_edit::value(&version);
-    workspace["workspace"]["dependencies"]["nvim-api-sys"]["version"] = toml_edit::value(&version);
+    workspace["workspace"]["dependencies"]["nvim-rpc-sys"]["version"] = toml_edit::value(&version);
     tokio::fs::write(sys_path, sys.to_string()).await?;
     tokio::fs::write(WORKSPACE_MANIFEST, workspace.to_string()).await?;
     Ok(())
@@ -138,9 +138,9 @@ async fn main() -> Result<(), Error> {
     }
     println!();
 
-    let api_sys_rs = Path::new(NVIM_API_SYS).join("src/generated.rs");
+    let api_sys_rs = Path::new(NVIM_RPC_SYS).join("src/generated.rs");
     gen_to(&api_info, &api_sys_rs, gen_api_sys::gen_rs).await?;
-    let api_rs = Path::new(NVIM_API).join("src/generated.rs");
+    let api_rs = Path::new(NVIM_RPC).join("src/generated.rs");
     gen_to(&api_info, &api_rs, gen_api::gen_rs).await?;
     update_versions(&api_info.version).await?;
 

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Generate Neovim API bindings for the nvim-api workspace"
+description = "Generate Neovim API bindings for the nvim-rpc workspace"
 readme = "README.md"
 publish = false
 

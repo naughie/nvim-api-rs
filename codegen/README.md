@@ -18,12 +18,12 @@ APPIMAGE_EXTRACT_AND_RUN=1 cargo gen --nvim /path/to/nvim.appimage
 
 The command prints the Neovim version, then writes and formats:
 
-- [`crates/nvim-api-sys/src/generated.rs`](../crates/nvim-api-sys/src/generated.rs):
+- [`crates/nvim-rpc-sys/src/generated.rs`](../crates/nvim-rpc-sys/src/generated.rs):
   function and event descriptors, UI options, extension IDs, and version constants.
-- [`crates/nvim-api/src/generated.rs`](../crates/nvim-api/src/generated.rs):
+- [`crates/nvim-rpc/src/generated.rs`](../crates/nvim-rpc/src/generated.rs):
   the `api` descriptor re-exports, handle methods, and UI option encoding.
 
-It also sets `nvim-api-sys`'s package version to Neovim's `major.minor.patch`
+It also sets `nvim-rpc-sys`'s package version to Neovim's `major.minor.patch`
 and updates the workspace dependency requirement accordingly. Other package
 versions are unchanged. Review both generated files and the manifest changes
 together.
@@ -64,5 +64,5 @@ Check the generated code and examples afterward:
 
 ```sh
 cargo test -p codegen
-cargo test --workspace --features nvim-api/bytes,nvim-api/tokio,nvim-api/futures
+cargo test --workspace --features nvim-rpc/bytes,nvim-rpc/tokio,nvim-rpc/futures
 ```

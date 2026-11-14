@@ -342,7 +342,7 @@ fn gen_ui_opts(ui_opts: &[String]) -> TokenStream {
         /// Enable only the extensions your UI implements. For a line-grid UI:
         ///
         /// ```
-        /// use nvim_api_sys::UiOptions;
+        /// use nvim_rpc_sys::UiOptions;
         ///
         /// let options = UiOptions {
         ///     ext_linegrid: true,

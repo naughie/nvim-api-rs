@@ -167,7 +167,7 @@ pub(super) fn gen_rs(api_info: &ApiInfo) -> TokenStream {
         /// [`crate::Neovim::request()`] or [`crate::Neovim::notify()`]:
         ///
         /// ```
-        /// use nvim_api::{api, Buffer, Neovim};
+        /// use nvim_rpc::{api, Buffer, Neovim};
         ///
         /// let lines = ["first", "second"];
         /// let mut nvim = Neovim::new(Vec::new());

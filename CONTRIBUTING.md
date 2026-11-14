@@ -11,9 +11,9 @@ that encode slices and exact-size iterators directly and decode results without
 building an owned value tree. Add allocation requirements only where ownership
 requires them, and keep those boundaries explicit.
 
-`rmp-bytes` is the coding style baseline. Its core codec and `nvim-api` leave
+`rmp-bytes` is the coding style baseline. Its core codec and `nvim-rpc` leave
 transport, receive storage, execution, and dispatch to the caller. Keep runtime
-adapters optional. `nvim-api-plugin` owns the Tokio-specific tasks, shared frame
+adapters optional. `nvim-rpc-plugin` owns the Tokio-specific tasks, shared frame
 storage, and response matching.
 
 Applications select argument representations through `Like` and result
@@ -37,7 +37,7 @@ the core crates separately when changing feature gates or dependencies:
 
 ```sh
 cargo test -p rmp-bytes --no-default-features
-cargo test -p nvim-api --no-default-features
+cargo test -p nvim-rpc --no-default-features
 ```
 
 The allocation and efficiency tests check the borrowing and storage contracts.
@@ -48,8 +48,8 @@ Keep them alongside the crate whose behavior they verify.
 The live tests are ignored by default. Set `NVIM_BIN` and select them explicitly:
 
 ```sh
-NVIM_BIN=/path/to/nvim cargo test -p nvim-api --test live -- --ignored --test-threads=1
-NVIM_BIN=/path/to/nvim cargo test -p nvim-api-plugin --test live -- --ignored
+NVIM_BIN=/path/to/nvim cargo test -p nvim-rpc --test live -- --ignored --test-threads=1
+NVIM_BIN=/path/to/nvim cargo test -p nvim-rpc-plugin --test live -- --ignored
 ```
 
 For an AppImage without FUSE, also set `APPIMAGE_EXTRACT_AND_RUN=1`.
@@ -73,7 +73,7 @@ generated code or its documentation, then regenerate both outputs:
 cargo gen --nvim /path/to/nvim
 ```
 
-The generator also aligns the `nvim-api-sys` version and workspace dependency
+The generator also aligns the `nvim-rpc-sys` version and workspace dependency
 with the selected Neovim release. Review those manifest changes along with the
 generated files. See [codegen/README.md](codegen/README.md) for output paths,
 release downloads, and caching.
@@ -83,11 +83,11 @@ release downloads, and caching.
 The [Update Neovim bindings workflow](.github/workflows/update-neovim.yml) checks
 upstream releases daily at 02:17 UTC (11:17 Japan time). It selects the highest
 numeric stable release, excluding drafts, prereleases, and the moving `stable`
-and `nightly` tags. If `nvim-api-sys` already targets that version or a newer one,
+and `nightly` tags. If `nvim-rpc-sys` already targets that version or a newer one,
 the run finishes without changes.
 
 For a newer release, the workflow runs `cargo gen` with the explicit version.
-It keeps `nvim-api-sys` aligned with Neovim, increments the patch versions of all
+It keeps `nvim-rpc-sys` aligned with Neovim, increments the patch versions of all
 other packages under `crates/`, and updates workspace dependency requirements
 and `Cargo.lock`. The generator's ordinary local behavior is unchanged. Bumps
 are calculated from a fresh checkout of the default branch, so retries do not
@@ -142,7 +142,7 @@ or merging a fork's PR does not publish crates. The workflow checks out the
 PR's merge commit, checks formatting and runs the all-features workspace tests,
 then uses crates.io trusted publishing to obtain a temporary upload token.
 
-It publishes `rmp-bytes`, `nvim-api-sys`, `nvim-api`, and `nvim-api-plugin` in
+It publishes `rmp-bytes`, `nvim-rpc-sys`, `nvim-rpc`, and `nvim-rpc-plugin` in
 that order. Each `cargo publish` verifies the packaged crate and waits for its
 registry index entry before the next dependent crate is published. `codegen`
 is not published. The workflow does not require a long-lived crates.io token
@@ -157,9 +157,9 @@ Complete this setup before merging the first automated update PR:
 
    ```sh
    cargo publish -p rmp-bytes --locked --registry crates-io
-   cargo publish -p nvim-api-sys --locked --registry crates-io
-   cargo publish -p nvim-api --locked --registry crates-io
-   cargo publish -p nvim-api-plugin --locked --registry crates-io
+   cargo publish -p nvim-rpc-sys --locked --registry crates-io
+   cargo publish -p nvim-rpc --locked --registry crates-io
+   cargo publish -p nvim-rpc-plugin --locked --registry crates-io
    ```
 
 2. In GitHub **Settings → Environments**, create an environment named
@@ -173,7 +173,7 @@ Complete this setup before merging the first automated update PR:
    | Field | Value |
    | --- | --- |
    | Repository owner | `naughie` |
-   | Repository name | `nvim-api-rs` |
+   | Repository name | `nvim-rpc-rs` |
    | Workflow filename | `publish-neovim.yml` |
    | Environment | `crates-io` |
 

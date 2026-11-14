@@ -10,8 +10,8 @@ from urllib.request import Request, urlopen
 
 
 # The two independent libraries must be available before their dependents.
-CRATES = ("rmp-bytes", "nvim-api-sys", "nvim-api", "nvim-api-plugin")
-USER_AGENT = "nvim-api-rs publishing (https://github.com/naughie/nvim-api-rs)"
+CRATES = ("rmp-bytes", "nvim-rpc-sys", "nvim-rpc", "nvim-rpc-plugin")
+USER_AGENT = "nvim-rpc-rs publishing (https://github.com/naughie/nvim-rpc-rs)"
 
 
 def fetch(url):

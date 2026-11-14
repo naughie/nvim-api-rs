@@ -38,7 +38,7 @@ def read_manifest(path):
 
 
 def needs_update(root, target):
-    current = read_manifest(root / "crates/nvim-api-sys/Cargo.toml")["package"]["version"]
+    current = read_manifest(root / "crates/nvim-rpc-sys/Cargo.toml")["package"]["version"]
     return version(target) > version(current)
 
 
@@ -71,7 +71,7 @@ def bumped_manifests(root):
     versions = {}
     for path in sorted((root / "crates").glob("*/Cargo.toml")):
         package = read_manifest(path)["package"]
-        if package["name"] == "nvim-api-sys":
+        if package["name"] == "nvim-rpc-sys":
             continue
         major, minor, patch = version(package["version"])
         new = f"{major}.{minor}.{patch + 1}"
@@ -96,11 +96,11 @@ def update(root, target):
         return
 
     subprocess.run(["cargo", "gen", target], cwd=root, check=True)
-    sys = read_manifest(root / "crates/nvim-api-sys/Cargo.toml")
+    sys = read_manifest(root / "crates/nvim-rpc-sys/Cargo.toml")
     workspace = read_manifest(root / "Cargo.toml")
     if (
         sys["package"]["version"] != target
-        or workspace["workspace"]["dependencies"]["nvim-api-sys"]["version"] != target
+        or workspace["workspace"]["dependencies"]["nvim-rpc-sys"]["version"] != target
     ):
         raise ValueError("generated Neovim version does not match the requested release")
 

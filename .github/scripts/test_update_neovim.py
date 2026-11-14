@@ -43,15 +43,15 @@ class UpdateTests(unittest.TestCase):
             '[workspace]\nmembers = ["crates/*"]\n\n'
             '[workspace.dependencies]\n'
             'mp = { version = "0.1.9", path = "crates/rmp-bytes", package = "rmp-bytes" } # alias\n'
-            'nvim-api = { version = "0.2.3", path = "crates/nvim-api" }\n'
-            'nvim-api-sys = { version = "0.12.6", path = "crates/nvim-api-sys" }\n'
+            'nvim-rpc = { version = "0.2.3", path = "crates/nvim-rpc" }\n'
+            'nvim-rpc-sys = { version = "0.12.6", path = "crates/nvim-rpc-sys" }\n'
             'external = { version = "1" }\n'
         )
         for name, version in [
             ("rmp-bytes", "0.1.9"),
-            ("nvim-api", "0.2.3"),
-            ("nvim-api-plugin", "0.3.1"),
-            ("nvim-api-sys", "0.12.6"),
+            ("nvim-rpc", "0.2.3"),
+            ("nvim-rpc-plugin", "0.3.1"),
+            ("nvim-rpc-sys", "0.12.6"),
         ]:
             path = self.root / "crates" / name / "Cargo.toml"
             path.parent.mkdir(parents=True)
@@ -70,8 +70,8 @@ class UpdateTests(unittest.TestCase):
         changes = updater.bumped_manifests(self.root)
         for name, expected in [
             ("rmp-bytes", "0.1.10"),
-            ("nvim-api", "0.2.4"),
-            ("nvim-api-plugin", "0.3.2"),
+            ("nvim-rpc", "0.2.4"),
+            ("nvim-rpc-plugin", "0.3.2"),
         ]:
             text = changes[self.root / "crates" / name / "Cargo.toml"]
             data = updater.tomllib.loads(text)
@@ -79,12 +79,12 @@ class UpdateTests(unittest.TestCase):
             self.assertEqual(data["dependencies"]["external"]["version"], "0.9.0")
             self.assertIn("# package", text)
 
-        self.assertNotIn(self.root / "crates/nvim-api-sys/Cargo.toml", changes)
+        self.assertNotIn(self.root / "crates/nvim-rpc-sys/Cargo.toml", changes)
         text = changes[self.root / "Cargo.toml"]
         deps = updater.tomllib.loads(text)["workspace"]["dependencies"]
         self.assertEqual(deps["mp"]["version"], "0.1.10")
-        self.assertEqual(deps["nvim-api"]["version"], "0.2.4")
-        self.assertEqual(deps["nvim-api-sys"]["version"], "0.12.6")
+        self.assertEqual(deps["nvim-rpc"]["version"], "0.2.4")
+        self.assertEqual(deps["nvim-rpc-sys"]["version"], "0.12.6")
         self.assertEqual(deps["external"]["version"], "1")
         self.assertIn("# alias", text)
 
@@ -94,7 +94,7 @@ class UpdateTests(unittest.TestCase):
             if args[:2] == ["cargo", "gen"]:
                 for path in [
                     self.root / "Cargo.toml",
-                    self.root / "crates/nvim-api-sys/Cargo.toml",
+                    self.root / "crates/nvim-rpc-sys/Cargo.toml",
                 ]:
                     path.write_text(path.read_text().replace('"0.12.6"', '"0.12.7"'))
 
@@ -112,7 +112,7 @@ class UpdateTests(unittest.TestCase):
             ValueError, "does not match"
         ):
             updater.update(self.root, "0.12.7")
-        package = updater.read_manifest(self.root / "crates/nvim-api/Cargo.toml")["package"]
+        package = updater.read_manifest(self.root / "crates/nvim-rpc/Cargo.toml")["package"]
         self.assertEqual(package["version"], "0.2.3")
 
     def test_unsupported_manifest_layout_fails_before_bumps_are_written(self):
