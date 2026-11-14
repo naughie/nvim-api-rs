@@ -7,6 +7,9 @@ use mp_prim::{Array, ArrayIter};
 use std::array::IntoIter as ArrayIntoIter;
 use std::marker::PhantomData;
 
+mod map;
+pub use map::{Map, MapRef};
+
 pub struct Elements<A, B>(A, PhantomData<fn() -> B>);
 
 impl<A: Clone, B> Clone for Elements<A, B> {

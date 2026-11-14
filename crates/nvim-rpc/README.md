@@ -100,7 +100,9 @@ Borrowed slices and array references apply each element's `Like` conversion
 for typed array arguments. Use `api_types::encode::Convert` around `Array`,
 `ArrayIter`, tuples, `Map`, or `MapIter` to compose conversions for custom
 values and handles. Iterator conversions preserve borrowing and exact lengths
-without collecting. See the
+without collecting. Use `api_types::encode::Map(values, f)` to transform values
+before conversion, or `MapRef(&values, f)` to keep the source and transform its
+borrowed elements. See the
 [`encode` module](https://docs.rs/nvim-rpc/latest/nvim_rpc/api_types/encode/)
 for examples and marker requirements.
 

@@ -23,6 +23,36 @@ pub struct Array<A>(pub A);
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct ArrayIter<I>(pub I);
 
+impl<A: IntoIterator> IntoIterator for Array<A> {
+    type Item = A::Item;
+    type IntoIter = A::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl<'s, A> IntoIterator for &'s Array<A>
+where
+    &'s A: IntoIterator,
+{
+    type Item = <&'s A as IntoIterator>::Item;
+    type IntoIter = <&'s A as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        (&self.0).into_iter()
+    }
+}
+
+impl<I: Iterator> IntoIterator for ArrayIter<I> {
+    type Item = I::Item;
+    type IntoIter = I;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0
+    }
+}
+
 impl<A, T> Sealed for Array<A>
 where
     T: Encode,

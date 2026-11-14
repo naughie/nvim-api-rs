@@ -156,6 +156,39 @@ fn collection_like_conversions_need_no_heap_storage() {
 }
 
 #[test]
+fn mapped_calls_need_no_heap_storage() {
+    use nvim_rpc::api_types::encode::{Map, MapRef};
+
+    let lines = [String::from("first"), String::from("second")];
+    let owned = [String::from("third"), String::from("fourth")];
+    let mut output = [0; 512];
+    let mut nvim = Neovim::new(StdWrite::new(Cursor::new(&mut output[..])));
+
+    let count = allocations(|| {
+        nvim.notify::<api::NvimBufSetLines>((
+            Buffer::CURRENT,
+            0,
+            -1,
+            true,
+            MapRef(&lines, String::as_str),
+        ))
+        .unwrap();
+        nvim.notify::<api::NvimBufSetLines>((
+            Buffer::CURRENT,
+            0,
+            -1,
+            true,
+            Map(owned, String::into_bytes),
+        ))
+        .unwrap();
+        nvim.notify::<api::NvimSetVar>(("buffers", Map([7, 9], Buffer::new)))
+            .unwrap();
+    });
+    assert_eq!(count, 0);
+    assert_eq!(lines, ["first", "second"]);
+}
+
+#[test]
 fn untagged_arguments_and_collections_need_no_heap_storage() {
     use sys::types::{ArrayOf, OneOf};
 

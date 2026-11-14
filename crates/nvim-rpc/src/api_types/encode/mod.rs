@@ -122,7 +122,13 @@
 //!     .unwrap();
 //! ```
 //!
-//! Use [`Convert`] around `Array`, `ArrayIter`, tuples, `Map`, or `MapIter` to
+//! Use [`Map`] to transform an iterable's elements before their `Like`
+//! conversions, or [`MapRef`] to transform borrowed elements and retain the
+//! source. For example, `Map(ids, Buffer::new)` converts IDs into handles;
+//! `MapRef(&lines, String::as_str)` borrows strings. Both preserve the source's
+//! exact length and apply the function lazily, without an intermediate collection.
+//!
+//! Use [`Convert`] around `Array`, `ArrayIter`, tuples, [`mp_prim::Map`], or `MapIter` to
 //! compose element conversions for those representations. Collections of
 //! compatible representations, including `Untagged`, encode directly.
 //! Iterated elements convert lazily without collecting; tuples convert their
@@ -189,6 +195,7 @@ mod untagged;
 pub use mp::encode::Untagged;
 
 mod array;
+pub use array::{Map, MapRef};
 mod boolean;
 mod dict;
 mod float;
