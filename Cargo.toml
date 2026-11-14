@@ -8,8 +8,8 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/naughie/nvim-rpc-rs"
 
 [workspace.dependencies]
-mp = { version = "0.1.0", path = "crates/rmp-bytes", package = "rmp-bytes" }
-nvim-rpc = { version = "0.1.0", path = "crates/nvim-rpc" }
+mp = { version = "0.1.1", path = "crates/rmp-bytes", package = "rmp-bytes" }
+nvim-rpc = { version = "0.1.1", path = "crates/nvim-rpc" }
 nvim-rpc-sys = { version = "0.12.6", path = "crates/nvim-rpc-sys" }
 
 futures = { version = "0.3", default-features = false }
