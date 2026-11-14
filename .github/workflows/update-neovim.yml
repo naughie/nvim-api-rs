@@ -1,0 +1,88 @@
+name: Update Neovim bindings
+
+on:
+  schedule:
+    - cron: '17 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: update-neovim
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      APPIMAGE_EXTRACT_AND_RUN: '1'
+      RUSTUP_TOOLCHAIN: stable
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Check release-update script
+        run: python3 -B -m unittest discover -s .github/scripts -p 'test_*.py'
+
+      - name: Find the newest stable Neovim release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --paginate --slurp repos/neovim/neovim/releases > "$RUNNER_TEMP/neovim-releases.json"
+          python3 .github/scripts/update_neovim.py check "$RUNNER_TEMP/neovim-releases.json"
+
+      - name: Install Rust
+        if: steps.release.outputs.update == 'true'
+        run: rustup toolchain install stable --profile minimal --component rustfmt
+
+      - name: Generate bindings and update versions
+        if: steps.release.outputs.update == 'true'
+        env:
+          NVIM_VERSION: ${{ steps.release.outputs.version }}
+        run: python3 .github/scripts/update_neovim.py update "$NVIM_VERSION"
+
+      - name: Validate generated bindings and crates
+        if: steps.release.outputs.update == 'true'
+        env:
+          NVIM_BIN: ${{ github.workspace }}/tmp/nvim/nvim
+        run: |
+          cargo fmt --all -- --check
+          cargo test --workspace --locked
+          cargo test --workspace --all-features --locked
+          cargo doc --workspace --all-features --no-deps --locked
+          cargo test -p rmp-bytes --no-default-features --locked
+          cargo test -p nvim-api --no-default-features --locked
+          cargo test -p nvim-api --test live --locked -- --ignored --test-threads=1
+          cargo test -p nvim-api-plugin --test live --locked -- --ignored
+
+      - name: Open or update the release PR
+        if: steps.release.outputs.update == 'true'
+        uses: peter-evans/create-pull-request@v8
+        with:
+          branch: automation/update-neovim
+          base: ${{ github.event.repository.default_branch }}
+          commit-message: 'Update bindings for Neovim v${{ steps.release.outputs.version }}'
+          title: 'Update bindings for Neovim v${{ steps.release.outputs.version }}'
+          body: |
+            Regenerate the bindings against [Neovim v${{ steps.release.outputs.version }}](https://github.com/neovim/neovim/releases/tag/v${{ steps.release.outputs.version }}).
+
+            Align `nvim-api-sys` with Neovim and increment the patch versions of the other crates under `crates/`. Update workspace dependency requirements and `Cargo.lock` together.
+
+            Validation passed before this PR was created or updated: formatting, workspace tests with default and all features, rustdoc, core tests without default features, and both live integration test suites against this Neovim release.
+
+            Review API compatibility and crate versions before merging, especially for a new Neovim minor or major release.
+
+            Merging this PR into the default branch triggers `Publish Neovim update`, which publishes these crate versions to crates.io through trusted publishing.
+          add-paths: |
+            Cargo.toml
+            Cargo.lock
+            crates/*/Cargo.toml
+            crates/nvim-api/src/generated.rs
+            crates/nvim-api-sys/src/generated.rs

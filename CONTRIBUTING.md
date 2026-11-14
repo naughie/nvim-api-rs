@@ -78,6 +78,120 @@ with the selected Neovim release. Review those manifest changes along with the
 generated files. See [codegen/README.md](codegen/README.md) for output paths,
 release downloads, and caching.
 
+### Scheduled Neovim updates
+
+The [Update Neovim bindings workflow](.github/workflows/update-neovim.yml) checks
+upstream releases daily at 02:17 UTC (11:17 Japan time). It selects the highest
+numeric stable release, excluding drafts, prereleases, and the moving `stable`
+and `nightly` tags. If `nvim-api-sys` already targets that version or a newer one,
+the run finishes without changes.
+
+For a newer release, the workflow runs `cargo gen` with the explicit version.
+It keeps `nvim-api-sys` aligned with Neovim, increments the patch versions of all
+other packages under `crates/`, and updates workspace dependency requirements
+and `Cargo.lock`. The generator's ordinary local behavior is unchanged. Bumps
+are calculated from a fresh checkout of the default branch, so retries do not
+accumulate patch increments.
+
+The workflow runs the validation commands above, including both live integration
+test suites against the downloaded Neovim. Only after validation passes does it
+create or update a PR from `automation/update-neovim`. Until merged, that PR is
+reused for subsequent updates. Review the generated API and version choices before
+merging, especially when Neovim's minor or major version changes. Merge the PR
+manually to start [publishing to crates.io](#publishing-neovim-updates).
+
+To enable it:
+
+1. Commit the workflow and its `.github/scripts/` helpers to the repository's
+   default branch. Scheduled workflows run only from that branch.
+2. In **Settings → Actions → General**, enable GitHub Actions and allow
+   `actions/checkout` and `peter-evans/create-pull-request` if your action policy
+   restricts which actions may run.
+3. Under **Workflow permissions**, enable **Allow GitHub Actions to create and
+   approve pull requests** and save. The workflow declares `contents: write`
+   and `pull-requests: write` itself; the default token permission can remain
+   read-only. Organization policy must also permit these settings.
+4. Open **Actions → Update Neovim bindings → Run workflow** for an initial check.
+   It always checks out the repository's default branch, including manual runs.
+   After that, the daily schedule runs automatically.
+
+No custom secrets are required; release lookup and PR creation use the built-in
+`GITHUB_TOKEN`. Validation runs inside the update workflow. Additional PR checks
+may require approval when the PR is created with that token; see
+[GitHub's token-trigger rules](https://docs.github.com/en/actions/concepts/security/github_token#when-github_token-triggers-workflow-runs)
+if adding required checks.
+
+Change the workflow's `schedule` entry to adjust its frequency. GitHub can delay
+or drop scheduled runs and disables public-repository schedules after 60 days
+without repository activity. Re-enable a disabled workflow from the Actions
+page; see [GitHub's schedule documentation](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule).
+
+The release scripts require Python 3.11 or newer. Their focused tests run without
+downloading Neovim, uploading crates, or changing the working tree:
+
+```sh
+python3 -B -m unittest discover -s .github/scripts -p 'test_*.py'
+```
+
+### Publishing Neovim updates
+
+The [Publish Neovim update workflow](.github/workflows/publish-neovim.yml) runs
+when a PR from this repository's `automation/update-neovim` branch is merged into
+the default branch. Closing a PR without merging, merging a PR from another branch,
+or merging a fork's PR does not publish crates. The workflow checks out the
+PR's merge commit, checks formatting and runs the all-features workspace tests,
+then uses crates.io trusted publishing to obtain a temporary upload token.
+
+It publishes `rmp-bytes`, `nvim-api-sys`, `nvim-api`, and `nvim-api-plugin` in
+that order. Each `cargo publish` verifies the packaged crate and waits for its
+registry index entry before the next dependent crate is published. `codegen`
+is not published. The workflow does not require a long-lived crates.io token
+in GitHub secrets.
+
+Complete this setup before merging the first automated update PR:
+
+1. Publish an initial version of each crate manually if it is not already on
+   crates.io. Trusted publishing requires existing crates that you own. From a
+   clean checkout with release-ready versions and a current `Cargo.lock`, log
+   in using `cargo login`, then publish missing crates in dependency order:
+
+   ```sh
+   cargo publish -p rmp-bytes --locked --registry crates-io
+   cargo publish -p nvim-api-sys --locked --registry crates-io
+   cargo publish -p nvim-api --locked --registry crates-io
+   cargo publish -p nvim-api-plugin --locked --registry crates-io
+   ```
+
+2. In GitHub **Settings → Environments**, create an environment named
+   **crates-io**. Under deployment branches and tags, allow only the default
+   branch. Leave required reviewers and wait timers unset so publishing starts
+   automatically after you merge. If the action policy is restricted, also
+   allow `rust-lang/crates-io-auth-action` under **Settings → Actions → General**.
+3. For **each of the four crates**, open crates.io **Settings → Trusted
+   Publishing**, add a GitHub publisher, and use these values:
+
+   | Field | Value |
+   | --- | --- |
+   | Repository owner | `naughie` |
+   | Repository name | `nvim-api-rs` |
+   | Workflow filename | `publish-neovim.yml` |
+   | Environment | `crates-io` |
+
+   The workflow field is the filename alone, without `.github/workflows/`.
+   See the [crates.io trusted publishing guide](https://crates.io/docs/trusted-publishing)
+   for registry prerequisites and configuration.
+4. Commit both workflows and their helper scripts to the default branch. Once
+   configured, review and merge an automated Neovim update PR normally, then
+   follow **Actions → Publish Neovim update** to check the upload results.
+
+For a failed or partial release, fix the external cause (for example, a missing
+trusted publisher entry) and use **Re-run failed jobs** on that publishing run.
+The same merged commit is used again. Already published versions are skipped
+after checking that they are not yanked and are visible in the registry index;
+the remaining versions are uploaded in dependency order. Registry errors stop
+the run. If the source or versions need fixing, merge a corrective update PR
+with fresh versions for crates that were already published.
+
 ## Documentation
 
 Keep the root README focused on choosing a crate and running an example. Crate
