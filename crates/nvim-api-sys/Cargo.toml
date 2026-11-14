@@ -1,0 +1,6 @@
+[package]
+name = "nvim-api-sys"
+version = "0.12.6"
+edition = "2024"
+
+[dependencies]

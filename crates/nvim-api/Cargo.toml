@@ -1,0 +1,21 @@
+[package]
+name = "nvim-api"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+bytes = ["mp/bytes"]
+
+tokio = ["mp/tokio-write", "dep:tokio"]
+futures = ["mp/futures-write", "dep:futures-io"]
+
+[dependencies]
+nvim-api-sys = { workspace = true }
+mp = { workspace = true, features = ["rpc"] }
+
+futures-io = { version = "0.3", optional = true }
+tokio = { version = "1", optional = true, features = [] }
+
+[dev-dependencies]
+futures = { version = "0.3", default-features = false, features = ["executor", "std"] }
+tokio = { version = "1", features = ["io-util", "macros", "rt"] }
