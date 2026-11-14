@@ -195,13 +195,68 @@ mod untagged;
 pub use mp::encode::Untagged;
 
 mod array;
-pub use array::{Map, MapRef};
 mod boolean;
 mod dict;
 mod float;
 mod int;
 mod nil;
 mod string;
+
+/// Maps an iterable's elements before converting them to the requested API type.
+///
+/// Consumes `A`, which may own or borrow its elements. `F` must implement `Fn`;
+/// it is called once per visited element during encoding. The source iterator
+/// must have an exact length. No intermediate collection is created.
+///
+/// ```
+/// use nvim_rpc::api_types::encode::Map;
+/// use nvim_rpc::{api, Buffer, Neovim};
+///
+/// let mut nvim = Neovim::new(Vec::new());
+/// let buffers = Map([7, 9], Buffer::new);
+/// nvim.notify::<api::NvimSetVar>(("buffers", buffers)).unwrap();
+/// ```
+///
+/// Supports `ArrayOf<B>`, `Array`, and `Object`; the mapped values must implement
+/// `Like<B>` or, for untyped arrays, `Like<Object>`. Sources `[T; N]`, `&[T; N]`,
+/// `Array<[T; N]>`, and `Array<&[T; N]>` also preserve their length for
+/// `FixedArrayOf<B, N>`. A different length is rejected:
+///
+/// ```compile_fail
+/// use nvim_rpc::api_types::encode::Map;
+/// use nvim_rpc::{api, Neovim, Window};
+///
+/// let mut nvim = Neovim::new(Vec::new());
+/// nvim.notify::<api::NvimWinSetCursor>((Window::CURRENT, Map([1i64], |n| n + 1)))
+///     .unwrap();
+/// ```
+///
+/// Other iterable sources support dynamically sized arrays, even when their
+/// runtime length happens to match a fixed-length marker. This adapter is
+/// distinct from the MessagePack dictionary representation
+/// [`mp::encode::primitive::Map`].
+pub struct Map<A, F>(pub A, pub F);
+
+/// Maps shared references to an iterable's elements without consuming the source.
+///
+/// `F` receives `&'s T` and may return a value borrowing that element. The
+/// resulting encoding cannot outlive the source. Conversion remains lazy and
+/// requires an exactly sized iterator, as with [`Map`].
+/// Borrowed `[T; N]` and `Array<[T; N]>` sources also support
+/// `FixedArrayOf<B, N>`.
+///
+/// ```
+/// use nvim_rpc::api_types::encode::MapRef;
+/// use nvim_rpc::{api, Buffer, Neovim};
+///
+/// let lines = [String::from("first"), String::from("second")];
+/// let mut nvim = Neovim::new(Vec::new());
+/// nvim.notify::<api::NvimBufSetLines>((
+///     Buffer::CURRENT, 0i64, -1i64, true, MapRef(&lines, String::as_str),
+/// )).unwrap();
+/// assert_eq!(lines[0], "first");
+/// ```
+pub struct MapRef<'s, A: ?Sized, F>(pub &'s A, pub F);
 
 /// Applies [`Like`] to the elements of an array, tuple, or map.
 ///
@@ -212,7 +267,7 @@ mod string;
 /// collections can use nested adapters.
 ///
 /// The adapter does not collect or allocate; iterator elements convert lazily.
-/// Tuple elements are converted when [`Like::encode`] is called. Values are
+/// Tuple elements are converted when [`Like::encode()`] is called. Values are
 /// borrowed or moved according to the wrapped collection's iterator.
 ///
 /// For example, a dictionary can contain a handle without manually extracting
@@ -228,11 +283,8 @@ mod string;
 /// nvim.request::<api::NvimGetOptionValue>(("modified", opts)).unwrap();
 /// ```
 ///
-/// [`sys::FixedArrayOf`] accepts the existing array and tuple shapes:
-/// `Array([T; N])`, `Array(&[T; N])`, `ArrayIter([T; N].into_iter())`, or a
-/// tuple of the required arity. For an array iterator, `N` is the original
-/// array's length; pass it unconsumed to encode all `N` elements. A different
-/// array length or tuple arity is rejected:
+/// [`sys::FixedArrayOf`] accepts `Array([T; N])`, `Array(&[T; N])`, or a tuple
+/// of the required arity. A different array length or tuple arity is rejected:
 ///
 /// ```compile_fail
 /// use nvim_rpc::api_types::encode::Convert;
@@ -244,8 +296,9 @@ mod string;
 ///     .unwrap();
 /// ```
 ///
-/// An arbitrary exact-size iterator cannot supply a fixed-length argument,
-/// even when its runtime length matches:
+/// An exact-size iterator cannot supply a fixed-length argument, even when its
+/// runtime length matches. This includes array iterators: their type retains
+/// the original length after elements have been consumed:
 ///
 /// ```compile_fail
 /// use nvim_rpc::api_types::encode::Convert;
@@ -253,8 +306,36 @@ mod string;
 /// use nvim_rpc::{api, Neovim, Window};
 ///
 /// let mut nvim = Neovim::new(Vec::new());
-/// nvim.notify::<api::NvimWinSetCursor>((Window::CURRENT, Convert(ArrayIter(1u8..3))))
+/// let mut position = [1i64, 2].into_iter();
+/// position.next();
+/// nvim.notify::<api::NvimWinSetCursor>((Window::CURRENT, Convert(ArrayIter(position))))
 ///     .unwrap();
+/// ```
+///
+/// The same restriction applies without `Convert`:
+///
+/// ```compile_fail
+/// use nvim_rpc::mp::encode::primitive::ArrayIter;
+/// use nvim_rpc::{api, Neovim, Window};
+///
+/// let mut nvim = Neovim::new(Vec::new());
+/// let mut position = [1i64, 2].into_iter();
+/// position.next();
+/// nvim.notify::<api::NvimWinSetCursor>((Window::CURRENT, ArrayIter(position)))
+///     .unwrap();
+/// ```
+///
+/// Converting an iterator to `ArrayOf<B>` does not establish a fixed length:
+///
+/// ```compile_fail
+/// use nvim_rpc::api_types::encode::{Convert, Like};
+/// use nvim_rpc::mp::encode::primitive::ArrayIter;
+/// use nvim_rpc::sys::types::{ArrayOf, Int};
+/// use nvim_rpc::{api, Neovim, Window};
+///
+/// let position = <_ as Like<ArrayOf<Int>>>::encode(Convert(ArrayIter([1i64, 2].into_iter())));
+/// let mut nvim = Neovim::new(Vec::new());
+/// nvim.notify::<api::NvimWinSetCursor>((Window::CURRENT, position)).unwrap();
 /// ```
 pub struct Convert<T>(pub T);
 

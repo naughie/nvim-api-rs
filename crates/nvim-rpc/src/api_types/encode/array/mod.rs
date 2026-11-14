@@ -4,11 +4,9 @@ use super::{mp_prim, sys};
 use mp::encode::Encode;
 use mp_prim::{Array, ArrayIter};
 
-use std::array::IntoIter as ArrayIntoIter;
 use std::marker::PhantomData;
 
 mod map;
-pub use map::{Map, MapRef};
 
 pub struct Elements<A, B>(A, PhantomData<fn() -> B>);
 
@@ -150,16 +148,6 @@ where
     }
 }
 
-impl<B: BaseType, T: Like<B>, const N: usize> Like<sys::FixedArrayOf<B, N>>
-    for Convert<ArrayIter<ArrayIntoIter<T, N>>>
-{
-    type EncodeAs = Array<Elements<ArrayIntoIter<T, N>, B>>;
-
-    fn encode(self) -> Self::EncodeAs {
-        Array(Elements::new(self.0.0))
-    }
-}
-
 impl<B: BaseType, T: Like<B>, const N: usize> LikeBaseType<sys::FixedArrayOf<B, N>>
     for Array<Elements<[T; N], B>>
 {
@@ -169,11 +157,6 @@ impl<'s, B: BaseType, T, const N: usize> LikeBaseType<sys::FixedArrayOf<B, N>>
     for Array<Elements<&'s [T; N], B>>
 where
     &'s T: Like<B>,
-{
-}
-
-impl<B: BaseType, T: Like<B>, const N: usize> LikeBaseType<sys::FixedArrayOf<B, N>>
-    for Array<Elements<ArrayIntoIter<T, N>, B>>
 {
 }
 
@@ -257,13 +240,6 @@ where
     B: BaseType,
     T: LikeBaseType<B>,
     I: ExactSizeIterator<Item = T>,
-{
-}
-
-impl<B, T, const N: usize> LikeBaseType<sys::FixedArrayOf<B, N>> for ArrayIter<ArrayIntoIter<T, N>>
-where
-    B: BaseType,
-    T: LikeBaseType<B>,
 {
 }
 

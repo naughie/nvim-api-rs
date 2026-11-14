@@ -73,7 +73,7 @@ fn owned_custom_values_move_into_collection_encodings() {
         Convert(Array([Line("a".into()), Line("bc".into())])),
         b"\x92\xa1a\xa2bc",
     );
-    assert_encoded::<types::FixedArrayOf<types::String, 2>>(
+    assert_encoded::<types::ArrayOf<types::String>>(
         Convert(ArrayIter([Line("a".into()), Line("bc".into())].into_iter())),
         b"\x92\xa1a\xa2bc",
     );
@@ -85,7 +85,7 @@ fn owned_custom_values_move_into_collection_encodings() {
 
 #[test]
 fn handle_collections_apply_owned_and_borrowed_conversions() {
-    macro_rules! assert_handles {
+    macro_rules! _assert_handles {
         ($handle:ident) => {
             let handles = [$handle::new(7), $handle::new(9)];
             assert_encoded::<types::ArrayOf<ext::$handle>>(&handles[..], b"\x92\x07\x09");
@@ -95,15 +95,15 @@ fn handle_collections_apply_owned_and_borrowed_conversions() {
                 b"\x92\x07\x09",
             );
             assert_encoded::<types::FixedArrayOf<ext::$handle, 2>>(
-                Convert(ArrayIter(handles.into_iter())),
+                Convert(Array(handles)),
                 b"\x92\x07\x09",
             );
         };
     }
 
-    assert_handles!(Buffer);
-    assert_handles!(Window);
-    assert_handles!(Tabpage);
+    _assert_handles!(Buffer);
+    _assert_handles!(Window);
+    _assert_handles!(Tabpage);
 }
 
 #[test]
@@ -115,10 +115,7 @@ fn empty_collections_preserve_their_wire_kind() {
     assert_encoded::<types::ArrayOf<types::String>>(Convert(Array(&lines)), b"\x90");
     assert_encoded::<types::FixedArrayOf<types::String, 0>>(Convert(Array(&lines)), b"\x90");
     assert_encoded::<types::ArrayOf<types::String>>(Convert(ArrayIter(lines.iter())), b"\x90");
-    assert_encoded::<types::FixedArrayOf<types::String, 0>>(
-        Convert(ArrayIter(lines.into_iter())),
-        b"\x90",
-    );
+    assert_encoded::<types::ArrayOf<types::String>>(Convert(ArrayIter(lines.into_iter())), b"\x90");
     assert_encoded::<types::Array>(Convert(()), b"\x90");
     assert_encoded::<types::ArrayOf<types::String>>(Convert(()), b"\x90");
     assert_encoded::<types::FixedArrayOf<types::String, 0>>(Convert(()), b"\x90");
@@ -288,6 +285,17 @@ fn array_conversion_preserves_length_and_runs_only_as_elements_are_read() {
     assert_eq!(state.next().unwrap().as_ref(), b"b");
     assert!(state.next().is_none());
     assert_eq!(count.get(), 2);
+}
+
+#[test]
+fn array_iterators_encode_their_remaining_elements() {
+    let mut values = [7i64, 9].into_iter();
+    assert_eq!(values.next(), Some(7));
+    assert_encoded::<types::ArrayOf<types::Int>>(ArrayIter(values), b"\x91\x09");
+
+    let mut lines = [Line("a".into()), Line("bc".into())].into_iter();
+    lines.next();
+    assert_encoded::<types::ArrayOf<types::String>>(Convert(ArrayIter(lines)), b"\x91\xa2bc");
 }
 
 #[test]
