@@ -740,7 +740,7 @@ dependencies = [
 
 [[package]]
 name = "nvim-rpc-sys"
-version = "0.12.6"
+version = "0.12.6-r1"
 
 [[package]]
 name = "once_cell"
