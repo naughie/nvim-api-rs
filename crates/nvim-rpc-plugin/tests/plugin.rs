@@ -94,6 +94,58 @@ async fn typed_callbacks_retain_bytes_and_reject_bad_request_params() {
 }
 
 #[tokio::test]
+async fn handler_responses_encode_untagged_success_and_error_values() {
+    use mp::decode::Object;
+    use mp::encode::Untagged;
+
+    struct Alternatives;
+
+    impl<W: AsyncWrite + Unpin + Send + 'static> Handler<W> for Alternatives {
+        type Request = (u8,);
+        type Response = Result<Untagged<i64, String>, Untagged<i64, String>>;
+        type Notification = ();
+
+        async fn on_request(
+            &self,
+            _: &[u8],
+            (value,): Self::Request,
+            _: Neovim<W>,
+        ) -> Self::Response {
+            match value {
+                0 => Ok(Untagged::Left(7)),
+                1 => Ok(Untagged::Right("value".into())),
+                2 => Err(Untagged::Left(-7)),
+                _ => Err(Untagged::Right("error".into())),
+            }
+        }
+
+        async fn on_notification(&self, _: &[u8], _: (), _: Neovim<W>) {}
+    }
+
+    let (stream, peer) = tokio::io::duplex(4096);
+    let (reader, writer) = tokio::io::split(stream);
+    let (peer_reader, mut peer_writer) = tokio::io::split(peer);
+    let mut receiver = Receiver::new(TokioRead(peer_reader), [0; 4096]);
+    let (_nvim, task) = spawn(reader, writer, Alternatives);
+
+    for value in 0u8..4 {
+        let id = u32::from(value) + 50;
+        send(&mut peer_writer, (0u8, id, "alternative", (value,))).await;
+        let Message::Response(response) = bounded(receiver.recv_async()).await.unwrap() else {
+            panic!("expected response");
+        };
+        assert_eq!(response.msgid.0, id);
+        match (value, response.result) {
+            (0, Ok(Object::U8(7))) | (2, Err(Object::I8(-7))) => {}
+            (1, Ok(Object::Str(text))) => assert_eq!(text.as_slice(), b"value"),
+            (3, Err(Object::Str(text))) => assert_eq!(text.as_slice(), b"error"),
+            value => panic!("unexpected response: {value:?}"),
+        }
+    }
+    task.abort();
+}
+
+#[tokio::test]
 async fn concurrent_typed_requests_match_out_of_order_replies_and_flush() {
     let (stream, peer) = tokio::io::duplex(4096);
     let (reader, writer) = tokio::io::split(stream);

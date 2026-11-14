@@ -31,6 +31,7 @@
 //! Neither trait requires `Send`, and an async implementation's future need not
 //! be `Send`. Choose the executor and any task spawning at the application layer.
 
+use super::Encode;
 use super::primitive::{Primitive, State};
 
 use std::ops::ControlFlow;
@@ -156,15 +157,24 @@ impl<W: WriterSync> WriterSync for &mut W {
     }
 }
 
-/// Adds primitive encoding to a synchronous writer.
+/// Adds value encoding to a synchronous writer.
 pub trait WriterSyncExt: WriterSync {
-    /// Creates a write operation; call [`WritePrimitive::consume()`] to finish it.
+    /// Creates a write operation; call [`WriteValue::consume()`] to finish it.
     fn write_primitive<P: Primitive>(&mut self, value: P) -> WritePrimitive<&mut Self, P::State>;
+
+    /// Creates a write operation for a primitive or composed encoding.
+    ///
+    /// Call [`WriteValue::consume()`] to finish it.
+    fn write_value<V: Encode>(&mut self, value: V) -> WriteValue<&mut Self, V::Encoder>;
 }
 
 impl<W: WriterSync> WriterSyncExt for W {
     fn write_primitive<P: Primitive>(&mut self, value: P) -> WritePrimitive<&mut Self, P::State> {
-        WritePrimitive(self, value.into_state(), None)
+        self.write_value(value)
+    }
+
+    fn write_value<V: Encode>(&mut self, value: V) -> WriteValue<&mut Self, V::Encoder> {
+        WriteValue(self, value.into_encoder(), None)
     }
 }
 
@@ -180,15 +190,24 @@ impl<W: WriterAsync> WriterAsync for &mut W {
     }
 }
 
-/// Adds primitive encoding to an asynchronous writer.
+/// Adds value encoding to an asynchronous writer.
 pub trait WriterAsyncExt: WriterAsync {
-    /// Creates a write operation; await [`WritePrimitive::consume_async()`] to finish it.
+    /// Creates a write operation; await [`WriteValue::consume_async()`] to finish it.
     fn write_primitive<P: Primitive>(&mut self, value: P) -> WritePrimitive<&mut Self, P::State>;
+
+    /// Creates a write operation for a primitive or composed encoding.
+    ///
+    /// Await [`WriteValue::consume_async()`] to finish it.
+    fn write_value<V: Encode>(&mut self, value: V) -> WriteValue<&mut Self, V::Encoder>;
 }
 
 impl<W: WriterAsync> WriterAsyncExt for W {
     fn write_primitive<P: Primitive>(&mut self, value: P) -> WritePrimitive<&mut Self, P::State> {
-        WritePrimitive(self, value.into_state(), None)
+        self.write_value(value)
+    }
+
+    fn write_value<V: Encode>(&mut self, value: V) -> WriteValue<&mut Self, V::Encoder> {
+        WriteValue(self, value.into_encoder(), None)
     }
 }
 
@@ -197,9 +216,12 @@ impl<W: WriterAsync> WriterAsyncExt for W {
 /// The current chunk is retained while an async write borrows its bytes. A failed
 /// or canceled write may have written a prefix; restarting it does not roll back
 /// the destination. Keep message-level retry policy outside this operation.
-pub struct WritePrimitive<W, S: State>(W, S, Option<S::Item>);
+pub struct WriteValue<W, S: State>(W, S, Option<S::Item>);
 
-impl<W: WriterSync, S: State> WritePrimitive<W, S> {
+/// The original name for [`WriteValue`], retained for primitive write operations.
+pub type WritePrimitive<W, S> = WriteValue<W, S>;
+
+impl<W: WriterSync, S: State> WriteValue<W, S> {
     /// Writes the next chunk, or returns `None` when all chunks are consumed.
     pub fn next_chunk(&mut self) -> Option<W::Result> {
         self.2 = self.1.next();
@@ -217,7 +239,7 @@ impl<W: WriterSync, S: State> WritePrimitive<W, S> {
     }
 }
 
-impl<W: WriterAsync, S: State> WritePrimitive<W, S> {
+impl<W: WriterAsync, S: State> WriteValue<W, S> {
     /// Writes one chunk asynchronously, retaining it across the await.
     pub async fn next_chunk_async(&mut self) -> Option<W::Result> {
         self.2 = self.1.next();

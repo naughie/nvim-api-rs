@@ -1,6 +1,7 @@
 pub use crate::rpc::MessageId;
 
-use super::primitive::{ArrayLike, Primitive, Sealed, State, StrLike};
+use super::primitive::{ArrayLike, Nil, Primitive, State, StrLike};
+use super::{Encode, Untagged};
 
 #[derive(Debug)]
 pub struct Request<M, P> {
@@ -35,60 +36,19 @@ impl<M: StrLike, P: ArrayLike> Request<M, P> {
     }
 }
 
-impl<T: Primitive, E: Primitive> Response<T, E> {
+impl<T: Encode, E: Encode> Response<T, E> {
     pub fn to_primitive(self) -> impl Primitive<State: State<Item: Send> + Send> + Send
     where
         T: Send,
-        T::State: Send,
-        <T::State as State>::Item: Send,
+        T::Encoder: Send,
+        <T::Encoder as State>::Item: Send,
         E: Send,
-        E::State: Send,
-        <E::State as State>::Item: Send,
+        E::Encoder: Send,
+        <E::Encoder as State>::Item: Send,
     {
-        use super::primitive::Nil;
-
-        struct Nullable<T>(Option<T>);
-        impl<T> Sealed for Nullable<T> {}
-        impl<T: Primitive> Primitive for Nullable<T> {
-            type State = NullableState<T::State>;
-            fn into_state(self) -> Self::State {
-                match self.0 {
-                    Some(v) => NullableState::Some(v.into_state()),
-                    None => NullableState::Null(Nil.into_state()),
-                }
-            }
-        }
-
-        enum NullableItem<T> {
-            Some(T),
-            Null(<<Nil as Primitive>::State as State>::Item),
-        }
-        impl<T: AsRef<[u8]>> AsRef<[u8]> for NullableItem<T> {
-            fn as_ref(&self) -> &[u8] {
-                match self {
-                    Self::Some(v) => v.as_ref(),
-                    Self::Null(v) => v.as_ref(),
-                }
-            }
-        }
-
-        enum NullableState<T> {
-            Some(T),
-            Null(<Nil as Primitive>::State),
-        }
-        impl<T: State> State for NullableState<T> {
-            type Item = NullableItem<T::Item>;
-            fn next(&mut self) -> Option<Self::Item> {
-                match self {
-                    Self::Some(v) => v.next().map(NullableItem::Some),
-                    Self::Null(v) => v.next().map(NullableItem::Null),
-                }
-            }
-        }
-
-        let (err, resp) = match self.result {
-            Ok(v) => (Nullable(None), Nullable(Some(v))),
-            Err(v) => (Nullable(Some(v)), Nullable(None)),
+        let (err, resp): (Untagged<E, Nil>, Untagged<T, Nil>) = match self.result {
+            Ok(v) => (Untagged::Right(Nil), Untagged::Left(v)),
+            Err(v) => (Untagged::Left(v), Untagged::Right(Nil)),
         };
         (1u8, self.msgid.0, err, resp)
     }

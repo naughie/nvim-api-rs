@@ -96,6 +96,23 @@ Implement `api_types::encode::Like<Marker>` for application arguments and
 `api_types::decode::Decode<Marker, B>` for application results. See the
 `api_types` module documentation for examples of both.
 
+Borrowed slices and array references apply each element's `Like` conversion
+for typed array arguments. Use `api_types::encode::Convert` around `Array`,
+`ArrayIter`, tuples, `Map`, or `MapIter` to compose conversions for custom
+values and handles. Iterator conversions preserve borrowing and exact lengths
+without collecting. See the
+[`encode` module](https://docs.rs/nvim-rpc/latest/nvim_rpc/api_types/encode/)
+for examples and marker requirements.
+
+Use `sys::types::OneOf<A, B>` for an argument conversion with two possible
+markers and `api_types::encode::Untagged<L, R>` for its representation.
+`Untagged::Left` and `Untagged::Right` write only the selected payload; they add
+no wire tag. Nest the types for more alternatives, including typed collection
+elements. `Untagged` implements the codec's general `Encode` capability rather
+than `Primitive`. The
+[`encoding reference`](https://docs.rs/nvim-rpc/latest/nvim_rpc/api_types/encode/#alternatives)
+shows custom enums, ownership choices, and conversion into `Object` arguments.
+
 Typed call conversion requires `Send` encoded values, states, and chunks.
 Custom transports may still be local, and their futures need not be `Send`.
 A failed or cancelled write can leave a partial RPC frame on the connection;

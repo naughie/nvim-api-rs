@@ -1,6 +1,6 @@
 //! Encodes values as a sequence of byte chunks.
 //!
-//! A [`Primitive`] creates its encoding state; a writer consumes that state.
+//! An [`Encode`] representation creates its encoding state; a writer consumes it.
 //! A `Vec<u8>` is already a writer, while [`StdWrite`] adapts `std::io::Write`:
 //!
 //! ```
@@ -20,6 +20,8 @@
 //! [`WriterSyncExt::write_primitive()`] and [`WriterAsyncExt::write_primitive()`]
 //! prepare a write. Call `consume()` or await `consume_async()` to finish it.
 //! Writers preserve their own result type, including `()` for infallible buffers.
+//! Use `write_value()` for representations such as [`Untagged`] that select
+//! between encodings without being a [`Primitive`] themselves.
 
 pub mod write;
 pub use write::StdWrite;
@@ -34,6 +36,30 @@ pub use write::TokioWrite;
 
 pub mod primitive;
 pub use primitive::Primitive;
+
+mod untagged;
+pub use untagged::Untagged;
+
+/// A built-in representation that creates an encoding state.
+///
+/// All [`Primitive`] representations implement this trait. Compositions such as
+/// [`Untagged`] also implement it without becoming primitives. The trait is sealed;
+/// applications convert domain values to these representations before writing.
+pub trait Encode: primitive::Sealed {
+    /// The state that yields the representation's encoded byte chunks.
+    type Encoder: primitive::State;
+
+    /// Consumes the representation and creates its encoding state.
+    fn into_encoder(self) -> Self::Encoder;
+}
+
+impl<P: Primitive> Encode for P {
+    type Encoder = P::State;
+
+    fn into_encoder(self) -> Self::Encoder {
+        self.into_state()
+    }
+}
 
 #[cfg(feature = "rpc")]
 pub mod rpc;

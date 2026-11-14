@@ -4,7 +4,7 @@ use crate::sys::types::ApiFn;
 
 use mp::decode::{Buf, Object};
 use mp::encode::primitive::State as EncodeState;
-use mp::encode::{Primitive, WriterAsync, WriterAsyncExt, WriterSync, WriterSyncExt};
+use mp::encode::{Encode, Primitive, WriterAsync, WriterAsyncExt, WriterSync, WriterSyncExt};
 
 use std::fmt;
 use std::marker::PhantomData;
@@ -436,17 +436,17 @@ impl<W> Neovim<W> {
         self.send(Call::<F, _>::new(params).into_notification())
     }
 
-    /// Writes a primitive, such as an encoded RPC response, without assigning an ID.
+    /// Writes an encoding representation without assigning an ID.
     ///
-    /// See [`crate::rpc`] for a plugin reply example. Raw primitive sending does
-    /// not add `Send` bounds to the primitive or its state.
-    pub fn send<P: Primitive, E>(&mut self, value: P) -> Result<(), SendError<E>>
+    /// See [`crate::rpc`] for a plugin reply example. The value and its encoding
+    /// state may be local to the calling task.
+    pub fn send<P: Encode, E>(&mut self, value: P) -> Result<(), SendError<E>>
     where
         W: WriterSync,
         W::Result: WriteResult<Error = E>,
     {
         let next = self.begin()?;
-        WriterSyncExt::write_primitive(&mut self.writer, value)
+        WriterSyncExt::write_value(&mut self.writer, value)
             .consume()
             .into_result()
             .map_err(SendError::Write)?;
@@ -496,16 +496,16 @@ impl<W> Neovim<W> {
             .await
     }
 
-    /// Writes a primitive asynchronously without changing the next request ID.
+    /// Writes an encoding representation asynchronously without changing the next request ID.
     ///
     /// Interrupted writes follow the failure policy of [`Self::request_async()`].
-    pub async fn send_async<P: Primitive, E>(&mut self, value: P) -> Result<(), SendError<E>>
+    pub async fn send_async<P: Encode, E>(&mut self, value: P) -> Result<(), SendError<E>>
     where
         W: WriterAsync,
         W::Result: WriteResult<Error = E>,
     {
         let next = self.begin()?;
-        WriterAsyncExt::write_primitive(&mut self.writer, value)
+        WriterAsyncExt::write_value(&mut self.writer, value)
             .consume_async()
             .await
             .into_result()

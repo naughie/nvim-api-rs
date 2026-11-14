@@ -4,6 +4,8 @@
 //! Tuples and `()` encode as arrays; [`Nil`] encodes MessagePack nil. Use [`Array`]
 //! or [`ArrayIter`] for homogeneous sequences and [`Map`] or [`MapIter`] for
 //! key/value pairs. Their iterators must have an exact length for the wire header.
+//! Array, map, and tuple elements can be any [`super::Encode`] representation,
+//! including [`super::Untagged`]. The container still has one known outer kind.
 //!
 //! ```
 //! use rmp_bytes::encode::WriterSyncExt as _;

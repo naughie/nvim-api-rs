@@ -1,14 +1,15 @@
-use crate::mp::encode::primitive::{Primitive, State};
+use crate::mp::encode::Encode;
+use crate::mp::encode::primitive::State;
 
 use std::convert::Infallible;
 
-/// Converts a handler's result into success or error primitives for an RPC reply.
+/// Converts a handler's result into success or error representations for an RPC reply.
 ///
-/// `Result<T, E>` is supported when both branches are encodable primitives.
+/// `Result<T, E>` is supported when both branches implement `Encode`.
 /// `()` is shorthand for `Ok(())`; both it and `Ok::<(), Infallible>(())` encode
 /// a successful empty array. Use the explicit `Nil` primitive for a nil result.
 /// Application response types can implement this trait by converting their
-/// fields into built-in primitives; they do not implement `Primitive`.
+/// fields into built-in representations or untagged alternatives.
 /// Responses move between handler and writer tasks and therefore require
 /// `Send + 'static`.
 ///
@@ -28,8 +29,8 @@ use std::convert::Infallible;
 /// }
 /// ```
 pub trait IntoResponse: Send + 'static {
-    type Value: Primitive<State: State<Item: Send> + Send> + Send;
-    type Error: Primitive<State: State<Item: Send> + Send> + Send;
+    type Value: Encode<Encoder: State<Item: Send> + Send> + Send;
+    type Error: Encode<Encoder: State<Item: Send> + Send> + Send;
 
     fn into_response(self) -> Result<Self::Value, Self::Error>;
 }
@@ -45,8 +46,8 @@ impl IntoResponse for () {
 
 impl<T, E> IntoResponse for Result<T, E>
 where
-    T: Primitive<State: State<Item: Send> + Send> + Send + 'static,
-    E: Primitive<State: State<Item: Send> + Send> + Send + 'static,
+    T: Encode<Encoder: State<Item: Send> + Send> + Send + 'static,
+    E: Encode<Encoder: State<Item: Send> + Send> + Send + 'static,
 {
     type Value = T;
     type Error = E;

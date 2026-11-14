@@ -1,3 +1,4 @@
+use super::super::Encode;
 use super::ArrayLike;
 use super::{Primitive, Sealed, State};
 use rmp::Marker;
@@ -23,8 +24,8 @@ impl State for VoidState {
 
 macro_rules! _impl_prim_for_tuple {
     ($num:expr, $priv:ident, $first:ident, $( ( $ty:ident => $next_ty:ident ),)* ) => {
-        impl<$( $ty: Primitive, )*> Sealed for ($( $ty, )*) {}
-        impl<$( $ty: Primitive, )*> Primitive for ($( $ty, )*) {
+        impl<$( $ty: Encode, )*> Sealed for ($( $ty, )*) {}
+        impl<$( $ty: Encode, )*> Primitive for ($( $ty, )*) {
             type State = $priv::TupleState<$( $ty, )*>;
 
             fn into_state(self) -> Self::State {
@@ -36,10 +37,10 @@ macro_rules! _impl_prim_for_tuple {
                 }
             }
         }
-        impl<$( $ty: Primitive, )*> ArrayLike for ($( $ty, )*) {}
+        impl<$( $ty: Encode, )*> ArrayLike for ($( $ty, )*) {}
 
         mod $priv {
-            use super::{State, Primitive};
+            use super::{State, Encode};
             use rmp::Marker;
 
             #[derive(Clone, Copy, PartialEq, Eq)]
@@ -70,13 +71,13 @@ macro_rules! _impl_prim_for_tuple {
             }
 
             #[allow(non_snake_case)]
-            pub struct TupleState<$( $ty: Primitive, )*> {
-                pub(super) which: Which<$( <$ty as Primitive>::State, )*>,
+            pub struct TupleState<$( $ty: Encode, )*> {
+                pub(super) which: Which<$( <$ty as Encode>::Encoder, )*>,
                 $( pub(super) $ty: Option<$ty>, )*
             }
 
-            impl<$( $ty: Primitive, )*> State for TupleState<$( $ty, )*> {
-                type Item = Item<$( <<$ty as Primitive>::State as State>::Item, )*>;
+            impl<$( $ty: Encode, )*> State for TupleState<$( $ty, )*> {
+                type Item = Item<$( <<$ty as Encode>::Encoder as State>::Item, )*>;
 
                 fn next(&mut self) -> Option<Self::Item> {
                     loop {
@@ -87,7 +88,7 @@ macro_rules! _impl_prim_for_tuple {
                             }
                             $(
                                 Which::$ty (state) => {
-                                    let state = state.get_or_insert_with(|| self.$ty.take().expect("should be called once").into_state());
+                                    let state = state.get_or_insert_with(|| self.$ty.take().expect("should be called once").into_encoder());
                                     let next = state.next();
 
                                     if let Some(next) = next {
