@@ -132,11 +132,7 @@ impl State for StringState {
                 self.1 = StateInner::Data;
                 let (len, new_len) = metadata(inner);
                 if let Some(new_len) = new_len {
-                    // SAFETY: new_len <= self.len() <= capacity
-                    unsafe {
-                        let inner_bytes = inner.as_mut_vec();
-                        inner_bytes.set_len(new_len.get());
-                    }
+                    inner.truncate(new_len.get());
                 }
 
                 Some(Repr::Marker(len))
@@ -155,6 +151,30 @@ mod tests {
     use super::super::encode_to_vec;
     use super::*;
     use rmp::Marker;
+
+    #[test]
+    fn owned_buffer_is_retained() {
+        for (text, marker) in [
+            ("", &[0xa0][..]),
+            ("foo bar", &[0xa7]),
+            ("non-ASCII: 漢字", &[0xb1]),
+        ] {
+            let mut s = String::with_capacity(text.len() + 16);
+            s.push_str(text);
+            let ptr = s.as_ptr();
+            let capacity = s.capacity();
+            let mut state = s.into_state();
+
+            assert_eq!(state.next().unwrap().as_ref(), marker);
+            let Some(Repr::Data(s)) = state.next() else {
+                panic!("expected string data");
+            };
+            assert_eq!(s, text);
+            assert_eq!(s.as_ptr(), ptr);
+            assert_eq!(s.capacity(), capacity);
+            assert!(state.next().is_none());
+        }
+    }
 
     #[test]
     fn eq_encoded() {
