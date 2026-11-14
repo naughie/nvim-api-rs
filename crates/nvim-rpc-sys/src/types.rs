@@ -109,6 +109,14 @@ pub struct FixedArrayOf<T, const N: usize>(PhantomData<T>);
 pub struct Dict;
 /// A marker for a Neovim API value whose concrete type is unspecified.
 pub struct Object;
+/// A value described by either marker `A` or marker `B`.
+///
+/// Nest this marker to describe more alternatives, for example
+/// `OneOf<Int, OneOf<String, Array>>`. The branches describe possible values;
+/// they do not add a discriminator or an array to the RPC value.
+/// Order and nesting remain part of the Rust type; alternatives are not
+/// normalized or implicitly reordered.
+pub struct OneOf<A, B>(PhantomData<fn() -> (A, B)>);
 /// A Lua function reference used by Lua-only APIs.
 ///
 /// This marker does not provide a way to send a Rust function over RPC.

@@ -33,6 +33,21 @@ binary values. `Nil` encodes nil; `()` encodes an empty array. `Primitive` is
 sealed, so application types convert to these representations. The crate does
 not choose an encoding for `Option<T>`.
 
+`encode::Untagged<L, R>` selects either payload's encoding without adding a
+variant tag or container. Nest it to combine more alternatives. It implements
+the sealed `Encode` trait, rather than `Primitive`; array and map primitives
+can contain these composed representations. Use `write_value()` to write one
+directly:
+
+```rust
+use rmp_bytes::encode::{Untagged, WriterSyncExt as _};
+
+let value: Untagged<i64, &str> = Untagged::Right("text");
+let mut bytes = Vec::new();
+bytes.write_value(value).consume();
+assert_eq!(bytes, b"\xa4text");
+```
+
 ## Read without collecting
 
 ```rust

@@ -67,3 +67,14 @@ fn local_primitive_encoding_does_not_require_send() {
     );
     assert_eq!(bytes, [42]);
 }
+
+#[test]
+fn local_untagged_sends_do_not_require_send() {
+    use nvim_rpc::mp::encode::Untagged;
+
+    let value = Rc::new(42u8);
+    let value: Untagged<_, &str> = Untagged::Left(Func(move || *value));
+    let mut nvim = Neovim::new(Vec::new());
+    futures::executor::block_on(nvim.send_async(value)).unwrap();
+    assert_eq!(nvim.into_inner(), [42]);
+}

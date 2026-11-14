@@ -60,7 +60,9 @@ implementation, as the example's `Add` type does.
 
 A `Result<T, E>` response encodes its success or error value. Custom response
 types select those values through `IntoResponse`, as `AddResponse` does in the
-example. `()` produces a successful empty array; use `mp::encode::primitive::Nil`
+example. Both values implement `mp::encode::Encode`; `mp::encode::Untagged`
+supports alternatives such as an integer or a string without a wire tag.
+`()` produces a successful empty array; use `mp::encode::primitive::Nil`
 as the success value of a `Result` response for nil.
 
 ## Call Neovim

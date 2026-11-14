@@ -1,3 +1,4 @@
+use super::super::Encode;
 use super::ArrayLike;
 use super::{MAX_LEN, MAX_LEN_U32};
 use super::{Primitive, Sealed, State, data};
@@ -6,7 +7,7 @@ use rmp::Marker;
 /// Encodes an exactly sized collection as a MessagePack array.
 ///
 /// `Array([1u8, 2, 3])` consumes an array; `Array(&["a", "b"][..])`
-/// borrows a string slice. Each yielded element must be a [`Primitive`].
+/// borrows a string slice. Each yielded element must implement [`Encode`].
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Array<A>(pub A);
 /// Encodes an [`ExactSizeIterator`] without collecting its elements.
@@ -22,16 +23,46 @@ pub struct Array<A>(pub A);
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct ArrayIter<I>(pub I);
 
+impl<A: IntoIterator> IntoIterator for Array<A> {
+    type Item = A::Item;
+    type IntoIter = A::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl<'s, A> IntoIterator for &'s Array<A>
+where
+    &'s A: IntoIterator,
+{
+    type Item = <&'s A as IntoIterator>::Item;
+    type IntoIter = <&'s A as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        (&self.0).into_iter()
+    }
+}
+
+impl<I: Iterator> IntoIterator for ArrayIter<I> {
+    type Item = I::Item;
+    type IntoIter = I;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0
+    }
+}
+
 impl<A, T> Sealed for Array<A>
 where
-    T: Primitive,
+    T: Encode,
     A: IntoIterator<Item = T>,
     A::IntoIter: ExactSizeIterator,
 {
 }
 impl<A, T> Primitive for Array<A>
 where
-    T: Primitive,
+    T: Encode,
     A: IntoIterator<Item = T>,
     A::IntoIter: ExactSizeIterator,
 {
@@ -43,23 +74,23 @@ where
 }
 impl<A, T> ArrayLike for Array<A>
 where
-    T: Primitive,
+    T: Encode,
     A: IntoIterator<Item = T>,
     A::IntoIter: ExactSizeIterator,
 {
 }
 
-impl<T: Primitive, I: ExactSizeIterator<Item = T>> Sealed for ArrayIter<I> {}
-impl<T: Primitive, I: ExactSizeIterator<Item = T>> Primitive for ArrayIter<I> {
+impl<T: Encode, I: ExactSizeIterator<Item = T>> Sealed for ArrayIter<I> {}
+impl<T: Encode, I: ExactSizeIterator<Item = T>> Primitive for ArrayIter<I> {
     type State = ArrayIterState<I, T>;
 
     fn into_state(self) -> Self::State {
         ArrayIterState(Some(array_len(self.0.len())), Flatten(self.0, None, 0))
     }
 }
-impl<T: Primitive, I: ExactSizeIterator<Item = T>> ArrayLike for ArrayIter<I> {}
+impl<T: Encode, I: ExactSizeIterator<Item = T>> ArrayLike for ArrayIter<I> {}
 
-pub struct ArrayIterState<I, T: Primitive>(Option<LenType>, Flatten<I, T>);
+pub struct ArrayIterState<I, T: Encode>(Option<LenType>, Flatten<I, T>);
 
 fn array_len(len: usize) -> LenType {
     match len {
@@ -95,10 +126,10 @@ impl<T: AsRef<[u8]>> AsRef<[u8]> for ArrayItem<T> {
     }
 }
 
-pub struct Flatten<I, T: Primitive>(I, Option<T::State>, u32);
+pub struct Flatten<I, T: Encode>(I, Option<T::Encoder>, u32);
 
-impl<T: Primitive, I: ExactSizeIterator<Item = T>> Flatten<I, T> {
-    fn next(&mut self) -> Option<<T::State as State>::Item> {
+impl<T: Encode, I: ExactSizeIterator<Item = T>> Flatten<I, T> {
+    fn next(&mut self) -> Option<<T::Encoder as State>::Item> {
         loop {
             if let Some(state) = &mut self.1
                 && let Some(ret) = state.next()
@@ -113,13 +144,13 @@ impl<T: Primitive, I: ExactSizeIterator<Item = T>> Flatten<I, T> {
 
             let next_state = self.0.next()?;
             self.2 += 1;
-            self.1 = Some(next_state.into_state());
+            self.1 = Some(next_state.into_encoder());
         }
     }
 }
 
-impl<T: Primitive, I: ExactSizeIterator<Item = T>> State for ArrayIterState<I, T> {
-    type Item = ArrayItem<<T::State as State>::Item>;
+impl<T: Encode, I: ExactSizeIterator<Item = T>> State for ArrayIterState<I, T> {
+    type Item = ArrayItem<<T::Encoder as State>::Item>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(marker) = self.0.take() {

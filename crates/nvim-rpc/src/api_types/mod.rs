@@ -76,46 +76,36 @@ mod base {
 
     /// A Neovim type marker, such as `Int`, `ArrayOf<String>`, or `Buffer`.
     ///
-    /// The vocabulary is sealed; applications customize their Rust
-    /// representations through `Like` and `Decode`.
+    /// `OneOf<A, B>` composes alternatives recursively. The vocabulary is
+    /// sealed; applications customize their Rust representations through
+    /// `Like` and `Decode`.
     pub trait BaseType: Sealed {}
 
-    impl Sealed for Buffer {}
-    impl BaseType for Buffer {}
+    // Separates non-union markers from OneOf for recursive compatibility checks.
+    pub(super) trait NonUnion: BaseType {}
 
-    impl Sealed for Window {}
-    impl BaseType for Window {}
+    macro_rules! _impl_base_type {
+        ($($ty:ty),+ $(,)?) => {
+            $(
+                impl Sealed for $ty {}
+                impl BaseType for $ty {}
+                impl NonUnion for $ty {}
+            )+
+        };
+    }
 
-    impl Sealed for Tabpage {}
-    impl BaseType for Tabpage {}
-
-    impl Sealed for Nil {}
-    impl BaseType for Nil {}
-
-    impl Sealed for String {}
-    impl BaseType for String {}
-
-    impl Sealed for Bool {}
-    impl BaseType for Bool {}
-
-    impl Sealed for Int {}
-    impl BaseType for Int {}
-
-    impl Sealed for Float {}
-    impl BaseType for Float {}
-
-    impl Sealed for Array {}
-    impl BaseType for Array {}
+    _impl_base_type!(
+        Buffer, Window, Tabpage, Nil, String, Bool, Int, Float, Array, Dict, Object
+    );
 
     impl<T: BaseType> Sealed for ArrayOf<T> {}
     impl<T: BaseType> BaseType for ArrayOf<T> {}
+    impl<T: BaseType> NonUnion for ArrayOf<T> {}
 
     impl<T: BaseType, const N: usize> Sealed for FixedArrayOf<T, N> {}
     impl<T: BaseType, const N: usize> BaseType for FixedArrayOf<T, N> {}
+    impl<T: BaseType, const N: usize> NonUnion for FixedArrayOf<T, N> {}
 
-    impl Sealed for Dict {}
-    impl BaseType for Dict {}
-
-    impl Sealed for Object {}
-    impl BaseType for Object {}
+    impl<A: BaseType, B: BaseType> Sealed for OneOf<A, B> {}
+    impl<A: BaseType, B: BaseType> BaseType for OneOf<A, B> {}
 }

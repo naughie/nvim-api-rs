@@ -1,8 +1,9 @@
+use super::super::Encode;
 use super::{MAX_LEN, MAX_LEN_U32};
 use super::{Primitive, Sealed, State, data};
 use rmp::Marker;
 
-/// Encodes an exactly sized collection of primitive key/value pairs as a map.
+/// Encodes an exactly sized collection of encodable key/value pairs as a map.
 ///
 /// ```
 /// use rmp_bytes::encode::primitive::Map;
@@ -13,21 +14,21 @@ use rmp::Marker;
 /// assert_eq!(bytes, b"\x82\xa1x\x07\xa1y\x09");
 /// ```
 pub struct Map<M>(pub M);
-/// Encodes an [`ExactSizeIterator`] yielding primitive key/value pairs.
+/// Encodes an [`ExactSizeIterator`] yielding encodable key/value pairs.
 pub struct MapIter<I>(pub I);
 
 impl<M, K, V> Sealed for Map<M>
 where
-    K: Primitive,
-    V: Primitive,
+    K: Encode,
+    V: Encode,
     M: IntoIterator<Item = (K, V)>,
     M::IntoIter: ExactSizeIterator,
 {
 }
 impl<M, K, V> Primitive for Map<M>
 where
-    K: Primitive,
-    V: Primitive,
+    K: Encode,
+    V: Encode,
     M: IntoIterator<Item = (K, V)>,
     M::IntoIter: ExactSizeIterator,
 {
@@ -40,15 +41,15 @@ where
 
 impl<I, K, V> Sealed for MapIter<I>
 where
-    K: Primitive,
-    V: Primitive,
+    K: Encode,
+    V: Encode,
     I: ExactSizeIterator<Item = (K, V)>,
 {
 }
 impl<I, K, V> Primitive for MapIter<I>
 where
-    K: Primitive,
-    V: Primitive,
+    K: Encode,
+    V: Encode,
     I: ExactSizeIterator<Item = (K, V)>,
 {
     type State = MapIterState<I, K, V>;
@@ -58,7 +59,7 @@ where
     }
 }
 
-pub struct MapIterState<I, K: Primitive, V: Primitive>(Option<LenType>, Flatten<I, K, V>);
+pub struct MapIterState<I, K: Encode, V: Encode>(Option<LenType>, Flatten<I, K, V>);
 
 fn map_len(len: usize) -> LenType {
     match len {
@@ -94,17 +95,17 @@ impl<K: AsRef<[u8]>, V: AsRef<[u8]>> AsRef<[u8]> for MapItem<K, V> {
     }
 }
 
-pub struct Flatten<I, K: Primitive, V: Primitive>(I, Option<K::State>, Option<V::State>, u32);
+pub struct Flatten<I, K: Encode, V: Encode>(I, Option<K::Encoder>, Option<V::Encoder>, u32);
 
-enum FlattenItem<K: Primitive, V: Primitive> {
-    Key(<K::State as State>::Item),
-    Value(<V::State as State>::Item),
+enum FlattenItem<K: Encode, V: Encode> {
+    Key(<K::Encoder as State>::Item),
+    Value(<V::Encoder as State>::Item),
 }
 
 impl<I, K, V> Flatten<I, K, V>
 where
-    K: Primitive,
-    V: Primitive,
+    K: Encode,
+    V: Encode,
     I: ExactSizeIterator<Item = (K, V)>,
 {
     fn next(&mut self) -> Option<FlattenItem<K, V>> {
@@ -129,19 +130,19 @@ where
 
             let (next_key, next_value) = self.0.next()?;
             self.3 += 1;
-            self.1 = Some(next_key.into_state());
-            self.2 = Some(next_value.into_state());
+            self.1 = Some(next_key.into_encoder());
+            self.2 = Some(next_value.into_encoder());
         }
     }
 }
 
 impl<I, K, V> State for MapIterState<I, K, V>
 where
-    K: Primitive,
-    V: Primitive,
+    K: Encode,
+    V: Encode,
     I: ExactSizeIterator<Item = (K, V)>,
 {
-    type Item = MapItem<<K::State as State>::Item, <V::State as State>::Item>;
+    type Item = MapItem<<K::Encoder as State>::Item, <V::Encoder as State>::Item>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if let Some(marker) = self.0.take() {
