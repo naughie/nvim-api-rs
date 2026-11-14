@@ -1,4 +1,4 @@
-//! Encode values as a sequence of byte chunks.
+//! Encodes values as a sequence of byte chunks.
 //!
 //! A [`Primitive`] creates its encoding state; a writer consumes that state.
 //! A `Vec<u8>` is already a writer, while [`StdWrite`] adapts `std::io::Write`:
@@ -17,7 +17,7 @@
 //! assert_eq!(bytes, b"\x92\xa3red\xa4blue");
 //! ```
 //!
-//! [`WriterSyncExt::write_primitive`] and [`WriterAsyncExt::write_primitive`]
+//! [`WriterSyncExt::write_primitive()`] and [`WriterAsyncExt::write_primitive()`]
 //! prepare a write. Call `consume()` or await `consume_async()` to finish it.
 //! Writers preserve their own result type, including `()` for infallible buffers.
 

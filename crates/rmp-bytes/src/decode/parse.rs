@@ -32,7 +32,7 @@ pub enum Object<B> {
     Bin(Bin<B>),
     /// A string payload retained without UTF-8 validation.
     ///
-    /// Use [`Bin::as_str`] to validate and borrow it as text.
+    /// Use [`Bin::as_str()`] to validate and borrow it as text.
     Str(Bin<B>),
 
     Array(Array<B>),
@@ -306,7 +306,7 @@ impl<B: Buf> Object<B> {
     /// Decodes a buffer without checking its frame boundary.
     ///
     /// `buf` must contain exactly one complete value. Prefer
-    /// [`ObjectParser::next_object`] when the boundary has not been checked.
+    /// [`ObjectParser::next_object()`] when the boundary has not been checked.
     ///
     /// # Panics
     ///
@@ -479,7 +479,7 @@ impl<B: Buf> ExactSizeIterator for Map<B> {
 
 /// Decodes complete values from a buffer, advancing after each successful read.
 ///
-/// [`next_object`](Self::next_object) returns [`InsufficientBytes`] without
+/// [`next_object()`](Self::next_object()) returns [`InsufficientBytes`] without
 /// advancing when the next value is incomplete. The [`Iterator`] implementation
 /// returns `None` in that case, leaving the incomplete bytes in the buffer.
 pub struct ObjectParser<B> {

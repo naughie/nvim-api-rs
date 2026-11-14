@@ -3,7 +3,7 @@ use crate::{Array, Bytes};
 use nvim_api::api_types::{Decode, DecodeError};
 use nvim_api::sys::types;
 
-/// Decode an incoming request or notification's argument array.
+/// Decodes an incoming request or notification's argument array.
 ///
 /// The result moves into a handler task, so it must be `Send + 'static`.
 /// [`crate::Bin`] retains shared bytes without copying its payload. A custom

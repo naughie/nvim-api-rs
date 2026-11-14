@@ -9,7 +9,7 @@ use tokio::task::{JoinHandle, JoinSet};
 use std::convert::Infallible;
 use std::sync::{Arc, Mutex, MutexGuard};
 
-/// Start a connection and its handler tasks on the current Tokio runtime.
+/// Starts a connection and its handler tasks on the current Tokio runtime.
 ///
 /// `from_neovim` receives Neovim's RPC messages and `to_neovim` sends messages
 /// back. They may be process pipes, files, or socket halves. For a plugin started

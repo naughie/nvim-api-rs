@@ -5,7 +5,7 @@ use crate::sys;
 /// Neovim API function descriptors for typed requests and notifications.
 ///
 /// Select a descriptor and pass its arguments as a tuple to
-/// [`crate::Neovim::request`] or [`crate::Neovim::notify`]:
+/// [`crate::Neovim::request()`] or [`crate::Neovim::notify()`]:
 ///
 /// ```
 /// use nvim_api::{api, Buffer, Neovim};
@@ -18,8 +18,8 @@ use crate::sys;
 /// assert_eq!(pending.id().0, 0);
 /// ```
 ///
-/// The async equivalents are [`crate::Neovim::request_async`] and
-/// [`crate::Neovim::notify_async`]. Handle methods construct [`crate::Call`]
+/// The async equivalents are [`crate::Neovim::request_async()`] and
+/// [`crate::Neovim::notify_async()`]. Handle methods construct [`crate::Call`]
 /// values for manual encoding. Lua-only functions requiring a `LuaRef`
 /// are omitted from this module.
 pub mod api {
@@ -79,13 +79,13 @@ pub mod api {
     };
 }
 impl crate::handles::Buffer {
-    /// Build a call to [`nvim_buf_line_count`](https://neovim.io/doc/user/api/#nvim_buf_line_count()).
+    /// Builds a call to [`nvim_buf_line_count()`](https://neovim.io/doc/user/api/#nvim_buf_line_count()).
     ///
     /// Since Neovim API level 1.
     pub fn line_count(self) -> crate::Call<sys::functions::NvimBufLineCount, (Self,)> {
         crate::Call::new((self,))
     }
-    /// Build a call to [`nvim_buf_attach`](https://neovim.io/doc/user/api/#nvim_buf_attach()).
+    /// Builds a call to [`nvim_buf_attach()`](https://neovim.io/doc/user/api/#nvim_buf_attach()).
     ///
     /// Since Neovim API level 4.
     pub fn attach<A0, A1>(
@@ -99,13 +99,13 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, send_buffer, opts))
     }
-    /// Build a call to [`nvim_buf_detach`](https://neovim.io/doc/user/api/#nvim_buf_detach()).
+    /// Builds a call to [`nvim_buf_detach()`](https://neovim.io/doc/user/api/#nvim_buf_detach()).
     ///
     /// Since Neovim API level 4.
     pub fn detach(self) -> crate::Call<sys::functions::NvimBufDetach, (Self,)> {
         crate::Call::new((self,))
     }
-    /// Build a call to [`nvim_buf_get_lines`](https://neovim.io/doc/user/api/#nvim_buf_get_lines()).
+    /// Builds a call to [`nvim_buf_get_lines()`](https://neovim.io/doc/user/api/#nvim_buf_get_lines()).
     ///
     /// Since Neovim API level 1.
     pub fn get_lines<A0, A1, A2>(
@@ -121,7 +121,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, start, end, strict_indexing))
     }
-    /// Build a call to [`nvim_buf_set_lines`](https://neovim.io/doc/user/api/#nvim_buf_set_lines()).
+    /// Builds a call to [`nvim_buf_set_lines()`](https://neovim.io/doc/user/api/#nvim_buf_set_lines()).
     ///
     /// Since Neovim API level 1.
     pub fn set_lines<A0, A1, A2, A3>(
@@ -139,7 +139,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, start, end, strict_indexing, replacement))
     }
-    /// Build a call to [`nvim_buf_set_text`](https://neovim.io/doc/user/api/#nvim_buf_set_text()).
+    /// Builds a call to [`nvim_buf_set_text()`](https://neovim.io/doc/user/api/#nvim_buf_set_text()).
     ///
     /// Since Neovim API level 7.
     pub fn set_text<A0, A1, A2, A3, A4>(
@@ -159,7 +159,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, start_row, start_col, end_row, end_col, replacement))
     }
-    /// Build a call to [`nvim_buf_get_text`](https://neovim.io/doc/user/api/#nvim_buf_get_text()).
+    /// Builds a call to [`nvim_buf_get_text()`](https://neovim.io/doc/user/api/#nvim_buf_get_text()).
     ///
     /// Since Neovim API level 9.
     pub fn get_text<A0, A1, A2, A3, A4>(
@@ -179,7 +179,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, start_row, start_col, end_row, end_col, opts))
     }
-    /// Build a call to [`nvim_buf_get_offset`](https://neovim.io/doc/user/api/#nvim_buf_get_offset()).
+    /// Builds a call to [`nvim_buf_get_offset()`](https://neovim.io/doc/user/api/#nvim_buf_get_offset()).
     ///
     /// Since Neovim API level 5.
     pub fn get_offset<A0>(
@@ -191,7 +191,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, index))
     }
-    /// Build a call to [`nvim_buf_get_var`](https://neovim.io/doc/user/api/#nvim_buf_get_var()).
+    /// Builds a call to [`nvim_buf_get_var()`](https://neovim.io/doc/user/api/#nvim_buf_get_var()).
     ///
     /// Since Neovim API level 1.
     pub fn get_var<A0>(self, name: A0) -> crate::Call<sys::functions::NvimBufGetVar, (Self, A0)>
@@ -200,13 +200,13 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, name))
     }
-    /// Build a call to [`nvim_buf_get_changedtick`](https://neovim.io/doc/user/api/#nvim_buf_get_changedtick()).
+    /// Builds a call to [`nvim_buf_get_changedtick()`](https://neovim.io/doc/user/api/#nvim_buf_get_changedtick()).
     ///
     /// Since Neovim API level 2.
     pub fn get_changedtick(self) -> crate::Call<sys::functions::NvimBufGetChangedtick, (Self,)> {
         crate::Call::new((self,))
     }
-    /// Build a call to [`nvim_buf_get_keymap`](https://neovim.io/doc/user/api/#nvim_buf_get_keymap()).
+    /// Builds a call to [`nvim_buf_get_keymap()`](https://neovim.io/doc/user/api/#nvim_buf_get_keymap()).
     ///
     /// Since Neovim API level 3.
     pub fn get_keymap<A0>(
@@ -218,7 +218,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, mode))
     }
-    /// Build a call to [`nvim_buf_set_keymap`](https://neovim.io/doc/user/api/#nvim_buf_set_keymap()).
+    /// Builds a call to [`nvim_buf_set_keymap()`](https://neovim.io/doc/user/api/#nvim_buf_set_keymap()).
     ///
     /// Since Neovim API level 6.
     pub fn set_keymap<A0, A1, A2, A3>(
@@ -236,7 +236,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, mode, lhs, rhs, opts))
     }
-    /// Build a call to [`nvim_buf_del_keymap`](https://neovim.io/doc/user/api/#nvim_buf_del_keymap()).
+    /// Builds a call to [`nvim_buf_del_keymap()`](https://neovim.io/doc/user/api/#nvim_buf_del_keymap()).
     ///
     /// Since Neovim API level 6.
     pub fn del_keymap<A0, A1>(
@@ -250,7 +250,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, mode, lhs))
     }
-    /// Build a call to [`nvim_buf_set_var`](https://neovim.io/doc/user/api/#nvim_buf_set_var()).
+    /// Builds a call to [`nvim_buf_set_var()`](https://neovim.io/doc/user/api/#nvim_buf_set_var()).
     ///
     /// Since Neovim API level 1.
     pub fn set_var<A0, A1>(
@@ -264,7 +264,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, name, value))
     }
-    /// Build a call to [`nvim_buf_del_var`](https://neovim.io/doc/user/api/#nvim_buf_del_var()).
+    /// Builds a call to [`nvim_buf_del_var()`](https://neovim.io/doc/user/api/#nvim_buf_del_var()).
     ///
     /// Since Neovim API level 1.
     pub fn del_var<A0>(self, name: A0) -> crate::Call<sys::functions::NvimBufDelVar, (Self, A0)>
@@ -273,13 +273,13 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, name))
     }
-    /// Build a call to [`nvim_buf_get_name`](https://neovim.io/doc/user/api/#nvim_buf_get_name()).
+    /// Builds a call to [`nvim_buf_get_name()`](https://neovim.io/doc/user/api/#nvim_buf_get_name()).
     ///
     /// Since Neovim API level 1.
     pub fn get_name(self) -> crate::Call<sys::functions::NvimBufGetName, (Self,)> {
         crate::Call::new((self,))
     }
-    /// Build a call to [`nvim_buf_set_name`](https://neovim.io/doc/user/api/#nvim_buf_set_name()).
+    /// Builds a call to [`nvim_buf_set_name()`](https://neovim.io/doc/user/api/#nvim_buf_set_name()).
     ///
     /// Since Neovim API level 1.
     pub fn set_name<A0>(self, name: A0) -> crate::Call<sys::functions::NvimBufSetName, (Self, A0)>
@@ -288,13 +288,13 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, name))
     }
-    /// Build a call to [`nvim_buf_is_loaded`](https://neovim.io/doc/user/api/#nvim_buf_is_loaded()).
+    /// Builds a call to [`nvim_buf_is_loaded()`](https://neovim.io/doc/user/api/#nvim_buf_is_loaded()).
     ///
     /// Since Neovim API level 5.
     pub fn is_loaded(self) -> crate::Call<sys::functions::NvimBufIsLoaded, (Self,)> {
         crate::Call::new((self,))
     }
-    /// Build a call to [`nvim_buf_delete`](https://neovim.io/doc/user/api/#nvim_buf_delete()).
+    /// Builds a call to [`nvim_buf_delete()`](https://neovim.io/doc/user/api/#nvim_buf_delete()).
     ///
     /// Since Neovim API level 7.
     pub fn delete<A0>(self, opts: A0) -> crate::Call<sys::functions::NvimBufDelete, (Self, A0)>
@@ -303,13 +303,13 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, opts))
     }
-    /// Build a call to [`nvim_buf_is_valid`](https://neovim.io/doc/user/api/#nvim_buf_is_valid()).
+    /// Builds a call to [`nvim_buf_is_valid()`](https://neovim.io/doc/user/api/#nvim_buf_is_valid()).
     ///
     /// Since Neovim API level 1.
     pub fn is_valid(self) -> crate::Call<sys::functions::NvimBufIsValid, (Self,)> {
         crate::Call::new((self,))
     }
-    /// Build a call to [`nvim_buf_del_mark`](https://neovim.io/doc/user/api/#nvim_buf_del_mark()).
+    /// Builds a call to [`nvim_buf_del_mark()`](https://neovim.io/doc/user/api/#nvim_buf_del_mark()).
     ///
     /// Since Neovim API level 8.
     pub fn del_mark<A0>(self, name: A0) -> crate::Call<sys::functions::NvimBufDelMark, (Self, A0)>
@@ -318,7 +318,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, name))
     }
-    /// Build a call to [`nvim_buf_set_mark`](https://neovim.io/doc/user/api/#nvim_buf_set_mark()).
+    /// Builds a call to [`nvim_buf_set_mark()`](https://neovim.io/doc/user/api/#nvim_buf_set_mark()).
     ///
     /// Since Neovim API level 8.
     pub fn set_mark<A0, A1, A2, A3>(
@@ -336,7 +336,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, name, line, col, opts))
     }
-    /// Build a call to [`nvim_buf_get_mark`](https://neovim.io/doc/user/api/#nvim_buf_get_mark()).
+    /// Builds a call to [`nvim_buf_get_mark()`](https://neovim.io/doc/user/api/#nvim_buf_get_mark()).
     ///
     /// Since Neovim API level 1.
     pub fn get_mark<A0>(self, name: A0) -> crate::Call<sys::functions::NvimBufGetMark, (Self, A0)>
@@ -345,7 +345,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, name))
     }
-    /// Build a call to [`nvim_buf_create_user_command`](https://neovim.io/doc/user/api/#nvim_buf_create_user_command()).
+    /// Builds a call to [`nvim_buf_create_user_command()`](https://neovim.io/doc/user/api/#nvim_buf_create_user_command()).
     ///
     /// Since Neovim API level 9.
     pub fn create_user_command<A0, A1, A2>(
@@ -361,7 +361,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, name, cmd, opts))
     }
-    /// Build a call to [`nvim_buf_del_user_command`](https://neovim.io/doc/user/api/#nvim_buf_del_user_command()).
+    /// Builds a call to [`nvim_buf_del_user_command()`](https://neovim.io/doc/user/api/#nvim_buf_del_user_command()).
     ///
     /// Since Neovim API level 9.
     pub fn del_user_command<A0>(
@@ -373,7 +373,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, name))
     }
-    /// Build a call to [`nvim_buf_get_commands`](https://neovim.io/doc/user/api/#nvim_buf_get_commands()).
+    /// Builds a call to [`nvim_buf_get_commands()`](https://neovim.io/doc/user/api/#nvim_buf_get_commands()).
     ///
     /// Since Neovim API level 4.
     pub fn get_commands<A0>(
@@ -385,14 +385,14 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, opts))
     }
-    /// Build a call to [`nvim_buf_get_number`](https://neovim.io/doc/user/api/#nvim_buf_get_number()).
+    /// Builds a call to [`nvim_buf_get_number()`](https://neovim.io/doc/user/api/#nvim_buf_get_number()).
     ///
     /// Since Neovim API level 1; deprecated since 2.
     #[deprecated(note = "Deprecated since Neovim API level 2")]
     pub fn get_number(self) -> crate::Call<sys::functions::NvimBufGetNumber, (Self,)> {
         crate::Call::new((self,))
     }
-    /// Build a call to [`nvim_buf_clear_highlight`](https://neovim.io/doc/user/api/#nvim_buf_clear_highlight()).
+    /// Builds a call to [`nvim_buf_clear_highlight()`](https://neovim.io/doc/user/api/#nvim_buf_clear_highlight()).
     ///
     /// Since Neovim API level 1; deprecated since 7.
     #[deprecated(note = "Deprecated since Neovim API level 7")]
@@ -409,7 +409,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, ns_id, line_start, line_end))
     }
-    /// Build a call to [`nvim_buf_add_highlight`](https://neovim.io/doc/user/api/#nvim_buf_add_highlight()).
+    /// Builds a call to [`nvim_buf_add_highlight()`](https://neovim.io/doc/user/api/#nvim_buf_add_highlight()).
     ///
     /// Since Neovim API level 1; deprecated since 13.
     #[deprecated(note = "Deprecated since Neovim API level 13")]
@@ -430,7 +430,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, ns_id, hl_group, line, col_start, col_end))
     }
-    /// Build a call to [`nvim_buf_set_virtual_text`](https://neovim.io/doc/user/api/#nvim_buf_set_virtual_text()).
+    /// Builds a call to [`nvim_buf_set_virtual_text()`](https://neovim.io/doc/user/api/#nvim_buf_set_virtual_text()).
     ///
     /// Since Neovim API level 5; deprecated since 8.
     #[deprecated(note = "Deprecated since Neovim API level 8")]
@@ -449,7 +449,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, src_id, line, chunks, opts))
     }
-    /// Build a call to [`nvim_buf_get_option`](https://neovim.io/doc/user/api/#nvim_buf_get_option()).
+    /// Builds a call to [`nvim_buf_get_option()`](https://neovim.io/doc/user/api/#nvim_buf_get_option()).
     ///
     /// Since Neovim API level 1; deprecated since 11.
     #[deprecated(note = "Deprecated since Neovim API level 11")]
@@ -462,7 +462,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, name))
     }
-    /// Build a call to [`nvim_buf_set_option`](https://neovim.io/doc/user/api/#nvim_buf_set_option()).
+    /// Builds a call to [`nvim_buf_set_option()`](https://neovim.io/doc/user/api/#nvim_buf_set_option()).
     ///
     /// Since Neovim API level 1; deprecated since 11.
     #[deprecated(note = "Deprecated since Neovim API level 11")]
@@ -477,7 +477,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, name, value))
     }
-    /// Build a call to [`nvim_buf_get_extmark_by_id`](https://neovim.io/doc/user/api/#nvim_buf_get_extmark_by_id()).
+    /// Builds a call to [`nvim_buf_get_extmark_by_id()`](https://neovim.io/doc/user/api/#nvim_buf_get_extmark_by_id()).
     ///
     /// Since Neovim API level 7.
     pub fn get_extmark_by_id<A0, A1, A2>(
@@ -493,7 +493,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, ns_id, id, opts))
     }
-    /// Build a call to [`nvim_buf_get_extmarks`](https://neovim.io/doc/user/api/#nvim_buf_get_extmarks()).
+    /// Builds a call to [`nvim_buf_get_extmarks()`](https://neovim.io/doc/user/api/#nvim_buf_get_extmarks()).
     ///
     /// Since Neovim API level 7.
     pub fn get_extmarks<A0, A1, A2, A3>(
@@ -511,7 +511,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, ns_id, start, end, opts))
     }
-    /// Build a call to [`nvim_buf_set_extmark`](https://neovim.io/doc/user/api/#nvim_buf_set_extmark()).
+    /// Builds a call to [`nvim_buf_set_extmark()`](https://neovim.io/doc/user/api/#nvim_buf_set_extmark()).
     ///
     /// Since Neovim API level 7.
     pub fn set_extmark<A0, A1, A2, A3>(
@@ -529,7 +529,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, ns_id, line, col, opts))
     }
-    /// Build a call to [`nvim_buf_del_extmark`](https://neovim.io/doc/user/api/#nvim_buf_del_extmark()).
+    /// Builds a call to [`nvim_buf_del_extmark()`](https://neovim.io/doc/user/api/#nvim_buf_del_extmark()).
     ///
     /// Since Neovim API level 7.
     pub fn del_extmark<A0, A1>(
@@ -543,7 +543,7 @@ impl crate::handles::Buffer {
     {
         crate::Call::new((self, ns_id, id))
     }
-    /// Build a call to [`nvim_buf_clear_namespace`](https://neovim.io/doc/user/api/#nvim_buf_clear_namespace()).
+    /// Builds a call to [`nvim_buf_clear_namespace()`](https://neovim.io/doc/user/api/#nvim_buf_clear_namespace()).
     ///
     /// Since Neovim API level 5.
     pub fn clear_namespace<A0, A1, A2>(
@@ -561,13 +561,13 @@ impl crate::handles::Buffer {
     }
 }
 impl crate::handles::Tabpage {
-    /// Build a call to [`nvim_tabpage_list_wins`](https://neovim.io/doc/user/api/#nvim_tabpage_list_wins()).
+    /// Builds a call to [`nvim_tabpage_list_wins()`](https://neovim.io/doc/user/api/#nvim_tabpage_list_wins()).
     ///
     /// Since Neovim API level 1.
     pub fn list_wins(self) -> crate::Call<sys::functions::NvimTabpageListWins, (Self,)> {
         crate::Call::new((self,))
     }
-    /// Build a call to [`nvim_tabpage_get_var`](https://neovim.io/doc/user/api/#nvim_tabpage_get_var()).
+    /// Builds a call to [`nvim_tabpage_get_var()`](https://neovim.io/doc/user/api/#nvim_tabpage_get_var()).
     ///
     /// Since Neovim API level 1.
     pub fn get_var<A0>(self, name: A0) -> crate::Call<sys::functions::NvimTabpageGetVar, (Self, A0)>
@@ -576,7 +576,7 @@ impl crate::handles::Tabpage {
     {
         crate::Call::new((self, name))
     }
-    /// Build a call to [`nvim_tabpage_set_var`](https://neovim.io/doc/user/api/#nvim_tabpage_set_var()).
+    /// Builds a call to [`nvim_tabpage_set_var()`](https://neovim.io/doc/user/api/#nvim_tabpage_set_var()).
     ///
     /// Since Neovim API level 1.
     pub fn set_var<A0, A1>(
@@ -590,7 +590,7 @@ impl crate::handles::Tabpage {
     {
         crate::Call::new((self, name, value))
     }
-    /// Build a call to [`nvim_tabpage_del_var`](https://neovim.io/doc/user/api/#nvim_tabpage_del_var()).
+    /// Builds a call to [`nvim_tabpage_del_var()`](https://neovim.io/doc/user/api/#nvim_tabpage_del_var()).
     ///
     /// Since Neovim API level 1.
     pub fn del_var<A0>(self, name: A0) -> crate::Call<sys::functions::NvimTabpageDelVar, (Self, A0)>
@@ -599,13 +599,13 @@ impl crate::handles::Tabpage {
     {
         crate::Call::new((self, name))
     }
-    /// Build a call to [`nvim_tabpage_get_win`](https://neovim.io/doc/user/api/#nvim_tabpage_get_win()).
+    /// Builds a call to [`nvim_tabpage_get_win()`](https://neovim.io/doc/user/api/#nvim_tabpage_get_win()).
     ///
     /// Since Neovim API level 1.
     pub fn get_win(self) -> crate::Call<sys::functions::NvimTabpageGetWin, (Self,)> {
         crate::Call::new((self,))
     }
-    /// Build a call to [`nvim_tabpage_set_win`](https://neovim.io/doc/user/api/#nvim_tabpage_set_win()).
+    /// Builds a call to [`nvim_tabpage_set_win()`](https://neovim.io/doc/user/api/#nvim_tabpage_set_win()).
     ///
     /// Since Neovim API level 12.
     pub fn set_win<A0>(self, win: A0) -> crate::Call<sys::functions::NvimTabpageSetWin, (Self, A0)>
@@ -614,13 +614,13 @@ impl crate::handles::Tabpage {
     {
         crate::Call::new((self, win))
     }
-    /// Build a call to [`nvim_tabpage_get_number`](https://neovim.io/doc/user/api/#nvim_tabpage_get_number()).
+    /// Builds a call to [`nvim_tabpage_get_number()`](https://neovim.io/doc/user/api/#nvim_tabpage_get_number()).
     ///
     /// Since Neovim API level 1.
     pub fn get_number(self) -> crate::Call<sys::functions::NvimTabpageGetNumber, (Self,)> {
         crate::Call::new((self,))
     }
-    /// Build a call to [`nvim_tabpage_is_valid`](https://neovim.io/doc/user/api/#nvim_tabpage_is_valid()).
+    /// Builds a call to [`nvim_tabpage_is_valid()`](https://neovim.io/doc/user/api/#nvim_tabpage_is_valid()).
     ///
     /// Since Neovim API level 1.
     pub fn is_valid(self) -> crate::Call<sys::functions::NvimTabpageIsValid, (Self,)> {
@@ -628,7 +628,7 @@ impl crate::handles::Tabpage {
     }
 }
 impl crate::handles::Window {
-    /// Build a call to [`nvim_win_get_option`](https://neovim.io/doc/user/api/#nvim_win_get_option()).
+    /// Builds a call to [`nvim_win_get_option()`](https://neovim.io/doc/user/api/#nvim_win_get_option()).
     ///
     /// Since Neovim API level 1; deprecated since 11.
     #[deprecated(note = "Deprecated since Neovim API level 11")]
@@ -641,7 +641,7 @@ impl crate::handles::Window {
     {
         crate::Call::new((self, name))
     }
-    /// Build a call to [`nvim_win_set_option`](https://neovim.io/doc/user/api/#nvim_win_set_option()).
+    /// Builds a call to [`nvim_win_set_option()`](https://neovim.io/doc/user/api/#nvim_win_set_option()).
     ///
     /// Since Neovim API level 1; deprecated since 11.
     #[deprecated(note = "Deprecated since Neovim API level 11")]
@@ -656,7 +656,7 @@ impl crate::handles::Window {
     {
         crate::Call::new((self, name, value))
     }
-    /// Build a call to [`nvim_win_set_config`](https://neovim.io/doc/user/api/#nvim_win_set_config()).
+    /// Builds a call to [`nvim_win_set_config()`](https://neovim.io/doc/user/api/#nvim_win_set_config()).
     ///
     /// Since Neovim API level 6.
     pub fn set_config<A0>(
@@ -668,19 +668,19 @@ impl crate::handles::Window {
     {
         crate::Call::new((self, config))
     }
-    /// Build a call to [`nvim_win_get_config`](https://neovim.io/doc/user/api/#nvim_win_get_config()).
+    /// Builds a call to [`nvim_win_get_config()`](https://neovim.io/doc/user/api/#nvim_win_get_config()).
     ///
     /// Since Neovim API level 6.
     pub fn get_config(self) -> crate::Call<sys::functions::NvimWinGetConfig, (Self,)> {
         crate::Call::new((self,))
     }
-    /// Build a call to [`nvim_win_get_buf`](https://neovim.io/doc/user/api/#nvim_win_get_buf()).
+    /// Builds a call to [`nvim_win_get_buf()`](https://neovim.io/doc/user/api/#nvim_win_get_buf()).
     ///
     /// Since Neovim API level 1.
     pub fn get_buf(self) -> crate::Call<sys::functions::NvimWinGetBuf, (Self,)> {
         crate::Call::new((self,))
     }
-    /// Build a call to [`nvim_win_set_buf`](https://neovim.io/doc/user/api/#nvim_win_set_buf()).
+    /// Builds a call to [`nvim_win_set_buf()`](https://neovim.io/doc/user/api/#nvim_win_set_buf()).
     ///
     /// Since Neovim API level 5.
     pub fn set_buf<A0>(self, buf: A0) -> crate::Call<sys::functions::NvimWinSetBuf, (Self, A0)>
@@ -689,13 +689,13 @@ impl crate::handles::Window {
     {
         crate::Call::new((self, buf))
     }
-    /// Build a call to [`nvim_win_get_cursor`](https://neovim.io/doc/user/api/#nvim_win_get_cursor()).
+    /// Builds a call to [`nvim_win_get_cursor()`](https://neovim.io/doc/user/api/#nvim_win_get_cursor()).
     ///
     /// Since Neovim API level 1.
     pub fn get_cursor(self) -> crate::Call<sys::functions::NvimWinGetCursor, (Self,)> {
         crate::Call::new((self,))
     }
-    /// Build a call to [`nvim_win_set_cursor`](https://neovim.io/doc/user/api/#nvim_win_set_cursor()).
+    /// Builds a call to [`nvim_win_set_cursor()`](https://neovim.io/doc/user/api/#nvim_win_set_cursor()).
     ///
     /// Since Neovim API level 1.
     pub fn set_cursor<A0>(
@@ -707,13 +707,13 @@ impl crate::handles::Window {
     {
         crate::Call::new((self, pos))
     }
-    /// Build a call to [`nvim_win_get_height`](https://neovim.io/doc/user/api/#nvim_win_get_height()).
+    /// Builds a call to [`nvim_win_get_height()`](https://neovim.io/doc/user/api/#nvim_win_get_height()).
     ///
     /// Since Neovim API level 1.
     pub fn get_height(self) -> crate::Call<sys::functions::NvimWinGetHeight, (Self,)> {
         crate::Call::new((self,))
     }
-    /// Build a call to [`nvim_win_set_height`](https://neovim.io/doc/user/api/#nvim_win_set_height()).
+    /// Builds a call to [`nvim_win_set_height()`](https://neovim.io/doc/user/api/#nvim_win_set_height()).
     ///
     /// Since Neovim API level 1.
     pub fn set_height<A0>(
@@ -725,13 +725,13 @@ impl crate::handles::Window {
     {
         crate::Call::new((self, height))
     }
-    /// Build a call to [`nvim_win_get_width`](https://neovim.io/doc/user/api/#nvim_win_get_width()).
+    /// Builds a call to [`nvim_win_get_width()`](https://neovim.io/doc/user/api/#nvim_win_get_width()).
     ///
     /// Since Neovim API level 1.
     pub fn get_width(self) -> crate::Call<sys::functions::NvimWinGetWidth, (Self,)> {
         crate::Call::new((self,))
     }
-    /// Build a call to [`nvim_win_set_width`](https://neovim.io/doc/user/api/#nvim_win_set_width()).
+    /// Builds a call to [`nvim_win_set_width()`](https://neovim.io/doc/user/api/#nvim_win_set_width()).
     ///
     /// Since Neovim API level 1.
     pub fn set_width<A0>(
@@ -743,7 +743,7 @@ impl crate::handles::Window {
     {
         crate::Call::new((self, width))
     }
-    /// Build a call to [`nvim_win_get_var`](https://neovim.io/doc/user/api/#nvim_win_get_var()).
+    /// Builds a call to [`nvim_win_get_var()`](https://neovim.io/doc/user/api/#nvim_win_get_var()).
     ///
     /// Since Neovim API level 1.
     pub fn get_var<A0>(self, name: A0) -> crate::Call<sys::functions::NvimWinGetVar, (Self, A0)>
@@ -752,7 +752,7 @@ impl crate::handles::Window {
     {
         crate::Call::new((self, name))
     }
-    /// Build a call to [`nvim_win_set_var`](https://neovim.io/doc/user/api/#nvim_win_set_var()).
+    /// Builds a call to [`nvim_win_set_var()`](https://neovim.io/doc/user/api/#nvim_win_set_var()).
     ///
     /// Since Neovim API level 1.
     pub fn set_var<A0, A1>(
@@ -766,7 +766,7 @@ impl crate::handles::Window {
     {
         crate::Call::new((self, name, value))
     }
-    /// Build a call to [`nvim_win_del_var`](https://neovim.io/doc/user/api/#nvim_win_del_var()).
+    /// Builds a call to [`nvim_win_del_var()`](https://neovim.io/doc/user/api/#nvim_win_del_var()).
     ///
     /// Since Neovim API level 1.
     pub fn del_var<A0>(self, name: A0) -> crate::Call<sys::functions::NvimWinDelVar, (Self, A0)>
@@ -775,37 +775,37 @@ impl crate::handles::Window {
     {
         crate::Call::new((self, name))
     }
-    /// Build a call to [`nvim_win_get_position`](https://neovim.io/doc/user/api/#nvim_win_get_position()).
+    /// Builds a call to [`nvim_win_get_position()`](https://neovim.io/doc/user/api/#nvim_win_get_position()).
     ///
     /// Since Neovim API level 1.
     pub fn get_position(self) -> crate::Call<sys::functions::NvimWinGetPosition, (Self,)> {
         crate::Call::new((self,))
     }
-    /// Build a call to [`nvim_win_get_tabpage`](https://neovim.io/doc/user/api/#nvim_win_get_tabpage()).
+    /// Builds a call to [`nvim_win_get_tabpage()`](https://neovim.io/doc/user/api/#nvim_win_get_tabpage()).
     ///
     /// Since Neovim API level 1.
     pub fn get_tabpage(self) -> crate::Call<sys::functions::NvimWinGetTabpage, (Self,)> {
         crate::Call::new((self,))
     }
-    /// Build a call to [`nvim_win_get_number`](https://neovim.io/doc/user/api/#nvim_win_get_number()).
+    /// Builds a call to [`nvim_win_get_number()`](https://neovim.io/doc/user/api/#nvim_win_get_number()).
     ///
     /// Since Neovim API level 1.
     pub fn get_number(self) -> crate::Call<sys::functions::NvimWinGetNumber, (Self,)> {
         crate::Call::new((self,))
     }
-    /// Build a call to [`nvim_win_is_valid`](https://neovim.io/doc/user/api/#nvim_win_is_valid()).
+    /// Builds a call to [`nvim_win_is_valid()`](https://neovim.io/doc/user/api/#nvim_win_is_valid()).
     ///
     /// Since Neovim API level 1.
     pub fn is_valid(self) -> crate::Call<sys::functions::NvimWinIsValid, (Self,)> {
         crate::Call::new((self,))
     }
-    /// Build a call to [`nvim_win_hide`](https://neovim.io/doc/user/api/#nvim_win_hide()).
+    /// Builds a call to [`nvim_win_hide()`](https://neovim.io/doc/user/api/#nvim_win_hide()).
     ///
     /// Since Neovim API level 7.
     pub fn hide(self) -> crate::Call<sys::functions::NvimWinHide, (Self,)> {
         crate::Call::new((self,))
     }
-    /// Build a call to [`nvim_win_close`](https://neovim.io/doc/user/api/#nvim_win_close()).
+    /// Builds a call to [`nvim_win_close()`](https://neovim.io/doc/user/api/#nvim_win_close()).
     ///
     /// Since Neovim API level 6.
     pub fn close<A0>(self, force: A0) -> crate::Call<sys::functions::NvimWinClose, (Self, A0)>
@@ -814,7 +814,7 @@ impl crate::handles::Window {
     {
         crate::Call::new((self, force))
     }
-    /// Build a call to [`nvim_win_set_hl_ns`](https://neovim.io/doc/user/api/#nvim_win_set_hl_ns()).
+    /// Builds a call to [`nvim_win_set_hl_ns()`](https://neovim.io/doc/user/api/#nvim_win_set_hl_ns()).
     ///
     /// Since Neovim API level 10.
     pub fn set_hl_ns<A0>(self, ns_id: A0) -> crate::Call<sys::functions::NvimWinSetHlNs, (Self, A0)>
@@ -823,7 +823,7 @@ impl crate::handles::Window {
     {
         crate::Call::new((self, ns_id))
     }
-    /// Build a call to [`nvim_win_text_height`](https://neovim.io/doc/user/api/#nvim_win_text_height()).
+    /// Builds a call to [`nvim_win_text_height()`](https://neovim.io/doc/user/api/#nvim_win_text_height()).
     ///
     /// Since Neovim API level 12.
     pub fn text_height<A0>(

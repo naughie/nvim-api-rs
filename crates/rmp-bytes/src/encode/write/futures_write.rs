@@ -5,7 +5,7 @@ use futures_util::io::{AsyncWrite, AsyncWriteExt};
 /// Adapts a futures [`AsyncWrite`] destination to [`WriterAsync`].
 ///
 /// The adapter borrows chunks across `write_all().await` and does not start a
-/// task. Use [`WriterAsync::flush`] to flush the underlying writer explicitly.
+/// task. Use [`WriterAsync::flush()`] to flush the underlying writer explicitly.
 pub struct FuturesWrite<W> {
     inner: W,
 }

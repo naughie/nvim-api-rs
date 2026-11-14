@@ -21,7 +21,7 @@
 //! assert_eq!(Buffer::CURRENT.id(), 0);
 //! ```
 //!
-//! Use [`crate::Call::into_request`] or [`crate::Call::into_notification`] when
+//! Use [`crate::Call::into_request()`] or [`crate::Call::into_notification()`] when
 //! assigning IDs and writing envelopes yourself. Ordinary [`crate::Neovim`]
 //! requests use the descriptor and tuple form above.
 //!
@@ -47,7 +47,7 @@ macro_rules! _handle {
             /// ID zero, which Neovim interprets as the current handle.
             pub const CURRENT: Self = Self(0);
 
-            /// Wrap an ID without checking it against the server.
+            /// Wraps an ID without checking it against the server.
             pub const fn new(id: i64) -> Self {
                 Self(id)
             }

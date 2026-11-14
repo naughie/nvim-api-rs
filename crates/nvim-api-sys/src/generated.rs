@@ -15,7 +15,7 @@ pub const API_PRERELEASE: bool = false;
 pub mod functions {
     use super::ext_types;
     use crate::types;
-    /// Signature of [`nvim_get_autocmds`](https://neovim.io/doc/user/api/#nvim_get_autocmds()).
+    /// Signature of [`nvim_get_autocmds()`](https://neovim.io/doc/user/api/#nvim_get_autocmds()).
     ///
     /// Since Neovim API level 9.
     pub struct NvimGetAutocmds {
@@ -26,7 +26,7 @@ pub mod functions {
         type Return = types::ArrayOf<types::Dict>;
         const NAME: &str = "nvim_get_autocmds";
     }
-    /// Signature of [`nvim_create_autocmd`](https://neovim.io/doc/user/api/#nvim_create_autocmd()).
+    /// Signature of [`nvim_create_autocmd()`](https://neovim.io/doc/user/api/#nvim_create_autocmd()).
     ///
     /// Since Neovim API level 9.
     pub struct NvimCreateAutocmd {
@@ -38,7 +38,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "nvim_create_autocmd";
     }
-    /// Signature of [`nvim_del_autocmd`](https://neovim.io/doc/user/api/#nvim_del_autocmd()).
+    /// Signature of [`nvim_del_autocmd()`](https://neovim.io/doc/user/api/#nvim_del_autocmd()).
     ///
     /// Since Neovim API level 9.
     pub struct NvimDelAutocmd {
@@ -49,7 +49,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_del_autocmd";
     }
-    /// Signature of [`nvim_clear_autocmds`](https://neovim.io/doc/user/api/#nvim_clear_autocmds()).
+    /// Signature of [`nvim_clear_autocmds()`](https://neovim.io/doc/user/api/#nvim_clear_autocmds()).
     ///
     /// Since Neovim API level 9.
     pub struct NvimClearAutocmds {
@@ -60,7 +60,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_clear_autocmds";
     }
-    /// Signature of [`nvim_create_augroup`](https://neovim.io/doc/user/api/#nvim_create_augroup()).
+    /// Signature of [`nvim_create_augroup()`](https://neovim.io/doc/user/api/#nvim_create_augroup()).
     ///
     /// Since Neovim API level 9.
     pub struct NvimCreateAugroup {
@@ -72,7 +72,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "nvim_create_augroup";
     }
-    /// Signature of [`nvim_del_augroup_by_id`](https://neovim.io/doc/user/api/#nvim_del_augroup_by_id()).
+    /// Signature of [`nvim_del_augroup_by_id()`](https://neovim.io/doc/user/api/#nvim_del_augroup_by_id()).
     ///
     /// Since Neovim API level 9.
     pub struct NvimDelAugroupById {
@@ -83,7 +83,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_del_augroup_by_id";
     }
-    /// Signature of [`nvim_del_augroup_by_name`](https://neovim.io/doc/user/api/#nvim_del_augroup_by_name()).
+    /// Signature of [`nvim_del_augroup_by_name()`](https://neovim.io/doc/user/api/#nvim_del_augroup_by_name()).
     ///
     /// Since Neovim API level 9.
     pub struct NvimDelAugroupByName {
@@ -94,7 +94,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_del_augroup_by_name";
     }
-    /// Signature of [`nvim_exec_autocmds`](https://neovim.io/doc/user/api/#nvim_exec_autocmds()).
+    /// Signature of [`nvim_exec_autocmds()`](https://neovim.io/doc/user/api/#nvim_exec_autocmds()).
     ///
     /// Since Neovim API level 9.
     pub struct NvimExecAutocmds {
@@ -106,7 +106,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_exec_autocmds";
     }
-    /// Signature of [`nvim_buf_line_count`](https://neovim.io/doc/user/api/#nvim_buf_line_count()).
+    /// Signature of [`nvim_buf_line_count()`](https://neovim.io/doc/user/api/#nvim_buf_line_count()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimBufLineCount {}
@@ -121,7 +121,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "line_count";
     }
-    /// Signature of [`nvim_buf_attach`](https://neovim.io/doc/user/api/#nvim_buf_attach()).
+    /// Signature of [`nvim_buf_attach()`](https://neovim.io/doc/user/api/#nvim_buf_attach()).
     ///
     /// Since Neovim API level 4.
     pub struct NvimBufAttach {
@@ -139,7 +139,7 @@ pub mod functions {
         type Return = types::Bool;
         const NAME: &str = "attach";
     }
-    /// Signature of [`nvim_buf_detach`](https://neovim.io/doc/user/api/#nvim_buf_detach()).
+    /// Signature of [`nvim_buf_detach()`](https://neovim.io/doc/user/api/#nvim_buf_detach()).
     ///
     /// Since Neovim API level 4.
     pub struct NvimBufDetach {}
@@ -154,7 +154,7 @@ pub mod functions {
         type Return = types::Bool;
         const NAME: &str = "detach";
     }
-    /// Signature of [`nvim_buf_get_lines`](https://neovim.io/doc/user/api/#nvim_buf_get_lines()).
+    /// Signature of [`nvim_buf_get_lines()`](https://neovim.io/doc/user/api/#nvim_buf_get_lines()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimBufGetLines {
@@ -173,7 +173,7 @@ pub mod functions {
         type Return = types::ArrayOf<types::String>;
         const NAME: &str = "get_lines";
     }
-    /// Signature of [`nvim_buf_set_lines`](https://neovim.io/doc/user/api/#nvim_buf_set_lines()).
+    /// Signature of [`nvim_buf_set_lines()`](https://neovim.io/doc/user/api/#nvim_buf_set_lines()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimBufSetLines {
@@ -204,7 +204,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "set_lines";
     }
-    /// Signature of [`nvim_buf_set_text`](https://neovim.io/doc/user/api/#nvim_buf_set_text()).
+    /// Signature of [`nvim_buf_set_text()`](https://neovim.io/doc/user/api/#nvim_buf_set_text()).
     ///
     /// Since Neovim API level 7.
     pub struct NvimBufSetText {
@@ -238,7 +238,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "set_text";
     }
-    /// Signature of [`nvim_buf_get_text`](https://neovim.io/doc/user/api/#nvim_buf_get_text()).
+    /// Signature of [`nvim_buf_get_text()`](https://neovim.io/doc/user/api/#nvim_buf_get_text()).
     ///
     /// Since Neovim API level 9.
     pub struct NvimBufGetText {
@@ -266,7 +266,7 @@ pub mod functions {
         type Return = types::ArrayOf<types::String>;
         const NAME: &str = "get_text";
     }
-    /// Signature of [`nvim_buf_get_offset`](https://neovim.io/doc/user/api/#nvim_buf_get_offset()).
+    /// Signature of [`nvim_buf_get_offset()`](https://neovim.io/doc/user/api/#nvim_buf_get_offset()).
     ///
     /// Since Neovim API level 5.
     pub struct NvimBufGetOffset {
@@ -283,7 +283,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "get_offset";
     }
-    /// Signature of [`nvim_buf_get_var`](https://neovim.io/doc/user/api/#nvim_buf_get_var()).
+    /// Signature of [`nvim_buf_get_var()`](https://neovim.io/doc/user/api/#nvim_buf_get_var()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimBufGetVar {
@@ -300,7 +300,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "get_var";
     }
-    /// Signature of [`nvim_buf_get_changedtick`](https://neovim.io/doc/user/api/#nvim_buf_get_changedtick()).
+    /// Signature of [`nvim_buf_get_changedtick()`](https://neovim.io/doc/user/api/#nvim_buf_get_changedtick()).
     ///
     /// Since Neovim API level 2.
     pub struct NvimBufGetChangedtick {}
@@ -315,7 +315,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "get_changedtick";
     }
-    /// Signature of [`nvim_buf_get_keymap`](https://neovim.io/doc/user/api/#nvim_buf_get_keymap()).
+    /// Signature of [`nvim_buf_get_keymap()`](https://neovim.io/doc/user/api/#nvim_buf_get_keymap()).
     ///
     /// Since Neovim API level 3.
     pub struct NvimBufGetKeymap {
@@ -332,7 +332,7 @@ pub mod functions {
         type Return = types::ArrayOf<types::Dict>;
         const NAME: &str = "get_keymap";
     }
-    /// Signature of [`nvim_buf_set_keymap`](https://neovim.io/doc/user/api/#nvim_buf_set_keymap()).
+    /// Signature of [`nvim_buf_set_keymap()`](https://neovim.io/doc/user/api/#nvim_buf_set_keymap()).
     ///
     /// Since Neovim API level 6.
     pub struct NvimBufSetKeymap {
@@ -358,7 +358,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "set_keymap";
     }
-    /// Signature of [`nvim_buf_del_keymap`](https://neovim.io/doc/user/api/#nvim_buf_del_keymap()).
+    /// Signature of [`nvim_buf_del_keymap()`](https://neovim.io/doc/user/api/#nvim_buf_del_keymap()).
     ///
     /// Since Neovim API level 6.
     pub struct NvimBufDelKeymap {
@@ -376,7 +376,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "del_keymap";
     }
-    /// Signature of [`nvim_buf_set_var`](https://neovim.io/doc/user/api/#nvim_buf_set_var()).
+    /// Signature of [`nvim_buf_set_var()`](https://neovim.io/doc/user/api/#nvim_buf_set_var()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimBufSetVar {
@@ -394,7 +394,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "set_var";
     }
-    /// Signature of [`nvim_buf_del_var`](https://neovim.io/doc/user/api/#nvim_buf_del_var()).
+    /// Signature of [`nvim_buf_del_var()`](https://neovim.io/doc/user/api/#nvim_buf_del_var()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimBufDelVar {
@@ -411,7 +411,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "del_var";
     }
-    /// Signature of [`nvim_buf_get_name`](https://neovim.io/doc/user/api/#nvim_buf_get_name()).
+    /// Signature of [`nvim_buf_get_name()`](https://neovim.io/doc/user/api/#nvim_buf_get_name()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimBufGetName {}
@@ -426,7 +426,7 @@ pub mod functions {
         type Return = types::String;
         const NAME: &str = "get_name";
     }
-    /// Signature of [`nvim_buf_set_name`](https://neovim.io/doc/user/api/#nvim_buf_set_name()).
+    /// Signature of [`nvim_buf_set_name()`](https://neovim.io/doc/user/api/#nvim_buf_set_name()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimBufSetName {
@@ -443,7 +443,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "set_name";
     }
-    /// Signature of [`nvim_buf_is_loaded`](https://neovim.io/doc/user/api/#nvim_buf_is_loaded()).
+    /// Signature of [`nvim_buf_is_loaded()`](https://neovim.io/doc/user/api/#nvim_buf_is_loaded()).
     ///
     /// Since Neovim API level 5.
     pub struct NvimBufIsLoaded {}
@@ -458,7 +458,7 @@ pub mod functions {
         type Return = types::Bool;
         const NAME: &str = "is_loaded";
     }
-    /// Signature of [`nvim_buf_delete`](https://neovim.io/doc/user/api/#nvim_buf_delete()).
+    /// Signature of [`nvim_buf_delete()`](https://neovim.io/doc/user/api/#nvim_buf_delete()).
     ///
     /// Since Neovim API level 7.
     pub struct NvimBufDelete {
@@ -475,7 +475,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "delete";
     }
-    /// Signature of [`nvim_buf_is_valid`](https://neovim.io/doc/user/api/#nvim_buf_is_valid()).
+    /// Signature of [`nvim_buf_is_valid()`](https://neovim.io/doc/user/api/#nvim_buf_is_valid()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimBufIsValid {}
@@ -490,7 +490,7 @@ pub mod functions {
         type Return = types::Bool;
         const NAME: &str = "is_valid";
     }
-    /// Signature of [`nvim_buf_del_mark`](https://neovim.io/doc/user/api/#nvim_buf_del_mark()).
+    /// Signature of [`nvim_buf_del_mark()`](https://neovim.io/doc/user/api/#nvim_buf_del_mark()).
     ///
     /// Since Neovim API level 8.
     pub struct NvimBufDelMark {
@@ -507,7 +507,7 @@ pub mod functions {
         type Return = types::Bool;
         const NAME: &str = "del_mark";
     }
-    /// Signature of [`nvim_buf_set_mark`](https://neovim.io/doc/user/api/#nvim_buf_set_mark()).
+    /// Signature of [`nvim_buf_set_mark()`](https://neovim.io/doc/user/api/#nvim_buf_set_mark()).
     ///
     /// Since Neovim API level 8.
     pub struct NvimBufSetMark {
@@ -533,7 +533,7 @@ pub mod functions {
         type Return = types::Bool;
         const NAME: &str = "set_mark";
     }
-    /// Signature of [`nvim_buf_get_mark`](https://neovim.io/doc/user/api/#nvim_buf_get_mark()).
+    /// Signature of [`nvim_buf_get_mark()`](https://neovim.io/doc/user/api/#nvim_buf_get_mark()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimBufGetMark {
@@ -550,7 +550,7 @@ pub mod functions {
         type Return = types::FixedArrayOf<types::Int, 2usize>;
         const NAME: &str = "get_mark";
     }
-    /// Signature of [`nvim_buf_call`](https://neovim.io/doc/user/api/#nvim_buf_call()).
+    /// Signature of [`nvim_buf_call()`](https://neovim.io/doc/user/api/#nvim_buf_call()).
     ///
     /// Since Neovim API level 7.
     pub struct NvimBufCall {
@@ -567,7 +567,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "call";
     }
-    /// Signature of [`nvim_parse_cmd`](https://neovim.io/doc/user/api/#nvim_parse_cmd()).
+    /// Signature of [`nvim_parse_cmd()`](https://neovim.io/doc/user/api/#nvim_parse_cmd()).
     ///
     /// Since Neovim API level 10.
     pub struct NvimParseCmd {
@@ -579,7 +579,7 @@ pub mod functions {
         type Return = types::Dict;
         const NAME: &str = "nvim_parse_cmd";
     }
-    /// Signature of [`nvim_cmd`](https://neovim.io/doc/user/api/#nvim_cmd()).
+    /// Signature of [`nvim_cmd()`](https://neovim.io/doc/user/api/#nvim_cmd()).
     ///
     /// Since Neovim API level 10.
     pub struct NvimCmd {
@@ -591,7 +591,7 @@ pub mod functions {
         type Return = types::String;
         const NAME: &str = "nvim_cmd";
     }
-    /// Signature of [`nvim_create_user_command`](https://neovim.io/doc/user/api/#nvim_create_user_command()).
+    /// Signature of [`nvim_create_user_command()`](https://neovim.io/doc/user/api/#nvim_create_user_command()).
     ///
     /// Since Neovim API level 9.
     pub struct NvimCreateUserCommand {
@@ -604,7 +604,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_create_user_command";
     }
-    /// Signature of [`nvim_del_user_command`](https://neovim.io/doc/user/api/#nvim_del_user_command()).
+    /// Signature of [`nvim_del_user_command()`](https://neovim.io/doc/user/api/#nvim_del_user_command()).
     ///
     /// Since Neovim API level 9.
     pub struct NvimDelUserCommand {
@@ -615,7 +615,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_del_user_command";
     }
-    /// Signature of [`nvim_buf_create_user_command`](https://neovim.io/doc/user/api/#nvim_buf_create_user_command()).
+    /// Signature of [`nvim_buf_create_user_command()`](https://neovim.io/doc/user/api/#nvim_buf_create_user_command()).
     ///
     /// Since Neovim API level 9.
     pub struct NvimBufCreateUserCommand {
@@ -634,7 +634,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "create_user_command";
     }
-    /// Signature of [`nvim_buf_del_user_command`](https://neovim.io/doc/user/api/#nvim_buf_del_user_command()).
+    /// Signature of [`nvim_buf_del_user_command()`](https://neovim.io/doc/user/api/#nvim_buf_del_user_command()).
     ///
     /// Since Neovim API level 9.
     pub struct NvimBufDelUserCommand {
@@ -651,7 +651,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "del_user_command";
     }
-    /// Signature of [`nvim_get_commands`](https://neovim.io/doc/user/api/#nvim_get_commands()).
+    /// Signature of [`nvim_get_commands()`](https://neovim.io/doc/user/api/#nvim_get_commands()).
     ///
     /// Since Neovim API level 4.
     pub struct NvimGetCommands {
@@ -662,7 +662,7 @@ pub mod functions {
         type Return = types::Dict;
         const NAME: &str = "nvim_get_commands";
     }
-    /// Signature of [`nvim_buf_get_commands`](https://neovim.io/doc/user/api/#nvim_buf_get_commands()).
+    /// Signature of [`nvim_buf_get_commands()`](https://neovim.io/doc/user/api/#nvim_buf_get_commands()).
     ///
     /// Since Neovim API level 4.
     pub struct NvimBufGetCommands {
@@ -679,7 +679,7 @@ pub mod functions {
         type Return = types::Dict;
         const NAME: &str = "get_commands";
     }
-    /// Signature of [`nvim_exec`](https://neovim.io/doc/user/api/#nvim_exec()).
+    /// Signature of [`nvim_exec()`](https://neovim.io/doc/user/api/#nvim_exec()).
     ///
     /// Since Neovim API level 7; deprecated since 11.
     #[deprecated(note = "Deprecated since Neovim API level 11")]
@@ -692,7 +692,7 @@ pub mod functions {
         type Return = types::String;
         const NAME: &str = "nvim_exec";
     }
-    /// Signature of [`nvim_command_output`](https://neovim.io/doc/user/api/#nvim_command_output()).
+    /// Signature of [`nvim_command_output()`](https://neovim.io/doc/user/api/#nvim_command_output()).
     ///
     /// Since Neovim API level 1; deprecated since 7.
     #[deprecated(note = "Deprecated since Neovim API level 7")]
@@ -704,7 +704,7 @@ pub mod functions {
         type Return = types::String;
         const NAME: &str = "nvim_command_output";
     }
-    /// Signature of [`nvim_execute_lua`](https://neovim.io/doc/user/api/#nvim_execute_lua()).
+    /// Signature of [`nvim_execute_lua()`](https://neovim.io/doc/user/api/#nvim_execute_lua()).
     ///
     /// Since Neovim API level 3; deprecated since 7.
     #[deprecated(note = "Deprecated since Neovim API level 7")]
@@ -717,7 +717,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "nvim_execute_lua";
     }
-    /// Signature of [`nvim_buf_get_number`](https://neovim.io/doc/user/api/#nvim_buf_get_number()).
+    /// Signature of [`nvim_buf_get_number()`](https://neovim.io/doc/user/api/#nvim_buf_get_number()).
     ///
     /// Since Neovim API level 1; deprecated since 2.
     #[deprecated(note = "Deprecated since Neovim API level 2")]
@@ -733,7 +733,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "get_number";
     }
-    /// Signature of [`nvim_buf_clear_highlight`](https://neovim.io/doc/user/api/#nvim_buf_clear_highlight()).
+    /// Signature of [`nvim_buf_clear_highlight()`](https://neovim.io/doc/user/api/#nvim_buf_clear_highlight()).
     ///
     /// Since Neovim API level 1; deprecated since 7.
     #[deprecated(note = "Deprecated since Neovim API level 7")]
@@ -753,7 +753,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "clear_highlight";
     }
-    /// Signature of [`nvim_buf_add_highlight`](https://neovim.io/doc/user/api/#nvim_buf_add_highlight()).
+    /// Signature of [`nvim_buf_add_highlight()`](https://neovim.io/doc/user/api/#nvim_buf_add_highlight()).
     ///
     /// Since Neovim API level 1; deprecated since 13.
     #[deprecated(note = "Deprecated since Neovim API level 13")]
@@ -788,7 +788,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "add_highlight";
     }
-    /// Signature of [`nvim_buf_set_virtual_text`](https://neovim.io/doc/user/api/#nvim_buf_set_virtual_text()).
+    /// Signature of [`nvim_buf_set_virtual_text()`](https://neovim.io/doc/user/api/#nvim_buf_set_virtual_text()).
     ///
     /// Since Neovim API level 5; deprecated since 8.
     #[deprecated(note = "Deprecated since Neovim API level 8")]
@@ -815,7 +815,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "set_virtual_text";
     }
-    /// Signature of [`nvim_get_hl_by_id`](https://neovim.io/doc/user/api/#nvim_get_hl_by_id()).
+    /// Signature of [`nvim_get_hl_by_id()`](https://neovim.io/doc/user/api/#nvim_get_hl_by_id()).
     ///
     /// Since Neovim API level 3; deprecated since 9.
     #[deprecated(note = "Deprecated since Neovim API level 9")]
@@ -828,7 +828,7 @@ pub mod functions {
         type Return = types::Dict;
         const NAME: &str = "nvim_get_hl_by_id";
     }
-    /// Signature of [`nvim_get_hl_by_name`](https://neovim.io/doc/user/api/#nvim_get_hl_by_name()).
+    /// Signature of [`nvim_get_hl_by_name()`](https://neovim.io/doc/user/api/#nvim_get_hl_by_name()).
     ///
     /// Since Neovim API level 3; deprecated since 9.
     #[deprecated(note = "Deprecated since Neovim API level 9")]
@@ -841,7 +841,7 @@ pub mod functions {
         type Return = types::Dict;
         const NAME: &str = "nvim_get_hl_by_name";
     }
-    /// Signature of [`buffer_insert`](https://neovim.io/doc/user/api/#buffer_insert()).
+    /// Signature of [`buffer_insert()`](https://neovim.io/doc/user/api/#buffer_insert()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -855,7 +855,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "buffer_insert";
     }
-    /// Signature of [`buffer_get_line`](https://neovim.io/doc/user/api/#buffer_get_line()).
+    /// Signature of [`buffer_get_line()`](https://neovim.io/doc/user/api/#buffer_get_line()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -868,7 +868,7 @@ pub mod functions {
         type Return = types::String;
         const NAME: &str = "buffer_get_line";
     }
-    /// Signature of [`buffer_set_line`](https://neovim.io/doc/user/api/#buffer_set_line()).
+    /// Signature of [`buffer_set_line()`](https://neovim.io/doc/user/api/#buffer_set_line()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -882,7 +882,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "buffer_set_line";
     }
-    /// Signature of [`buffer_del_line`](https://neovim.io/doc/user/api/#buffer_del_line()).
+    /// Signature of [`buffer_del_line()`](https://neovim.io/doc/user/api/#buffer_del_line()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -895,7 +895,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "buffer_del_line";
     }
-    /// Signature of [`buffer_get_line_slice`](https://neovim.io/doc/user/api/#buffer_get_line_slice()).
+    /// Signature of [`buffer_get_line_slice()`](https://neovim.io/doc/user/api/#buffer_get_line_slice()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -917,7 +917,7 @@ pub mod functions {
         type Return = types::ArrayOf<types::String>;
         const NAME: &str = "buffer_get_line_slice";
     }
-    /// Signature of [`buffer_set_line_slice`](https://neovim.io/doc/user/api/#buffer_set_line_slice()).
+    /// Signature of [`buffer_set_line_slice()`](https://neovim.io/doc/user/api/#buffer_set_line_slice()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -941,7 +941,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "buffer_set_line_slice";
     }
-    /// Signature of [`buffer_set_var`](https://neovim.io/doc/user/api/#buffer_set_var()).
+    /// Signature of [`buffer_set_var()`](https://neovim.io/doc/user/api/#buffer_set_var()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -955,7 +955,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "buffer_set_var";
     }
-    /// Signature of [`buffer_del_var`](https://neovim.io/doc/user/api/#buffer_del_var()).
+    /// Signature of [`buffer_del_var()`](https://neovim.io/doc/user/api/#buffer_del_var()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -968,7 +968,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "buffer_del_var";
     }
-    /// Signature of [`window_set_var`](https://neovim.io/doc/user/api/#window_set_var()).
+    /// Signature of [`window_set_var()`](https://neovim.io/doc/user/api/#window_set_var()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -982,7 +982,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "window_set_var";
     }
-    /// Signature of [`window_del_var`](https://neovim.io/doc/user/api/#window_del_var()).
+    /// Signature of [`window_del_var()`](https://neovim.io/doc/user/api/#window_del_var()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -995,7 +995,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "window_del_var";
     }
-    /// Signature of [`tabpage_set_var`](https://neovim.io/doc/user/api/#tabpage_set_var()).
+    /// Signature of [`tabpage_set_var()`](https://neovim.io/doc/user/api/#tabpage_set_var()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -1009,7 +1009,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "tabpage_set_var";
     }
-    /// Signature of [`tabpage_del_var`](https://neovim.io/doc/user/api/#tabpage_del_var()).
+    /// Signature of [`tabpage_del_var()`](https://neovim.io/doc/user/api/#tabpage_del_var()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -1022,7 +1022,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "tabpage_del_var";
     }
-    /// Signature of [`vim_set_var`](https://neovim.io/doc/user/api/#vim_set_var()).
+    /// Signature of [`vim_set_var()`](https://neovim.io/doc/user/api/#vim_set_var()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -1035,7 +1035,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "vim_set_var";
     }
-    /// Signature of [`vim_del_var`](https://neovim.io/doc/user/api/#vim_del_var()).
+    /// Signature of [`vim_del_var()`](https://neovim.io/doc/user/api/#vim_del_var()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -1047,7 +1047,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "vim_del_var";
     }
-    /// Signature of [`nvim_get_option_info`](https://neovim.io/doc/user/api/#nvim_get_option_info()).
+    /// Signature of [`nvim_get_option_info()`](https://neovim.io/doc/user/api/#nvim_get_option_info()).
     ///
     /// Since Neovim API level 7; deprecated since 11.
     #[deprecated(note = "Deprecated since Neovim API level 11")]
@@ -1059,7 +1059,7 @@ pub mod functions {
         type Return = types::Dict;
         const NAME: &str = "nvim_get_option_info";
     }
-    /// Signature of [`nvim_set_option`](https://neovim.io/doc/user/api/#nvim_set_option()).
+    /// Signature of [`nvim_set_option()`](https://neovim.io/doc/user/api/#nvim_set_option()).
     ///
     /// Since Neovim API level 1; deprecated since 11.
     #[deprecated(note = "Deprecated since Neovim API level 11")]
@@ -1072,7 +1072,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_set_option";
     }
-    /// Signature of [`nvim_get_option`](https://neovim.io/doc/user/api/#nvim_get_option()).
+    /// Signature of [`nvim_get_option()`](https://neovim.io/doc/user/api/#nvim_get_option()).
     ///
     /// Since Neovim API level 1; deprecated since 11.
     #[deprecated(note = "Deprecated since Neovim API level 11")]
@@ -1084,7 +1084,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "nvim_get_option";
     }
-    /// Signature of [`nvim_buf_get_option`](https://neovim.io/doc/user/api/#nvim_buf_get_option()).
+    /// Signature of [`nvim_buf_get_option()`](https://neovim.io/doc/user/api/#nvim_buf_get_option()).
     ///
     /// Since Neovim API level 1; deprecated since 11.
     #[deprecated(note = "Deprecated since Neovim API level 11")]
@@ -1102,7 +1102,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "get_option";
     }
-    /// Signature of [`nvim_buf_set_option`](https://neovim.io/doc/user/api/#nvim_buf_set_option()).
+    /// Signature of [`nvim_buf_set_option()`](https://neovim.io/doc/user/api/#nvim_buf_set_option()).
     ///
     /// Since Neovim API level 1; deprecated since 11.
     #[deprecated(note = "Deprecated since Neovim API level 11")]
@@ -1121,7 +1121,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "set_option";
     }
-    /// Signature of [`nvim_win_get_option`](https://neovim.io/doc/user/api/#nvim_win_get_option()).
+    /// Signature of [`nvim_win_get_option()`](https://neovim.io/doc/user/api/#nvim_win_get_option()).
     ///
     /// Since Neovim API level 1; deprecated since 11.
     #[deprecated(note = "Deprecated since Neovim API level 11")]
@@ -1139,7 +1139,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "get_option";
     }
-    /// Signature of [`nvim_win_set_option`](https://neovim.io/doc/user/api/#nvim_win_set_option()).
+    /// Signature of [`nvim_win_set_option()`](https://neovim.io/doc/user/api/#nvim_win_set_option()).
     ///
     /// Since Neovim API level 1; deprecated since 11.
     #[deprecated(note = "Deprecated since Neovim API level 11")]
@@ -1158,7 +1158,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "set_option";
     }
-    /// Signature of [`nvim_call_atomic`](https://neovim.io/doc/user/api/#nvim_call_atomic()).
+    /// Signature of [`nvim_call_atomic()`](https://neovim.io/doc/user/api/#nvim_call_atomic()).
     ///
     /// Since Neovim API level 1; deprecated since 12.
     #[deprecated(note = "Deprecated since Neovim API level 12")]
@@ -1170,7 +1170,7 @@ pub mod functions {
         type Return = types::Array;
         const NAME: &str = "nvim_call_atomic";
     }
-    /// Signature of [`nvim_subscribe`](https://neovim.io/doc/user/api/#nvim_subscribe()).
+    /// Signature of [`nvim_subscribe()`](https://neovim.io/doc/user/api/#nvim_subscribe()).
     ///
     /// Since Neovim API level 1; deprecated since 13.
     #[deprecated(note = "Deprecated since Neovim API level 13")]
@@ -1182,7 +1182,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_subscribe";
     }
-    /// Signature of [`nvim_unsubscribe`](https://neovim.io/doc/user/api/#nvim_unsubscribe()).
+    /// Signature of [`nvim_unsubscribe()`](https://neovim.io/doc/user/api/#nvim_unsubscribe()).
     ///
     /// Since Neovim API level 1; deprecated since 13.
     #[deprecated(note = "Deprecated since Neovim API level 13")]
@@ -1194,7 +1194,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_unsubscribe";
     }
-    /// Signature of [`nvim_out_write`](https://neovim.io/doc/user/api/#nvim_out_write()).
+    /// Signature of [`nvim_out_write()`](https://neovim.io/doc/user/api/#nvim_out_write()).
     ///
     /// Since Neovim API level 1; deprecated since 13.
     #[deprecated(note = "Deprecated since Neovim API level 13")]
@@ -1206,7 +1206,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_out_write";
     }
-    /// Signature of [`nvim_err_write`](https://neovim.io/doc/user/api/#nvim_err_write()).
+    /// Signature of [`nvim_err_write()`](https://neovim.io/doc/user/api/#nvim_err_write()).
     ///
     /// Since Neovim API level 1; deprecated since 13.
     #[deprecated(note = "Deprecated since Neovim API level 13")]
@@ -1218,7 +1218,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_err_write";
     }
-    /// Signature of [`nvim_err_writeln`](https://neovim.io/doc/user/api/#nvim_err_writeln()).
+    /// Signature of [`nvim_err_writeln()`](https://neovim.io/doc/user/api/#nvim_err_writeln()).
     ///
     /// Since Neovim API level 1; deprecated since 13.
     #[deprecated(note = "Deprecated since Neovim API level 13")]
@@ -1230,7 +1230,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_err_writeln";
     }
-    /// Signature of [`nvim_notify`](https://neovim.io/doc/user/api/#nvim_notify()).
+    /// Signature of [`nvim_notify()`](https://neovim.io/doc/user/api/#nvim_notify()).
     ///
     /// Since Neovim API level 7; deprecated since 13.
     #[deprecated(note = "Deprecated since Neovim API level 13")]
@@ -1244,7 +1244,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "nvim_notify";
     }
-    /// Signature of [`nvim_ui_term_event`](https://neovim.io/doc/user/api/#nvim_ui_term_event()).
+    /// Signature of [`nvim_ui_term_event()`](https://neovim.io/doc/user/api/#nvim_ui_term_event()).
     ///
     /// Since Neovim API level 12.
     pub struct NvimUiTermEvent {
@@ -1256,7 +1256,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_ui_term_event";
     }
-    /// Signature of [`nvim_create_namespace`](https://neovim.io/doc/user/api/#nvim_create_namespace()).
+    /// Signature of [`nvim_create_namespace()`](https://neovim.io/doc/user/api/#nvim_create_namespace()).
     ///
     /// Since Neovim API level 5.
     pub struct NvimCreateNamespace {
@@ -1267,7 +1267,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "nvim_create_namespace";
     }
-    /// Signature of [`nvim_get_namespaces`](https://neovim.io/doc/user/api/#nvim_get_namespaces()).
+    /// Signature of [`nvim_get_namespaces()`](https://neovim.io/doc/user/api/#nvim_get_namespaces()).
     ///
     /// Since Neovim API level 5.
     pub struct NvimGetNamespaces {}
@@ -1276,7 +1276,7 @@ pub mod functions {
         type Return = types::Dict;
         const NAME: &str = "nvim_get_namespaces";
     }
-    /// Signature of [`nvim_buf_get_extmark_by_id`](https://neovim.io/doc/user/api/#nvim_buf_get_extmark_by_id()).
+    /// Signature of [`nvim_buf_get_extmark_by_id()`](https://neovim.io/doc/user/api/#nvim_buf_get_extmark_by_id()).
     ///
     /// Since Neovim API level 7.
     pub struct NvimBufGetExtmarkById {
@@ -1295,7 +1295,7 @@ pub mod functions {
         type Return = types::Array;
         const NAME: &str = "get_extmark_by_id";
     }
-    /// Signature of [`nvim_buf_get_extmarks`](https://neovim.io/doc/user/api/#nvim_buf_get_extmarks()).
+    /// Signature of [`nvim_buf_get_extmarks()`](https://neovim.io/doc/user/api/#nvim_buf_get_extmarks()).
     ///
     /// Since Neovim API level 7.
     pub struct NvimBufGetExtmarks {
@@ -1321,7 +1321,7 @@ pub mod functions {
         type Return = types::ArrayOf<types::Dict>;
         const NAME: &str = "get_extmarks";
     }
-    /// Signature of [`nvim_buf_set_extmark`](https://neovim.io/doc/user/api/#nvim_buf_set_extmark()).
+    /// Signature of [`nvim_buf_set_extmark()`](https://neovim.io/doc/user/api/#nvim_buf_set_extmark()).
     ///
     /// Since Neovim API level 7.
     pub struct NvimBufSetExtmark {
@@ -1347,7 +1347,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "set_extmark";
     }
-    /// Signature of [`nvim_buf_del_extmark`](https://neovim.io/doc/user/api/#nvim_buf_del_extmark()).
+    /// Signature of [`nvim_buf_del_extmark()`](https://neovim.io/doc/user/api/#nvim_buf_del_extmark()).
     ///
     /// Since Neovim API level 7.
     pub struct NvimBufDelExtmark {
@@ -1365,7 +1365,7 @@ pub mod functions {
         type Return = types::Bool;
         const NAME: &str = "del_extmark";
     }
-    /// Signature of [`nvim_buf_clear_namespace`](https://neovim.io/doc/user/api/#nvim_buf_clear_namespace()).
+    /// Signature of [`nvim_buf_clear_namespace()`](https://neovim.io/doc/user/api/#nvim_buf_clear_namespace()).
     ///
     /// Since Neovim API level 5.
     pub struct NvimBufClearNamespace {
@@ -1384,7 +1384,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "clear_namespace";
     }
-    /// Signature of [`nvim_set_decoration_provider`](https://neovim.io/doc/user/api/#nvim_set_decoration_provider()).
+    /// Signature of [`nvim_set_decoration_provider()`](https://neovim.io/doc/user/api/#nvim_set_decoration_provider()).
     ///
     /// Since Neovim API level 7.
     pub struct NvimSetDecorationProvider {
@@ -1396,7 +1396,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_set_decoration_provider";
     }
-    /// Signature of [`nvim_get_option_value`](https://neovim.io/doc/user/api/#nvim_get_option_value()).
+    /// Signature of [`nvim_get_option_value()`](https://neovim.io/doc/user/api/#nvim_get_option_value()).
     ///
     /// Since Neovim API level 9.
     pub struct NvimGetOptionValue {
@@ -1408,7 +1408,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "nvim_get_option_value";
     }
-    /// Signature of [`nvim_set_option_value`](https://neovim.io/doc/user/api/#nvim_set_option_value()).
+    /// Signature of [`nvim_set_option_value()`](https://neovim.io/doc/user/api/#nvim_set_option_value()).
     ///
     /// Since Neovim API level 9.
     pub struct NvimSetOptionValue {
@@ -1421,7 +1421,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_set_option_value";
     }
-    /// Signature of [`nvim_get_all_options_info`](https://neovim.io/doc/user/api/#nvim_get_all_options_info()).
+    /// Signature of [`nvim_get_all_options_info()`](https://neovim.io/doc/user/api/#nvim_get_all_options_info()).
     ///
     /// Since Neovim API level 7.
     pub struct NvimGetAllOptionsInfo {}
@@ -1430,7 +1430,7 @@ pub mod functions {
         type Return = types::Dict;
         const NAME: &str = "nvim_get_all_options_info";
     }
-    /// Signature of [`nvim_get_option_info2`](https://neovim.io/doc/user/api/#nvim_get_option_info2()).
+    /// Signature of [`nvim_get_option_info2()`](https://neovim.io/doc/user/api/#nvim_get_option_info2()).
     ///
     /// Since Neovim API level 11.
     pub struct NvimGetOptionInfo2 {
@@ -1442,7 +1442,7 @@ pub mod functions {
         type Return = types::Dict;
         const NAME: &str = "nvim_get_option_info2";
     }
-    /// Signature of [`nvim_tabpage_list_wins`](https://neovim.io/doc/user/api/#nvim_tabpage_list_wins()).
+    /// Signature of [`nvim_tabpage_list_wins()`](https://neovim.io/doc/user/api/#nvim_tabpage_list_wins()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimTabpageListWins {}
@@ -1457,7 +1457,7 @@ pub mod functions {
         type Return = types::ArrayOf<ext_types::Window>;
         const NAME: &str = "list_wins";
     }
-    /// Signature of [`nvim_tabpage_get_var`](https://neovim.io/doc/user/api/#nvim_tabpage_get_var()).
+    /// Signature of [`nvim_tabpage_get_var()`](https://neovim.io/doc/user/api/#nvim_tabpage_get_var()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimTabpageGetVar {
@@ -1474,7 +1474,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "get_var";
     }
-    /// Signature of [`nvim_tabpage_set_var`](https://neovim.io/doc/user/api/#nvim_tabpage_set_var()).
+    /// Signature of [`nvim_tabpage_set_var()`](https://neovim.io/doc/user/api/#nvim_tabpage_set_var()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimTabpageSetVar {
@@ -1492,7 +1492,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "set_var";
     }
-    /// Signature of [`nvim_tabpage_del_var`](https://neovim.io/doc/user/api/#nvim_tabpage_del_var()).
+    /// Signature of [`nvim_tabpage_del_var()`](https://neovim.io/doc/user/api/#nvim_tabpage_del_var()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimTabpageDelVar {
@@ -1509,7 +1509,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "del_var";
     }
-    /// Signature of [`nvim_tabpage_get_win`](https://neovim.io/doc/user/api/#nvim_tabpage_get_win()).
+    /// Signature of [`nvim_tabpage_get_win()`](https://neovim.io/doc/user/api/#nvim_tabpage_get_win()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimTabpageGetWin {}
@@ -1524,7 +1524,7 @@ pub mod functions {
         type Return = ext_types::Window;
         const NAME: &str = "get_win";
     }
-    /// Signature of [`nvim_tabpage_set_win`](https://neovim.io/doc/user/api/#nvim_tabpage_set_win()).
+    /// Signature of [`nvim_tabpage_set_win()`](https://neovim.io/doc/user/api/#nvim_tabpage_set_win()).
     ///
     /// Since Neovim API level 12.
     pub struct NvimTabpageSetWin {
@@ -1541,7 +1541,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "set_win";
     }
-    /// Signature of [`nvim_tabpage_get_number`](https://neovim.io/doc/user/api/#nvim_tabpage_get_number()).
+    /// Signature of [`nvim_tabpage_get_number()`](https://neovim.io/doc/user/api/#nvim_tabpage_get_number()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimTabpageGetNumber {}
@@ -1556,7 +1556,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "get_number";
     }
-    /// Signature of [`nvim_tabpage_is_valid`](https://neovim.io/doc/user/api/#nvim_tabpage_is_valid()).
+    /// Signature of [`nvim_tabpage_is_valid()`](https://neovim.io/doc/user/api/#nvim_tabpage_is_valid()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimTabpageIsValid {}
@@ -1571,7 +1571,7 @@ pub mod functions {
         type Return = types::Bool;
         const NAME: &str = "is_valid";
     }
-    /// Signature of [`nvim_open_tabpage`](https://neovim.io/doc/user/api/#nvim_open_tabpage()).
+    /// Signature of [`nvim_open_tabpage()`](https://neovim.io/doc/user/api/#nvim_open_tabpage()).
     ///
     /// Since Neovim API level 14.
     pub struct NvimOpenTabpage {
@@ -1584,7 +1584,7 @@ pub mod functions {
         type Return = ext_types::Tabpage;
         const NAME: &str = "nvim_open_tabpage";
     }
-    /// Signature of [`nvim_ui_attach`](https://neovim.io/doc/user/api/#nvim_ui_attach()).
+    /// Signature of [`nvim_ui_attach()`](https://neovim.io/doc/user/api/#nvim_ui_attach()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimUiAttach {
@@ -1597,7 +1597,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_ui_attach";
     }
-    /// Signature of [`ui_attach`](https://neovim.io/doc/user/api/#ui_attach()).
+    /// Signature of [`ui_attach()`](https://neovim.io/doc/user/api/#ui_attach()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -1611,7 +1611,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "ui_attach";
     }
-    /// Signature of [`nvim_ui_set_focus`](https://neovim.io/doc/user/api/#nvim_ui_set_focus()).
+    /// Signature of [`nvim_ui_set_focus()`](https://neovim.io/doc/user/api/#nvim_ui_set_focus()).
     ///
     /// Since Neovim API level 11.
     pub struct NvimUiSetFocus {
@@ -1622,7 +1622,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_ui_set_focus";
     }
-    /// Signature of [`nvim_ui_detach`](https://neovim.io/doc/user/api/#nvim_ui_detach()).
+    /// Signature of [`nvim_ui_detach()`](https://neovim.io/doc/user/api/#nvim_ui_detach()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimUiDetach {}
@@ -1631,7 +1631,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_ui_detach";
     }
-    /// Signature of [`nvim_ui_try_resize`](https://neovim.io/doc/user/api/#nvim_ui_try_resize()).
+    /// Signature of [`nvim_ui_try_resize()`](https://neovim.io/doc/user/api/#nvim_ui_try_resize()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimUiTryResize {
@@ -1643,7 +1643,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_ui_try_resize";
     }
-    /// Signature of [`nvim_ui_set_option`](https://neovim.io/doc/user/api/#nvim_ui_set_option()).
+    /// Signature of [`nvim_ui_set_option()`](https://neovim.io/doc/user/api/#nvim_ui_set_option()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimUiSetOption {
@@ -1655,7 +1655,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_ui_set_option";
     }
-    /// Signature of [`nvim_ui_try_resize_grid`](https://neovim.io/doc/user/api/#nvim_ui_try_resize_grid()).
+    /// Signature of [`nvim_ui_try_resize_grid()`](https://neovim.io/doc/user/api/#nvim_ui_try_resize_grid()).
     ///
     /// Since Neovim API level 6.
     pub struct NvimUiTryResizeGrid {
@@ -1668,7 +1668,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_ui_try_resize_grid";
     }
-    /// Signature of [`nvim_ui_pum_set_height`](https://neovim.io/doc/user/api/#nvim_ui_pum_set_height()).
+    /// Signature of [`nvim_ui_pum_set_height()`](https://neovim.io/doc/user/api/#nvim_ui_pum_set_height()).
     ///
     /// Since Neovim API level 6.
     pub struct NvimUiPumSetHeight {
@@ -1679,7 +1679,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_ui_pum_set_height";
     }
-    /// Signature of [`nvim_ui_pum_set_bounds`](https://neovim.io/doc/user/api/#nvim_ui_pum_set_bounds()).
+    /// Signature of [`nvim_ui_pum_set_bounds()`](https://neovim.io/doc/user/api/#nvim_ui_pum_set_bounds()).
     ///
     /// Since Neovim API level 7.
     pub struct NvimUiPumSetBounds {
@@ -1693,7 +1693,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_ui_pum_set_bounds";
     }
-    /// Signature of [`nvim_ui_send`](https://neovim.io/doc/user/api/#nvim_ui_send()).
+    /// Signature of [`nvim_ui_send()`](https://neovim.io/doc/user/api/#nvim_ui_send()).
     ///
     /// Since Neovim API level 14.
     pub struct NvimUiSend {
@@ -1704,7 +1704,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_ui_send";
     }
-    /// Signature of [`nvim_get_hl_id_by_name`](https://neovim.io/doc/user/api/#nvim_get_hl_id_by_name()).
+    /// Signature of [`nvim_get_hl_id_by_name()`](https://neovim.io/doc/user/api/#nvim_get_hl_id_by_name()).
     ///
     /// Since Neovim API level 7.
     pub struct NvimGetHlIdByName {
@@ -1715,7 +1715,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "nvim_get_hl_id_by_name";
     }
-    /// Signature of [`nvim_get_hl`](https://neovim.io/doc/user/api/#nvim_get_hl()).
+    /// Signature of [`nvim_get_hl()`](https://neovim.io/doc/user/api/#nvim_get_hl()).
     ///
     /// Since Neovim API level 11.
     pub struct NvimGetHl {
@@ -1727,7 +1727,7 @@ pub mod functions {
         type Return = types::Dict;
         const NAME: &str = "nvim_get_hl";
     }
-    /// Signature of [`nvim_set_hl`](https://neovim.io/doc/user/api/#nvim_set_hl()).
+    /// Signature of [`nvim_set_hl()`](https://neovim.io/doc/user/api/#nvim_set_hl()).
     ///
     /// Since Neovim API level 7.
     pub struct NvimSetHl {
@@ -1740,7 +1740,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_set_hl";
     }
-    /// Signature of [`nvim_get_hl_ns`](https://neovim.io/doc/user/api/#nvim_get_hl_ns()).
+    /// Signature of [`nvim_get_hl_ns()`](https://neovim.io/doc/user/api/#nvim_get_hl_ns()).
     ///
     /// Since Neovim API level 12.
     pub struct NvimGetHlNs {
@@ -1751,7 +1751,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "nvim_get_hl_ns";
     }
-    /// Signature of [`nvim_set_hl_ns`](https://neovim.io/doc/user/api/#nvim_set_hl_ns()).
+    /// Signature of [`nvim_set_hl_ns()`](https://neovim.io/doc/user/api/#nvim_set_hl_ns()).
     ///
     /// Since Neovim API level 10.
     pub struct NvimSetHlNs {
@@ -1762,7 +1762,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_set_hl_ns";
     }
-    /// Signature of [`nvim_set_hl_ns_fast`](https://neovim.io/doc/user/api/#nvim_set_hl_ns_fast()).
+    /// Signature of [`nvim_set_hl_ns_fast()`](https://neovim.io/doc/user/api/#nvim_set_hl_ns_fast()).
     ///
     /// Since Neovim API level 10.
     pub struct NvimSetHlNsFast {
@@ -1773,7 +1773,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_set_hl_ns_fast";
     }
-    /// Signature of [`nvim_feedkeys`](https://neovim.io/doc/user/api/#nvim_feedkeys()).
+    /// Signature of [`nvim_feedkeys()`](https://neovim.io/doc/user/api/#nvim_feedkeys()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimFeedkeys {
@@ -1786,7 +1786,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_feedkeys";
     }
-    /// Signature of [`nvim_input`](https://neovim.io/doc/user/api/#nvim_input()).
+    /// Signature of [`nvim_input()`](https://neovim.io/doc/user/api/#nvim_input()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimInput {
@@ -1797,7 +1797,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "nvim_input";
     }
-    /// Signature of [`nvim_input_mouse`](https://neovim.io/doc/user/api/#nvim_input_mouse()).
+    /// Signature of [`nvim_input_mouse()`](https://neovim.io/doc/user/api/#nvim_input_mouse()).
     ///
     /// Since Neovim API level 6.
     pub struct NvimInputMouse {
@@ -1820,7 +1820,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_input_mouse";
     }
-    /// Signature of [`nvim_replace_termcodes`](https://neovim.io/doc/user/api/#nvim_replace_termcodes()).
+    /// Signature of [`nvim_replace_termcodes()`](https://neovim.io/doc/user/api/#nvim_replace_termcodes()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimReplaceTermcodes {
@@ -1834,7 +1834,7 @@ pub mod functions {
         type Return = types::String;
         const NAME: &str = "nvim_replace_termcodes";
     }
-    /// Signature of [`nvim_exec_lua`](https://neovim.io/doc/user/api/#nvim_exec_lua()).
+    /// Signature of [`nvim_exec_lua()`](https://neovim.io/doc/user/api/#nvim_exec_lua()).
     ///
     /// Since Neovim API level 7.
     pub struct NvimExecLua {
@@ -1846,7 +1846,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "nvim_exec_lua";
     }
-    /// Signature of [`nvim_strwidth`](https://neovim.io/doc/user/api/#nvim_strwidth()).
+    /// Signature of [`nvim_strwidth()`](https://neovim.io/doc/user/api/#nvim_strwidth()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimStrwidth {
@@ -1857,7 +1857,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "nvim_strwidth";
     }
-    /// Signature of [`nvim_list_runtime_paths`](https://neovim.io/doc/user/api/#nvim_list_runtime_paths()).
+    /// Signature of [`nvim_list_runtime_paths()`](https://neovim.io/doc/user/api/#nvim_list_runtime_paths()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimListRuntimePaths {}
@@ -1866,7 +1866,7 @@ pub mod functions {
         type Return = types::ArrayOf<types::String>;
         const NAME: &str = "nvim_list_runtime_paths";
     }
-    /// Signature of [`nvim_get_runtime_file`](https://neovim.io/doc/user/api/#nvim_get_runtime_file()).
+    /// Signature of [`nvim_get_runtime_file()`](https://neovim.io/doc/user/api/#nvim_get_runtime_file()).
     ///
     /// Since Neovim API level 7.
     pub struct NvimGetRuntimeFile {
@@ -1878,7 +1878,7 @@ pub mod functions {
         type Return = types::ArrayOf<types::String>;
         const NAME: &str = "nvim_get_runtime_file";
     }
-    /// Signature of [`nvim_set_current_dir`](https://neovim.io/doc/user/api/#nvim_set_current_dir()).
+    /// Signature of [`nvim_set_current_dir()`](https://neovim.io/doc/user/api/#nvim_set_current_dir()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimSetCurrentDir {
@@ -1889,7 +1889,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_set_current_dir";
     }
-    /// Signature of [`nvim_get_current_line`](https://neovim.io/doc/user/api/#nvim_get_current_line()).
+    /// Signature of [`nvim_get_current_line()`](https://neovim.io/doc/user/api/#nvim_get_current_line()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimGetCurrentLine {}
@@ -1898,7 +1898,7 @@ pub mod functions {
         type Return = types::String;
         const NAME: &str = "nvim_get_current_line";
     }
-    /// Signature of [`nvim_set_current_line`](https://neovim.io/doc/user/api/#nvim_set_current_line()).
+    /// Signature of [`nvim_set_current_line()`](https://neovim.io/doc/user/api/#nvim_set_current_line()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimSetCurrentLine {
@@ -1909,7 +1909,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_set_current_line";
     }
-    /// Signature of [`nvim_del_current_line`](https://neovim.io/doc/user/api/#nvim_del_current_line()).
+    /// Signature of [`nvim_del_current_line()`](https://neovim.io/doc/user/api/#nvim_del_current_line()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimDelCurrentLine {}
@@ -1918,7 +1918,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_del_current_line";
     }
-    /// Signature of [`nvim_get_var`](https://neovim.io/doc/user/api/#nvim_get_var()).
+    /// Signature of [`nvim_get_var()`](https://neovim.io/doc/user/api/#nvim_get_var()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimGetVar {
@@ -1929,7 +1929,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "nvim_get_var";
     }
-    /// Signature of [`nvim_set_var`](https://neovim.io/doc/user/api/#nvim_set_var()).
+    /// Signature of [`nvim_set_var()`](https://neovim.io/doc/user/api/#nvim_set_var()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimSetVar {
@@ -1941,7 +1941,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_set_var";
     }
-    /// Signature of [`nvim_del_var`](https://neovim.io/doc/user/api/#nvim_del_var()).
+    /// Signature of [`nvim_del_var()`](https://neovim.io/doc/user/api/#nvim_del_var()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimDelVar {
@@ -1952,7 +1952,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_del_var";
     }
-    /// Signature of [`nvim_get_vvar`](https://neovim.io/doc/user/api/#nvim_get_vvar()).
+    /// Signature of [`nvim_get_vvar()`](https://neovim.io/doc/user/api/#nvim_get_vvar()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimGetVvar {
@@ -1963,7 +1963,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "nvim_get_vvar";
     }
-    /// Signature of [`nvim_set_vvar`](https://neovim.io/doc/user/api/#nvim_set_vvar()).
+    /// Signature of [`nvim_set_vvar()`](https://neovim.io/doc/user/api/#nvim_set_vvar()).
     ///
     /// Since Neovim API level 6.
     pub struct NvimSetVvar {
@@ -1975,7 +1975,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_set_vvar";
     }
-    /// Signature of [`nvim_echo`](https://neovim.io/doc/user/api/#nvim_echo()).
+    /// Signature of [`nvim_echo()`](https://neovim.io/doc/user/api/#nvim_echo()).
     ///
     /// Since Neovim API level 7.
     pub struct NvimEcho {
@@ -1988,7 +1988,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "nvim_echo";
     }
-    /// Signature of [`nvim_list_bufs`](https://neovim.io/doc/user/api/#nvim_list_bufs()).
+    /// Signature of [`nvim_list_bufs()`](https://neovim.io/doc/user/api/#nvim_list_bufs()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimListBufs {}
@@ -1997,7 +1997,7 @@ pub mod functions {
         type Return = types::ArrayOf<ext_types::Buffer>;
         const NAME: &str = "nvim_list_bufs";
     }
-    /// Signature of [`nvim_get_current_buf`](https://neovim.io/doc/user/api/#nvim_get_current_buf()).
+    /// Signature of [`nvim_get_current_buf()`](https://neovim.io/doc/user/api/#nvim_get_current_buf()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimGetCurrentBuf {}
@@ -2006,7 +2006,7 @@ pub mod functions {
         type Return = ext_types::Buffer;
         const NAME: &str = "nvim_get_current_buf";
     }
-    /// Signature of [`nvim_set_current_buf`](https://neovim.io/doc/user/api/#nvim_set_current_buf()).
+    /// Signature of [`nvim_set_current_buf()`](https://neovim.io/doc/user/api/#nvim_set_current_buf()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimSetCurrentBuf {
@@ -2017,7 +2017,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_set_current_buf";
     }
-    /// Signature of [`nvim_list_wins`](https://neovim.io/doc/user/api/#nvim_list_wins()).
+    /// Signature of [`nvim_list_wins()`](https://neovim.io/doc/user/api/#nvim_list_wins()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimListWins {}
@@ -2026,7 +2026,7 @@ pub mod functions {
         type Return = types::ArrayOf<ext_types::Window>;
         const NAME: &str = "nvim_list_wins";
     }
-    /// Signature of [`nvim_get_current_win`](https://neovim.io/doc/user/api/#nvim_get_current_win()).
+    /// Signature of [`nvim_get_current_win()`](https://neovim.io/doc/user/api/#nvim_get_current_win()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimGetCurrentWin {}
@@ -2035,7 +2035,7 @@ pub mod functions {
         type Return = ext_types::Window;
         const NAME: &str = "nvim_get_current_win";
     }
-    /// Signature of [`nvim_set_current_win`](https://neovim.io/doc/user/api/#nvim_set_current_win()).
+    /// Signature of [`nvim_set_current_win()`](https://neovim.io/doc/user/api/#nvim_set_current_win()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimSetCurrentWin {
@@ -2046,7 +2046,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_set_current_win";
     }
-    /// Signature of [`nvim_create_buf`](https://neovim.io/doc/user/api/#nvim_create_buf()).
+    /// Signature of [`nvim_create_buf()`](https://neovim.io/doc/user/api/#nvim_create_buf()).
     ///
     /// Since Neovim API level 6.
     pub struct NvimCreateBuf {
@@ -2058,7 +2058,7 @@ pub mod functions {
         type Return = ext_types::Buffer;
         const NAME: &str = "nvim_create_buf";
     }
-    /// Signature of [`nvim_open_term`](https://neovim.io/doc/user/api/#nvim_open_term()).
+    /// Signature of [`nvim_open_term()`](https://neovim.io/doc/user/api/#nvim_open_term()).
     ///
     /// Since Neovim API level 7.
     pub struct NvimOpenTerm {
@@ -2070,7 +2070,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "nvim_open_term";
     }
-    /// Signature of [`nvim_chan_send`](https://neovim.io/doc/user/api/#nvim_chan_send()).
+    /// Signature of [`nvim_chan_send()`](https://neovim.io/doc/user/api/#nvim_chan_send()).
     ///
     /// Since Neovim API level 7.
     pub struct NvimChanSend {
@@ -2082,7 +2082,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_chan_send";
     }
-    /// Signature of [`nvim_list_tabpages`](https://neovim.io/doc/user/api/#nvim_list_tabpages()).
+    /// Signature of [`nvim_list_tabpages()`](https://neovim.io/doc/user/api/#nvim_list_tabpages()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimListTabpages {}
@@ -2091,7 +2091,7 @@ pub mod functions {
         type Return = types::ArrayOf<ext_types::Tabpage>;
         const NAME: &str = "nvim_list_tabpages";
     }
-    /// Signature of [`nvim_get_current_tabpage`](https://neovim.io/doc/user/api/#nvim_get_current_tabpage()).
+    /// Signature of [`nvim_get_current_tabpage()`](https://neovim.io/doc/user/api/#nvim_get_current_tabpage()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimGetCurrentTabpage {}
@@ -2100,7 +2100,7 @@ pub mod functions {
         type Return = ext_types::Tabpage;
         const NAME: &str = "nvim_get_current_tabpage";
     }
-    /// Signature of [`nvim_set_current_tabpage`](https://neovim.io/doc/user/api/#nvim_set_current_tabpage()).
+    /// Signature of [`nvim_set_current_tabpage()`](https://neovim.io/doc/user/api/#nvim_set_current_tabpage()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimSetCurrentTabpage {
@@ -2111,7 +2111,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_set_current_tabpage";
     }
-    /// Signature of [`nvim_paste`](https://neovim.io/doc/user/api/#nvim_paste()).
+    /// Signature of [`nvim_paste()`](https://neovim.io/doc/user/api/#nvim_paste()).
     ///
     /// Since Neovim API level 6.
     pub struct NvimPaste {
@@ -2124,7 +2124,7 @@ pub mod functions {
         type Return = types::Bool;
         const NAME: &str = "nvim_paste";
     }
-    /// Signature of [`nvim_put`](https://neovim.io/doc/user/api/#nvim_put()).
+    /// Signature of [`nvim_put()`](https://neovim.io/doc/user/api/#nvim_put()).
     ///
     /// Since Neovim API level 6.
     pub struct NvimPut {
@@ -2143,7 +2143,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_put";
     }
-    /// Signature of [`nvim_get_color_by_name`](https://neovim.io/doc/user/api/#nvim_get_color_by_name()).
+    /// Signature of [`nvim_get_color_by_name()`](https://neovim.io/doc/user/api/#nvim_get_color_by_name()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimGetColorByName {
@@ -2154,7 +2154,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "nvim_get_color_by_name";
     }
-    /// Signature of [`nvim_get_color_map`](https://neovim.io/doc/user/api/#nvim_get_color_map()).
+    /// Signature of [`nvim_get_color_map()`](https://neovim.io/doc/user/api/#nvim_get_color_map()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimGetColorMap {}
@@ -2163,7 +2163,7 @@ pub mod functions {
         type Return = types::Dict;
         const NAME: &str = "nvim_get_color_map";
     }
-    /// Signature of [`nvim_get_context`](https://neovim.io/doc/user/api/#nvim_get_context()).
+    /// Signature of [`nvim_get_context()`](https://neovim.io/doc/user/api/#nvim_get_context()).
     ///
     /// Since Neovim API level 6.
     pub struct NvimGetContext {
@@ -2174,7 +2174,7 @@ pub mod functions {
         type Return = types::Dict;
         const NAME: &str = "nvim_get_context";
     }
-    /// Signature of [`nvim_load_context`](https://neovim.io/doc/user/api/#nvim_load_context()).
+    /// Signature of [`nvim_load_context()`](https://neovim.io/doc/user/api/#nvim_load_context()).
     ///
     /// Since Neovim API level 6.
     pub struct NvimLoadContext {
@@ -2185,7 +2185,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "nvim_load_context";
     }
-    /// Signature of [`nvim_get_mode`](https://neovim.io/doc/user/api/#nvim_get_mode()).
+    /// Signature of [`nvim_get_mode()`](https://neovim.io/doc/user/api/#nvim_get_mode()).
     ///
     /// Since Neovim API level 2.
     pub struct NvimGetMode {}
@@ -2194,7 +2194,7 @@ pub mod functions {
         type Return = types::Dict;
         const NAME: &str = "nvim_get_mode";
     }
-    /// Signature of [`nvim_get_keymap`](https://neovim.io/doc/user/api/#nvim_get_keymap()).
+    /// Signature of [`nvim_get_keymap()`](https://neovim.io/doc/user/api/#nvim_get_keymap()).
     ///
     /// Since Neovim API level 3.
     pub struct NvimGetKeymap {
@@ -2205,7 +2205,7 @@ pub mod functions {
         type Return = types::ArrayOf<types::Dict>;
         const NAME: &str = "nvim_get_keymap";
     }
-    /// Signature of [`nvim_set_keymap`](https://neovim.io/doc/user/api/#nvim_set_keymap()).
+    /// Signature of [`nvim_set_keymap()`](https://neovim.io/doc/user/api/#nvim_set_keymap()).
     ///
     /// Since Neovim API level 6.
     pub struct NvimSetKeymap {
@@ -2219,7 +2219,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_set_keymap";
     }
-    /// Signature of [`nvim_del_keymap`](https://neovim.io/doc/user/api/#nvim_del_keymap()).
+    /// Signature of [`nvim_del_keymap()`](https://neovim.io/doc/user/api/#nvim_del_keymap()).
     ///
     /// Since Neovim API level 6.
     pub struct NvimDelKeymap {
@@ -2231,7 +2231,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_del_keymap";
     }
-    /// Signature of [`nvim_get_api_info`](https://neovim.io/doc/user/api/#nvim_get_api_info()).
+    /// Signature of [`nvim_get_api_info()`](https://neovim.io/doc/user/api/#nvim_get_api_info()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimGetApiInfo {}
@@ -2240,7 +2240,7 @@ pub mod functions {
         type Return = types::FixedArrayOf<types::Object, 2usize>;
         const NAME: &str = "nvim_get_api_info";
     }
-    /// Signature of [`nvim_set_client_info`](https://neovim.io/doc/user/api/#nvim_set_client_info()).
+    /// Signature of [`nvim_set_client_info()`](https://neovim.io/doc/user/api/#nvim_set_client_info()).
     ///
     /// Since Neovim API level 4.
     pub struct NvimSetClientInfo {
@@ -2261,7 +2261,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_set_client_info";
     }
-    /// Signature of [`nvim_get_chan_info`](https://neovim.io/doc/user/api/#nvim_get_chan_info()).
+    /// Signature of [`nvim_get_chan_info()`](https://neovim.io/doc/user/api/#nvim_get_chan_info()).
     ///
     /// Since Neovim API level 4.
     pub struct NvimGetChanInfo {
@@ -2272,7 +2272,7 @@ pub mod functions {
         type Return = types::Dict;
         const NAME: &str = "nvim_get_chan_info";
     }
-    /// Signature of [`nvim_list_chans`](https://neovim.io/doc/user/api/#nvim_list_chans()).
+    /// Signature of [`nvim_list_chans()`](https://neovim.io/doc/user/api/#nvim_list_chans()).
     ///
     /// Since Neovim API level 4.
     pub struct NvimListChans {}
@@ -2281,7 +2281,7 @@ pub mod functions {
         type Return = types::ArrayOf<types::Dict>;
         const NAME: &str = "nvim_list_chans";
     }
-    /// Signature of [`nvim_list_uis`](https://neovim.io/doc/user/api/#nvim_list_uis()).
+    /// Signature of [`nvim_list_uis()`](https://neovim.io/doc/user/api/#nvim_list_uis()).
     ///
     /// Since Neovim API level 4.
     pub struct NvimListUis {}
@@ -2290,7 +2290,7 @@ pub mod functions {
         type Return = types::ArrayOf<types::Dict>;
         const NAME: &str = "nvim_list_uis";
     }
-    /// Signature of [`nvim_get_proc_children`](https://neovim.io/doc/user/api/#nvim_get_proc_children()).
+    /// Signature of [`nvim_get_proc_children()`](https://neovim.io/doc/user/api/#nvim_get_proc_children()).
     ///
     /// Since Neovim API level 4.
     pub struct NvimGetProcChildren {
@@ -2301,7 +2301,7 @@ pub mod functions {
         type Return = types::Array;
         const NAME: &str = "nvim_get_proc_children";
     }
-    /// Signature of [`nvim_get_proc`](https://neovim.io/doc/user/api/#nvim_get_proc()).
+    /// Signature of [`nvim_get_proc()`](https://neovim.io/doc/user/api/#nvim_get_proc()).
     ///
     /// Since Neovim API level 4.
     pub struct NvimGetProc {
@@ -2312,7 +2312,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "nvim_get_proc";
     }
-    /// Signature of [`nvim_select_popupmenu_item`](https://neovim.io/doc/user/api/#nvim_select_popupmenu_item()).
+    /// Signature of [`nvim_select_popupmenu_item()`](https://neovim.io/doc/user/api/#nvim_select_popupmenu_item()).
     ///
     /// Since Neovim API level 6.
     pub struct NvimSelectPopupmenuItem {
@@ -2326,7 +2326,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_select_popupmenu_item";
     }
-    /// Signature of [`nvim_del_mark`](https://neovim.io/doc/user/api/#nvim_del_mark()).
+    /// Signature of [`nvim_del_mark()`](https://neovim.io/doc/user/api/#nvim_del_mark()).
     ///
     /// Since Neovim API level 8.
     pub struct NvimDelMark {
@@ -2337,7 +2337,7 @@ pub mod functions {
         type Return = types::Bool;
         const NAME: &str = "nvim_del_mark";
     }
-    /// Signature of [`nvim_get_mark`](https://neovim.io/doc/user/api/#nvim_get_mark()).
+    /// Signature of [`nvim_get_mark()`](https://neovim.io/doc/user/api/#nvim_get_mark()).
     ///
     /// Since Neovim API level 8.
     pub struct NvimGetMark {
@@ -2349,7 +2349,7 @@ pub mod functions {
         type Return = types::Array;
         const NAME: &str = "nvim_get_mark";
     }
-    /// Signature of [`nvim_eval_statusline`](https://neovim.io/doc/user/api/#nvim_eval_statusline()).
+    /// Signature of [`nvim_eval_statusline()`](https://neovim.io/doc/user/api/#nvim_eval_statusline()).
     ///
     /// Since Neovim API level 8.
     pub struct NvimEvalStatusline {
@@ -2361,7 +2361,7 @@ pub mod functions {
         type Return = types::Dict;
         const NAME: &str = "nvim_eval_statusline";
     }
-    /// Signature of [`nvim_exec2`](https://neovim.io/doc/user/api/#nvim_exec2()).
+    /// Signature of [`nvim_exec2()`](https://neovim.io/doc/user/api/#nvim_exec2()).
     ///
     /// Since Neovim API level 11.
     pub struct NvimExec2 {
@@ -2373,7 +2373,7 @@ pub mod functions {
         type Return = types::Dict;
         const NAME: &str = "nvim_exec2";
     }
-    /// Signature of [`nvim_command`](https://neovim.io/doc/user/api/#nvim_command()).
+    /// Signature of [`nvim_command()`](https://neovim.io/doc/user/api/#nvim_command()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimCommand {
@@ -2384,7 +2384,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "nvim_command";
     }
-    /// Signature of [`nvim_eval`](https://neovim.io/doc/user/api/#nvim_eval()).
+    /// Signature of [`nvim_eval()`](https://neovim.io/doc/user/api/#nvim_eval()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimEval {
@@ -2395,7 +2395,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "nvim_eval";
     }
-    /// Signature of [`nvim_call_function`](https://neovim.io/doc/user/api/#nvim_call_function()).
+    /// Signature of [`nvim_call_function()`](https://neovim.io/doc/user/api/#nvim_call_function()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimCallFunction {
@@ -2407,7 +2407,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "nvim_call_function";
     }
-    /// Signature of [`nvim_call_dict_function`](https://neovim.io/doc/user/api/#nvim_call_dict_function()).
+    /// Signature of [`nvim_call_dict_function()`](https://neovim.io/doc/user/api/#nvim_call_dict_function()).
     ///
     /// Since Neovim API level 4.
     pub struct NvimCallDictFunction {
@@ -2420,7 +2420,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "nvim_call_dict_function";
     }
-    /// Signature of [`nvim_parse_expression`](https://neovim.io/doc/user/api/#nvim_parse_expression()).
+    /// Signature of [`nvim_parse_expression()`](https://neovim.io/doc/user/api/#nvim_parse_expression()).
     ///
     /// Since Neovim API level 4.
     pub struct NvimParseExpression {
@@ -2433,7 +2433,7 @@ pub mod functions {
         type Return = types::Dict;
         const NAME: &str = "nvim_parse_expression";
     }
-    /// Signature of [`nvim_open_win`](https://neovim.io/doc/user/api/#nvim_open_win()).
+    /// Signature of [`nvim_open_win()`](https://neovim.io/doc/user/api/#nvim_open_win()).
     ///
     /// Since Neovim API level 6.
     pub struct NvimOpenWin {
@@ -2446,7 +2446,7 @@ pub mod functions {
         type Return = ext_types::Window;
         const NAME: &str = "nvim_open_win";
     }
-    /// Signature of [`nvim_win_set_config`](https://neovim.io/doc/user/api/#nvim_win_set_config()).
+    /// Signature of [`nvim_win_set_config()`](https://neovim.io/doc/user/api/#nvim_win_set_config()).
     ///
     /// Since Neovim API level 6.
     pub struct NvimWinSetConfig {
@@ -2463,7 +2463,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "set_config";
     }
-    /// Signature of [`nvim_win_get_config`](https://neovim.io/doc/user/api/#nvim_win_get_config()).
+    /// Signature of [`nvim_win_get_config()`](https://neovim.io/doc/user/api/#nvim_win_get_config()).
     ///
     /// Since Neovim API level 6.
     pub struct NvimWinGetConfig {}
@@ -2478,7 +2478,7 @@ pub mod functions {
         type Return = types::Dict;
         const NAME: &str = "get_config";
     }
-    /// Signature of [`nvim_win_get_buf`](https://neovim.io/doc/user/api/#nvim_win_get_buf()).
+    /// Signature of [`nvim_win_get_buf()`](https://neovim.io/doc/user/api/#nvim_win_get_buf()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimWinGetBuf {}
@@ -2493,7 +2493,7 @@ pub mod functions {
         type Return = ext_types::Buffer;
         const NAME: &str = "get_buf";
     }
-    /// Signature of [`nvim_win_set_buf`](https://neovim.io/doc/user/api/#nvim_win_set_buf()).
+    /// Signature of [`nvim_win_set_buf()`](https://neovim.io/doc/user/api/#nvim_win_set_buf()).
     ///
     /// Since Neovim API level 5.
     pub struct NvimWinSetBuf {
@@ -2510,7 +2510,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "set_buf";
     }
-    /// Signature of [`nvim_win_get_cursor`](https://neovim.io/doc/user/api/#nvim_win_get_cursor()).
+    /// Signature of [`nvim_win_get_cursor()`](https://neovim.io/doc/user/api/#nvim_win_get_cursor()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimWinGetCursor {}
@@ -2525,7 +2525,7 @@ pub mod functions {
         type Return = types::FixedArrayOf<types::Int, 2usize>;
         const NAME: &str = "get_cursor";
     }
-    /// Signature of [`nvim_win_set_cursor`](https://neovim.io/doc/user/api/#nvim_win_set_cursor()).
+    /// Signature of [`nvim_win_set_cursor()`](https://neovim.io/doc/user/api/#nvim_win_set_cursor()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimWinSetCursor {
@@ -2542,7 +2542,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "set_cursor";
     }
-    /// Signature of [`nvim_win_get_height`](https://neovim.io/doc/user/api/#nvim_win_get_height()).
+    /// Signature of [`nvim_win_get_height()`](https://neovim.io/doc/user/api/#nvim_win_get_height()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimWinGetHeight {}
@@ -2557,7 +2557,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "get_height";
     }
-    /// Signature of [`nvim_win_set_height`](https://neovim.io/doc/user/api/#nvim_win_set_height()).
+    /// Signature of [`nvim_win_set_height()`](https://neovim.io/doc/user/api/#nvim_win_set_height()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimWinSetHeight {
@@ -2574,7 +2574,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "set_height";
     }
-    /// Signature of [`nvim_win_get_width`](https://neovim.io/doc/user/api/#nvim_win_get_width()).
+    /// Signature of [`nvim_win_get_width()`](https://neovim.io/doc/user/api/#nvim_win_get_width()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimWinGetWidth {}
@@ -2589,7 +2589,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "get_width";
     }
-    /// Signature of [`nvim_win_set_width`](https://neovim.io/doc/user/api/#nvim_win_set_width()).
+    /// Signature of [`nvim_win_set_width()`](https://neovim.io/doc/user/api/#nvim_win_set_width()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimWinSetWidth {
@@ -2606,7 +2606,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "set_width";
     }
-    /// Signature of [`nvim_win_get_var`](https://neovim.io/doc/user/api/#nvim_win_get_var()).
+    /// Signature of [`nvim_win_get_var()`](https://neovim.io/doc/user/api/#nvim_win_get_var()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimWinGetVar {
@@ -2623,7 +2623,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "get_var";
     }
-    /// Signature of [`nvim_win_set_var`](https://neovim.io/doc/user/api/#nvim_win_set_var()).
+    /// Signature of [`nvim_win_set_var()`](https://neovim.io/doc/user/api/#nvim_win_set_var()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimWinSetVar {
@@ -2641,7 +2641,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "set_var";
     }
-    /// Signature of [`nvim_win_del_var`](https://neovim.io/doc/user/api/#nvim_win_del_var()).
+    /// Signature of [`nvim_win_del_var()`](https://neovim.io/doc/user/api/#nvim_win_del_var()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimWinDelVar {
@@ -2658,7 +2658,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "del_var";
     }
-    /// Signature of [`nvim_win_get_position`](https://neovim.io/doc/user/api/#nvim_win_get_position()).
+    /// Signature of [`nvim_win_get_position()`](https://neovim.io/doc/user/api/#nvim_win_get_position()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimWinGetPosition {}
@@ -2673,7 +2673,7 @@ pub mod functions {
         type Return = types::FixedArrayOf<types::Int, 2usize>;
         const NAME: &str = "get_position";
     }
-    /// Signature of [`nvim_win_get_tabpage`](https://neovim.io/doc/user/api/#nvim_win_get_tabpage()).
+    /// Signature of [`nvim_win_get_tabpage()`](https://neovim.io/doc/user/api/#nvim_win_get_tabpage()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimWinGetTabpage {}
@@ -2688,7 +2688,7 @@ pub mod functions {
         type Return = ext_types::Tabpage;
         const NAME: &str = "get_tabpage";
     }
-    /// Signature of [`nvim_win_get_number`](https://neovim.io/doc/user/api/#nvim_win_get_number()).
+    /// Signature of [`nvim_win_get_number()`](https://neovim.io/doc/user/api/#nvim_win_get_number()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimWinGetNumber {}
@@ -2703,7 +2703,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "get_number";
     }
-    /// Signature of [`nvim_win_is_valid`](https://neovim.io/doc/user/api/#nvim_win_is_valid()).
+    /// Signature of [`nvim_win_is_valid()`](https://neovim.io/doc/user/api/#nvim_win_is_valid()).
     ///
     /// Since Neovim API level 1.
     pub struct NvimWinIsValid {}
@@ -2718,7 +2718,7 @@ pub mod functions {
         type Return = types::Bool;
         const NAME: &str = "is_valid";
     }
-    /// Signature of [`nvim_win_hide`](https://neovim.io/doc/user/api/#nvim_win_hide()).
+    /// Signature of [`nvim_win_hide()`](https://neovim.io/doc/user/api/#nvim_win_hide()).
     ///
     /// Since Neovim API level 7.
     pub struct NvimWinHide {}
@@ -2733,7 +2733,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "hide";
     }
-    /// Signature of [`nvim_win_close`](https://neovim.io/doc/user/api/#nvim_win_close()).
+    /// Signature of [`nvim_win_close()`](https://neovim.io/doc/user/api/#nvim_win_close()).
     ///
     /// Since Neovim API level 6.
     pub struct NvimWinClose {
@@ -2750,7 +2750,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "close";
     }
-    /// Signature of [`nvim_win_call`](https://neovim.io/doc/user/api/#nvim_win_call()).
+    /// Signature of [`nvim_win_call()`](https://neovim.io/doc/user/api/#nvim_win_call()).
     ///
     /// Since Neovim API level 7.
     pub struct NvimWinCall {
@@ -2767,7 +2767,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "call";
     }
-    /// Signature of [`nvim_win_set_hl_ns`](https://neovim.io/doc/user/api/#nvim_win_set_hl_ns()).
+    /// Signature of [`nvim_win_set_hl_ns()`](https://neovim.io/doc/user/api/#nvim_win_set_hl_ns()).
     ///
     /// Since Neovim API level 10.
     pub struct NvimWinSetHlNs {
@@ -2784,7 +2784,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "set_hl_ns";
     }
-    /// Signature of [`nvim_win_text_height`](https://neovim.io/doc/user/api/#nvim_win_text_height()).
+    /// Signature of [`nvim_win_text_height()`](https://neovim.io/doc/user/api/#nvim_win_text_height()).
     ///
     /// Since Neovim API level 12.
     pub struct NvimWinTextHeight {
@@ -2801,7 +2801,7 @@ pub mod functions {
         type Return = types::Dict;
         const NAME: &str = "text_height";
     }
-    /// Signature of [`buffer_line_count`](https://neovim.io/doc/user/api/#buffer_line_count()).
+    /// Signature of [`buffer_line_count()`](https://neovim.io/doc/user/api/#buffer_line_count()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -2813,7 +2813,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "buffer_line_count";
     }
-    /// Signature of [`buffer_get_lines`](https://neovim.io/doc/user/api/#buffer_get_lines()).
+    /// Signature of [`buffer_get_lines()`](https://neovim.io/doc/user/api/#buffer_get_lines()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -2828,7 +2828,7 @@ pub mod functions {
         type Return = types::ArrayOf<types::String>;
         const NAME: &str = "buffer_get_lines";
     }
-    /// Signature of [`buffer_set_lines`](https://neovim.io/doc/user/api/#buffer_set_lines()).
+    /// Signature of [`buffer_set_lines()`](https://neovim.io/doc/user/api/#buffer_set_lines()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -2850,7 +2850,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "buffer_set_lines";
     }
-    /// Signature of [`buffer_get_var`](https://neovim.io/doc/user/api/#buffer_get_var()).
+    /// Signature of [`buffer_get_var()`](https://neovim.io/doc/user/api/#buffer_get_var()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -2863,7 +2863,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "buffer_get_var";
     }
-    /// Signature of [`buffer_get_name`](https://neovim.io/doc/user/api/#buffer_get_name()).
+    /// Signature of [`buffer_get_name()`](https://neovim.io/doc/user/api/#buffer_get_name()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -2875,7 +2875,7 @@ pub mod functions {
         type Return = types::String;
         const NAME: &str = "buffer_get_name";
     }
-    /// Signature of [`buffer_set_name`](https://neovim.io/doc/user/api/#buffer_set_name()).
+    /// Signature of [`buffer_set_name()`](https://neovim.io/doc/user/api/#buffer_set_name()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -2888,7 +2888,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "buffer_set_name";
     }
-    /// Signature of [`buffer_is_valid`](https://neovim.io/doc/user/api/#buffer_is_valid()).
+    /// Signature of [`buffer_is_valid()`](https://neovim.io/doc/user/api/#buffer_is_valid()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -2900,7 +2900,7 @@ pub mod functions {
         type Return = types::Bool;
         const NAME: &str = "buffer_is_valid";
     }
-    /// Signature of [`buffer_get_mark`](https://neovim.io/doc/user/api/#buffer_get_mark()).
+    /// Signature of [`buffer_get_mark()`](https://neovim.io/doc/user/api/#buffer_get_mark()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -2913,7 +2913,7 @@ pub mod functions {
         type Return = types::FixedArrayOf<types::Int, 2usize>;
         const NAME: &str = "buffer_get_mark";
     }
-    /// Signature of [`vim_command_output`](https://neovim.io/doc/user/api/#vim_command_output()).
+    /// Signature of [`vim_command_output()`](https://neovim.io/doc/user/api/#vim_command_output()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -2925,7 +2925,7 @@ pub mod functions {
         type Return = types::String;
         const NAME: &str = "vim_command_output";
     }
-    /// Signature of [`buffer_get_number`](https://neovim.io/doc/user/api/#buffer_get_number()).
+    /// Signature of [`buffer_get_number()`](https://neovim.io/doc/user/api/#buffer_get_number()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -2937,7 +2937,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "buffer_get_number";
     }
-    /// Signature of [`buffer_clear_highlight`](https://neovim.io/doc/user/api/#buffer_clear_highlight()).
+    /// Signature of [`buffer_clear_highlight()`](https://neovim.io/doc/user/api/#buffer_clear_highlight()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -2952,7 +2952,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "buffer_clear_highlight";
     }
-    /// Signature of [`buffer_add_highlight`](https://neovim.io/doc/user/api/#buffer_add_highlight()).
+    /// Signature of [`buffer_add_highlight()`](https://neovim.io/doc/user/api/#buffer_add_highlight()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -2976,7 +2976,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "buffer_add_highlight";
     }
-    /// Signature of [`vim_set_option`](https://neovim.io/doc/user/api/#vim_set_option()).
+    /// Signature of [`vim_set_option()`](https://neovim.io/doc/user/api/#vim_set_option()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -2989,7 +2989,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "vim_set_option";
     }
-    /// Signature of [`vim_get_option`](https://neovim.io/doc/user/api/#vim_get_option()).
+    /// Signature of [`vim_get_option()`](https://neovim.io/doc/user/api/#vim_get_option()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3001,7 +3001,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "vim_get_option";
     }
-    /// Signature of [`buffer_get_option`](https://neovim.io/doc/user/api/#buffer_get_option()).
+    /// Signature of [`buffer_get_option()`](https://neovim.io/doc/user/api/#buffer_get_option()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3014,7 +3014,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "buffer_get_option";
     }
-    /// Signature of [`buffer_set_option`](https://neovim.io/doc/user/api/#buffer_set_option()).
+    /// Signature of [`buffer_set_option()`](https://neovim.io/doc/user/api/#buffer_set_option()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3028,7 +3028,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "buffer_set_option";
     }
-    /// Signature of [`window_get_option`](https://neovim.io/doc/user/api/#window_get_option()).
+    /// Signature of [`window_get_option()`](https://neovim.io/doc/user/api/#window_get_option()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3041,7 +3041,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "window_get_option";
     }
-    /// Signature of [`window_set_option`](https://neovim.io/doc/user/api/#window_set_option()).
+    /// Signature of [`window_set_option()`](https://neovim.io/doc/user/api/#window_set_option()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3055,7 +3055,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "window_set_option";
     }
-    /// Signature of [`vim_subscribe`](https://neovim.io/doc/user/api/#vim_subscribe()).
+    /// Signature of [`vim_subscribe()`](https://neovim.io/doc/user/api/#vim_subscribe()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3067,7 +3067,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "vim_subscribe";
     }
-    /// Signature of [`vim_unsubscribe`](https://neovim.io/doc/user/api/#vim_unsubscribe()).
+    /// Signature of [`vim_unsubscribe()`](https://neovim.io/doc/user/api/#vim_unsubscribe()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3079,7 +3079,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "vim_unsubscribe";
     }
-    /// Signature of [`vim_out_write`](https://neovim.io/doc/user/api/#vim_out_write()).
+    /// Signature of [`vim_out_write()`](https://neovim.io/doc/user/api/#vim_out_write()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3091,7 +3091,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "vim_out_write";
     }
-    /// Signature of [`vim_err_write`](https://neovim.io/doc/user/api/#vim_err_write()).
+    /// Signature of [`vim_err_write()`](https://neovim.io/doc/user/api/#vim_err_write()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3103,7 +3103,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "vim_err_write";
     }
-    /// Signature of [`vim_report_error`](https://neovim.io/doc/user/api/#vim_report_error()).
+    /// Signature of [`vim_report_error()`](https://neovim.io/doc/user/api/#vim_report_error()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3115,7 +3115,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "vim_report_error";
     }
-    /// Signature of [`tabpage_get_windows`](https://neovim.io/doc/user/api/#tabpage_get_windows()).
+    /// Signature of [`tabpage_get_windows()`](https://neovim.io/doc/user/api/#tabpage_get_windows()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3127,7 +3127,7 @@ pub mod functions {
         type Return = types::ArrayOf<ext_types::Window>;
         const NAME: &str = "tabpage_get_windows";
     }
-    /// Signature of [`tabpage_get_var`](https://neovim.io/doc/user/api/#tabpage_get_var()).
+    /// Signature of [`tabpage_get_var()`](https://neovim.io/doc/user/api/#tabpage_get_var()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3140,7 +3140,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "tabpage_get_var";
     }
-    /// Signature of [`tabpage_get_window`](https://neovim.io/doc/user/api/#tabpage_get_window()).
+    /// Signature of [`tabpage_get_window()`](https://neovim.io/doc/user/api/#tabpage_get_window()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3152,7 +3152,7 @@ pub mod functions {
         type Return = ext_types::Window;
         const NAME: &str = "tabpage_get_window";
     }
-    /// Signature of [`tabpage_is_valid`](https://neovim.io/doc/user/api/#tabpage_is_valid()).
+    /// Signature of [`tabpage_is_valid()`](https://neovim.io/doc/user/api/#tabpage_is_valid()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3164,7 +3164,7 @@ pub mod functions {
         type Return = types::Bool;
         const NAME: &str = "tabpage_is_valid";
     }
-    /// Signature of [`ui_detach`](https://neovim.io/doc/user/api/#ui_detach()).
+    /// Signature of [`ui_detach()`](https://neovim.io/doc/user/api/#ui_detach()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3174,7 +3174,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "ui_detach";
     }
-    /// Signature of [`ui_try_resize`](https://neovim.io/doc/user/api/#ui_try_resize()).
+    /// Signature of [`ui_try_resize()`](https://neovim.io/doc/user/api/#ui_try_resize()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3187,7 +3187,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "ui_try_resize";
     }
-    /// Signature of [`vim_feedkeys`](https://neovim.io/doc/user/api/#vim_feedkeys()).
+    /// Signature of [`vim_feedkeys()`](https://neovim.io/doc/user/api/#vim_feedkeys()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3201,7 +3201,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "vim_feedkeys";
     }
-    /// Signature of [`vim_input`](https://neovim.io/doc/user/api/#vim_input()).
+    /// Signature of [`vim_input()`](https://neovim.io/doc/user/api/#vim_input()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3213,7 +3213,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "vim_input";
     }
-    /// Signature of [`vim_replace_termcodes`](https://neovim.io/doc/user/api/#vim_replace_termcodes()).
+    /// Signature of [`vim_replace_termcodes()`](https://neovim.io/doc/user/api/#vim_replace_termcodes()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3228,7 +3228,7 @@ pub mod functions {
         type Return = types::String;
         const NAME: &str = "vim_replace_termcodes";
     }
-    /// Signature of [`vim_strwidth`](https://neovim.io/doc/user/api/#vim_strwidth()).
+    /// Signature of [`vim_strwidth()`](https://neovim.io/doc/user/api/#vim_strwidth()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3240,7 +3240,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "vim_strwidth";
     }
-    /// Signature of [`vim_list_runtime_paths`](https://neovim.io/doc/user/api/#vim_list_runtime_paths()).
+    /// Signature of [`vim_list_runtime_paths()`](https://neovim.io/doc/user/api/#vim_list_runtime_paths()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3250,7 +3250,7 @@ pub mod functions {
         type Return = types::ArrayOf<types::String>;
         const NAME: &str = "vim_list_runtime_paths";
     }
-    /// Signature of [`vim_change_directory`](https://neovim.io/doc/user/api/#vim_change_directory()).
+    /// Signature of [`vim_change_directory()`](https://neovim.io/doc/user/api/#vim_change_directory()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3262,7 +3262,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "vim_change_directory";
     }
-    /// Signature of [`vim_get_current_line`](https://neovim.io/doc/user/api/#vim_get_current_line()).
+    /// Signature of [`vim_get_current_line()`](https://neovim.io/doc/user/api/#vim_get_current_line()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3272,7 +3272,7 @@ pub mod functions {
         type Return = types::String;
         const NAME: &str = "vim_get_current_line";
     }
-    /// Signature of [`vim_set_current_line`](https://neovim.io/doc/user/api/#vim_set_current_line()).
+    /// Signature of [`vim_set_current_line()`](https://neovim.io/doc/user/api/#vim_set_current_line()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3284,7 +3284,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "vim_set_current_line";
     }
-    /// Signature of [`vim_del_current_line`](https://neovim.io/doc/user/api/#vim_del_current_line()).
+    /// Signature of [`vim_del_current_line()`](https://neovim.io/doc/user/api/#vim_del_current_line()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3294,7 +3294,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "vim_del_current_line";
     }
-    /// Signature of [`vim_get_var`](https://neovim.io/doc/user/api/#vim_get_var()).
+    /// Signature of [`vim_get_var()`](https://neovim.io/doc/user/api/#vim_get_var()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3306,7 +3306,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "vim_get_var";
     }
-    /// Signature of [`vim_get_vvar`](https://neovim.io/doc/user/api/#vim_get_vvar()).
+    /// Signature of [`vim_get_vvar()`](https://neovim.io/doc/user/api/#vim_get_vvar()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3318,7 +3318,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "vim_get_vvar";
     }
-    /// Signature of [`vim_get_buffers`](https://neovim.io/doc/user/api/#vim_get_buffers()).
+    /// Signature of [`vim_get_buffers()`](https://neovim.io/doc/user/api/#vim_get_buffers()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3328,7 +3328,7 @@ pub mod functions {
         type Return = types::ArrayOf<ext_types::Buffer>;
         const NAME: &str = "vim_get_buffers";
     }
-    /// Signature of [`vim_get_current_buffer`](https://neovim.io/doc/user/api/#vim_get_current_buffer()).
+    /// Signature of [`vim_get_current_buffer()`](https://neovim.io/doc/user/api/#vim_get_current_buffer()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3338,7 +3338,7 @@ pub mod functions {
         type Return = ext_types::Buffer;
         const NAME: &str = "vim_get_current_buffer";
     }
-    /// Signature of [`vim_set_current_buffer`](https://neovim.io/doc/user/api/#vim_set_current_buffer()).
+    /// Signature of [`vim_set_current_buffer()`](https://neovim.io/doc/user/api/#vim_set_current_buffer()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3350,7 +3350,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "vim_set_current_buffer";
     }
-    /// Signature of [`vim_get_windows`](https://neovim.io/doc/user/api/#vim_get_windows()).
+    /// Signature of [`vim_get_windows()`](https://neovim.io/doc/user/api/#vim_get_windows()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3360,7 +3360,7 @@ pub mod functions {
         type Return = types::ArrayOf<ext_types::Window>;
         const NAME: &str = "vim_get_windows";
     }
-    /// Signature of [`vim_get_current_window`](https://neovim.io/doc/user/api/#vim_get_current_window()).
+    /// Signature of [`vim_get_current_window()`](https://neovim.io/doc/user/api/#vim_get_current_window()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3370,7 +3370,7 @@ pub mod functions {
         type Return = ext_types::Window;
         const NAME: &str = "vim_get_current_window";
     }
-    /// Signature of [`vim_set_current_window`](https://neovim.io/doc/user/api/#vim_set_current_window()).
+    /// Signature of [`vim_set_current_window()`](https://neovim.io/doc/user/api/#vim_set_current_window()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3382,7 +3382,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "vim_set_current_window";
     }
-    /// Signature of [`vim_get_tabpages`](https://neovim.io/doc/user/api/#vim_get_tabpages()).
+    /// Signature of [`vim_get_tabpages()`](https://neovim.io/doc/user/api/#vim_get_tabpages()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3392,7 +3392,7 @@ pub mod functions {
         type Return = types::ArrayOf<ext_types::Tabpage>;
         const NAME: &str = "vim_get_tabpages";
     }
-    /// Signature of [`vim_get_current_tabpage`](https://neovim.io/doc/user/api/#vim_get_current_tabpage()).
+    /// Signature of [`vim_get_current_tabpage()`](https://neovim.io/doc/user/api/#vim_get_current_tabpage()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3402,7 +3402,7 @@ pub mod functions {
         type Return = ext_types::Tabpage;
         const NAME: &str = "vim_get_current_tabpage";
     }
-    /// Signature of [`vim_set_current_tabpage`](https://neovim.io/doc/user/api/#vim_set_current_tabpage()).
+    /// Signature of [`vim_set_current_tabpage()`](https://neovim.io/doc/user/api/#vim_set_current_tabpage()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3414,7 +3414,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "vim_set_current_tabpage";
     }
-    /// Signature of [`vim_name_to_color`](https://neovim.io/doc/user/api/#vim_name_to_color()).
+    /// Signature of [`vim_name_to_color()`](https://neovim.io/doc/user/api/#vim_name_to_color()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3426,7 +3426,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "vim_name_to_color";
     }
-    /// Signature of [`vim_get_color_map`](https://neovim.io/doc/user/api/#vim_get_color_map()).
+    /// Signature of [`vim_get_color_map()`](https://neovim.io/doc/user/api/#vim_get_color_map()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3436,7 +3436,7 @@ pub mod functions {
         type Return = types::Dict;
         const NAME: &str = "vim_get_color_map";
     }
-    /// Signature of [`vim_get_api_info`](https://neovim.io/doc/user/api/#vim_get_api_info()).
+    /// Signature of [`vim_get_api_info()`](https://neovim.io/doc/user/api/#vim_get_api_info()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3446,7 +3446,7 @@ pub mod functions {
         type Return = types::FixedArrayOf<types::Object, 2usize>;
         const NAME: &str = "vim_get_api_info";
     }
-    /// Signature of [`vim_command`](https://neovim.io/doc/user/api/#vim_command()).
+    /// Signature of [`vim_command()`](https://neovim.io/doc/user/api/#vim_command()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3458,7 +3458,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "vim_command";
     }
-    /// Signature of [`vim_eval`](https://neovim.io/doc/user/api/#vim_eval()).
+    /// Signature of [`vim_eval()`](https://neovim.io/doc/user/api/#vim_eval()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3470,7 +3470,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "vim_eval";
     }
-    /// Signature of [`vim_call_function`](https://neovim.io/doc/user/api/#vim_call_function()).
+    /// Signature of [`vim_call_function()`](https://neovim.io/doc/user/api/#vim_call_function()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3483,7 +3483,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "vim_call_function";
     }
-    /// Signature of [`window_get_buffer`](https://neovim.io/doc/user/api/#window_get_buffer()).
+    /// Signature of [`window_get_buffer()`](https://neovim.io/doc/user/api/#window_get_buffer()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3495,7 +3495,7 @@ pub mod functions {
         type Return = ext_types::Buffer;
         const NAME: &str = "window_get_buffer";
     }
-    /// Signature of [`window_get_cursor`](https://neovim.io/doc/user/api/#window_get_cursor()).
+    /// Signature of [`window_get_cursor()`](https://neovim.io/doc/user/api/#window_get_cursor()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3507,7 +3507,7 @@ pub mod functions {
         type Return = types::FixedArrayOf<types::Int, 2usize>;
         const NAME: &str = "window_get_cursor";
     }
-    /// Signature of [`window_set_cursor`](https://neovim.io/doc/user/api/#window_set_cursor()).
+    /// Signature of [`window_set_cursor()`](https://neovim.io/doc/user/api/#window_set_cursor()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3520,7 +3520,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "window_set_cursor";
     }
-    /// Signature of [`window_get_height`](https://neovim.io/doc/user/api/#window_get_height()).
+    /// Signature of [`window_get_height()`](https://neovim.io/doc/user/api/#window_get_height()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3532,7 +3532,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "window_get_height";
     }
-    /// Signature of [`window_set_height`](https://neovim.io/doc/user/api/#window_set_height()).
+    /// Signature of [`window_set_height()`](https://neovim.io/doc/user/api/#window_set_height()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3545,7 +3545,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "window_set_height";
     }
-    /// Signature of [`window_get_width`](https://neovim.io/doc/user/api/#window_get_width()).
+    /// Signature of [`window_get_width()`](https://neovim.io/doc/user/api/#window_get_width()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3557,7 +3557,7 @@ pub mod functions {
         type Return = types::Int;
         const NAME: &str = "window_get_width";
     }
-    /// Signature of [`window_set_width`](https://neovim.io/doc/user/api/#window_set_width()).
+    /// Signature of [`window_set_width()`](https://neovim.io/doc/user/api/#window_set_width()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3570,7 +3570,7 @@ pub mod functions {
         type Return = ();
         const NAME: &str = "window_set_width";
     }
-    /// Signature of [`window_get_var`](https://neovim.io/doc/user/api/#window_get_var()).
+    /// Signature of [`window_get_var()`](https://neovim.io/doc/user/api/#window_get_var()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3583,7 +3583,7 @@ pub mod functions {
         type Return = types::Object;
         const NAME: &str = "window_get_var";
     }
-    /// Signature of [`window_get_position`](https://neovim.io/doc/user/api/#window_get_position()).
+    /// Signature of [`window_get_position()`](https://neovim.io/doc/user/api/#window_get_position()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3595,7 +3595,7 @@ pub mod functions {
         type Return = types::FixedArrayOf<types::Int, 2usize>;
         const NAME: &str = "window_get_position";
     }
-    /// Signature of [`window_get_tabpage`](https://neovim.io/doc/user/api/#window_get_tabpage()).
+    /// Signature of [`window_get_tabpage()`](https://neovim.io/doc/user/api/#window_get_tabpage()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]
@@ -3607,7 +3607,7 @@ pub mod functions {
         type Return = ext_types::Tabpage;
         const NAME: &str = "window_get_tabpage";
     }
-    /// Signature of [`window_is_valid`](https://neovim.io/doc/user/api/#window_is_valid()).
+    /// Signature of [`window_is_valid()`](https://neovim.io/doc/user/api/#window_is_valid()).
     ///
     /// Since Neovim API level 0; deprecated since 1.
     #[deprecated(note = "Deprecated since Neovim API level 1")]

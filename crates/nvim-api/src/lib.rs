@@ -1,7 +1,7 @@
 //! Neovim RPC calls with caller-selected arguments, results, and I/O.
 //!
 //! Select a function descriptor from [`api`] and pass its arguments to
-//! [`Neovim::request`] or [`Neovim::notify`]. [`Receiver`] reads requests,
+//! [`Neovim::request()`] or [`Neovim::notify()`]. [`Receiver`] reads requests,
 //! responses, and notifications; the application owns response dispatch.
 //!
 //! Use [nvim-api-plugin](https://docs.rs/nvim-api-plugin) for Tokio plugin
@@ -29,7 +29,7 @@
 //! ```
 //!
 //! The returned [`Pending`] identifies the expected response. Route that
-//! response to [`Pending::decode`] in your receive loop.
+//! response to [`Pending::decode()`] in your receive loop.
 //!
 //! # Read and decode a response
 //!
@@ -67,8 +67,8 @@
 //!
 //! Use `request_async`, `notify_async`, and `recv_async` with asynchronous
 //! adapters. Enable `bytes` for the `bytes` buffer adapters in [`mp`]. Features
-//! add adapters; they do not start a runtime or spawn tasks. Use [`Neovim::flush`]
-//! or [`Neovim::flush_async`] before waiting for a response on buffered I/O.
+//! add adapters; they do not start a runtime or spawn tasks. Use [`Neovim::flush()`]
+//! or [`Neovim::flush_async()`] before waiting for a response on buffered I/O.
 //!
 //! See [`api_types::encode`] for custom arguments, [`rpc`] for plugin
 //! replies, and [`ui`] for redraw notifications.
@@ -94,9 +94,9 @@ pub use read::{ReadError, Receiver};
 
 pub mod ui;
 
-/// Decode RPC messages and access their request IDs and payloads.
+/// Decodes RPC messages and accesses their request IDs and payloads.
 ///
-/// Send a plugin reply with [`Neovim::send`] and the incoming request's ID:
+/// Send a plugin reply with [`Neovim::send()`] and the incoming request's ID:
 ///
 /// ```
 /// use nvim_api::mp::encode::rpc::Response;
@@ -126,7 +126,7 @@ pub mod rpc {
     pub use mp::rpc::MessageId;
     pub use mp::rpc::decode::{Message, Notification, Request, Response};
 
-    /// Read one complete RPC message, advancing `buf` past it.
+    /// Reads one complete RPC message, advancing `buf` past it.
     ///
     /// Returns `InsufficientBytes` for an incomplete MessagePack object, or
     /// [`Message::InvalidFormat`] for a complete object with an invalid RPC

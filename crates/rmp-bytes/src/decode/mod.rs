@@ -1,4 +1,4 @@
-//! Read MessagePack values while retaining their buffer representation.
+//! Reads MessagePack values while retaining their buffer representation.
 //!
 //! [`ObjectParser`] advances over one complete value at a time. String and binary
 //! payloads retain the backing buffer; array and map elements are parsed as their

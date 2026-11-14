@@ -61,7 +61,7 @@ const MAX_LEN_U32: u32 = 0xffff_ffff;
 /// The remaining chunks of one encoded value.
 ///
 /// A chunk can own its bytes or borrow the input. Keep it alive until the writer
-/// has finished using [`AsRef::as_ref`].
+/// has finished using [`AsRef::as_ref()`].
 pub trait State {
     /// A byte chunk yielded by this state.
     type Item: AsRef<[u8]>;

@@ -12,17 +12,17 @@ pub use decode::{Decode, DecodeError, DecodedArray};
 use encode::Like;
 use mp::encode::primitive::ArrayLike;
 
-/// Encode an argument list matching an API's parameter markers.
+/// Encodes an argument list matching an API's parameter markers.
 ///
 /// Tuples through arity 15 are implemented by applying [`Like`] to each
 /// position. For example, `(Buffer, i64, i64, bool, &[&str])` can represent
-/// `nvim_buf_set_lines` parameters. [`crate::Neovim::request`] checks this
+/// `nvim_buf_set_lines` parameters. [`crate::Neovim::request()`] checks this
 /// relationship against the selected descriptor's `ApiFn::Params`.
 pub trait Params<Signature> {
     /// The MessagePack array containing the converted arguments.
     type Encoded: ArrayLike;
 
-    /// Consume the arguments and convert each value to its wire representation.
+    /// Consumes the arguments and converts each value to its wire representation.
     fn encode(self) -> Self::Encoded;
 }
 

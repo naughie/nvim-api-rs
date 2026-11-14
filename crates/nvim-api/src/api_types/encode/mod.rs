@@ -1,4 +1,4 @@
-//! Convert Rust arguments to the representation expected by a Neovim API.
+//! Converts Rust arguments to the representation expected by a Neovim API.
 //!
 //! [`Like`] lets a domain type select a primitive representation without
 //! becoming a MessagePack primitive itself:
@@ -88,14 +88,14 @@ mod string;
 /// identity [`Like`] implementation.
 pub trait LikeBaseType<T: BaseType>: Primitive {}
 
-/// Convert an application value into a primitive compatible with `T`.
+/// Converts an application value into a primitive compatible with `T`.
 ///
 /// The associated representation controls ownership: returning `&'a str`
 /// preserves a borrow; returning `String` transfers an owned value.
 pub trait Like<T: BaseType> {
-    /// The primitive produced by [`encode`](Self::encode).
+    /// The primitive produced by [`encode()`](Self::encode()).
     type EncodeAs: LikeBaseType<T>;
-    /// Consume the argument and produce its encoding representation.
+    /// Consumes the argument and produces its encoding representation.
     fn encode(self) -> Self::EncodeAs;
 }
 

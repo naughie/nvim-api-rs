@@ -44,7 +44,7 @@ fn rpc_function(func: &Function) -> bool {
 fn gen_method(func: &Function, method: &str) -> TokenStream {
     let id = func.to_id();
     let method = parse_ident(method);
-    let doc = func.docs("Build a call to");
+    let doc = func.docs("Builds a call to");
     let deprecated = func.deprecation();
     let args: Vec<_> = func
         .parameters
@@ -164,7 +164,7 @@ pub(super) fn gen_rs(api_info: &ApiInfo) -> TokenStream {
         /// Neovim API function descriptors for typed requests and notifications.
         ///
         /// Select a descriptor and pass its arguments as a tuple to
-        /// [`crate::Neovim::request`] or [`crate::Neovim::notify`]:
+        /// [`crate::Neovim::request()`] or [`crate::Neovim::notify()`]:
         ///
         /// ```
         /// use nvim_api::{api, Buffer, Neovim};
@@ -177,8 +177,8 @@ pub(super) fn gen_rs(api_info: &ApiInfo) -> TokenStream {
         /// assert_eq!(pending.id().0, 0);
         /// ```
         ///
-        /// The async equivalents are [`crate::Neovim::request_async`] and
-        /// [`crate::Neovim::notify_async`]. Handle methods construct [`crate::Call`]
+        /// The async equivalents are [`crate::Neovim::request_async()`] and
+        /// [`crate::Neovim::notify_async()`]. Handle methods construct [`crate::Call`]
         /// values for manual encoding. Lua-only functions requiring a `LuaRef`
         /// are omitted from this module.
         pub mod api {

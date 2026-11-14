@@ -28,7 +28,7 @@ impl Function {
     pub(super) fn docs(&self, summary: &str) -> [String; 3] {
         let name = &self.name;
         [
-            format!(" {summary} [`{name}`](https://neovim.io/doc/user/api/#{name}())."),
+            format!(" {summary} [`{name}()`](https://neovim.io/doc/user/api/#{name}())."),
             String::new(),
             self.doc_since(),
         ]

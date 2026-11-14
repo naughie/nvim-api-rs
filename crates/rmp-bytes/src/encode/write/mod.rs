@@ -158,7 +158,7 @@ impl<W: WriterSync> WriterSync for &mut W {
 
 /// Adds primitive encoding to a synchronous writer.
 pub trait WriterSyncExt: WriterSync {
-    /// Creates a write operation; call [`WritePrimitive::consume`] to finish it.
+    /// Creates a write operation; call [`WritePrimitive::consume()`] to finish it.
     fn write_primitive<P: Primitive>(&mut self, value: P) -> WritePrimitive<&mut Self, P::State>;
 }
 
@@ -182,7 +182,7 @@ impl<W: WriterAsync> WriterAsync for &mut W {
 
 /// Adds primitive encoding to an asynchronous writer.
 pub trait WriterAsyncExt: WriterAsync {
-    /// Creates a write operation; await [`WritePrimitive::consume_async`] to finish it.
+    /// Creates a write operation; await [`WritePrimitive::consume_async()`] to finish it.
     fn write_primitive<P: Primitive>(&mut self, value: P) -> WritePrimitive<&mut Self, P::State>;
 }
 

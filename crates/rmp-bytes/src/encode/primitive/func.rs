@@ -2,7 +2,7 @@ use super::{Primitive, Sealed};
 
 /// Computes a primitive when its encoding state is created.
 ///
-/// The closure is called by [`Primitive::into_state`], before byte chunks are
+/// The closure is called by [`Primitive::into_state()`], before byte chunks are
 /// written. Borrow `&Func<F>` or `&mut Func<F>` to use an `Fn` or `FnMut` again.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Func<F>(pub F);

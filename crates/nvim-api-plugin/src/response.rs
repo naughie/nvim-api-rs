@@ -2,7 +2,7 @@ use crate::mp::encode::primitive::{Primitive, State};
 
 use std::convert::Infallible;
 
-/// Convert a handler's result into success or error primitives for an RPC reply.
+/// Converts a handler's result into success or error primitives for an RPC reply.
 ///
 /// `Result<T, E>` is supported when both branches are encodable primitives.
 /// `()` is shorthand for `Ok(())`; both it and `Ok::<(), Infallible>(())` encode

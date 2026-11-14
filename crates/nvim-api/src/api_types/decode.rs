@@ -1,4 +1,4 @@
-//! Decode Neovim results into caller-selected Rust representations.
+//! Decodes Neovim results into caller-selected Rust representations.
 //!
 //! [`Decode`] supports borrowed strings and bytes, owned results, and custom
 //! types. [`DecodedArray`] converts array elements as they are visited. See
@@ -12,7 +12,7 @@ use std::fmt;
 use std::marker::PhantomData;
 use std::str::Utf8Error;
 
-/// Decode a value described by marker `T` from backing buffer `B`.
+/// Decodes a value described by marker `T` from backing buffer `B`.
 ///
 /// Choose the Rust result type independently of the API marker:
 ///
@@ -59,7 +59,7 @@ use std::str::Utf8Error;
 /// Signature tuples accept appended fields; fixed arrays and fixed-array
 /// tuples require the exact declared length.
 pub trait Decode<T, B>: Sized {
-    /// Convert one complete MessagePack object into the chosen Rust type.
+    /// Converts one complete MessagePack object into the chosen Rust type.
     fn decode(value: Object<B>) -> Result<Self, DecodeError>;
 }
 
@@ -335,7 +335,7 @@ impl<M, B: Buf, T: Decode<M, B::Slice>, const N: usize> Decode<sys::ArrayOf<M>, 
     }
 }
 
-/// Decode array elements one at a time without collecting them.
+/// Decodes array elements one at a time without collecting them.
 ///
 /// Each item is a `Result`, so an invalid element is reported when reached:
 ///
@@ -360,7 +360,7 @@ pub struct DecodedArray<T, M, B> {
 }
 
 impl<T, M, B> DecodedArray<T, M, B> {
-    /// Wrap an array; element validation occurs during iteration.
+    /// Wraps an array; element validation occurs during iteration.
     pub fn new(array: Array<B>) -> Self {
         Self {
             array,
@@ -368,7 +368,7 @@ impl<T, M, B> DecodedArray<T, M, B> {
         }
     }
 
-    /// Return the undecoded remainder of the array.
+    /// Returns the undecoded remainder of the array.
     pub fn into_inner(self) -> Array<B> {
         self.array
     }

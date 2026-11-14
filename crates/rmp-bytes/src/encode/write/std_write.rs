@@ -5,7 +5,7 @@ use std::io::Write;
 
 /// Adapts a [`std::io::Write`] destination to [`WriterSync`].
 ///
-/// The adapter calls `write_all` for each encoding chunk. Use [`WriterSync::flush`]
+/// The adapter calls `write_all` for each encoding chunk. Use [`WriterSync::flush()`]
 /// when the destination's buffering or transport requires it.
 pub struct StdWrite<W> {
     inner: W,

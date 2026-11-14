@@ -1,6 +1,6 @@
-//! Iterate the event groups and repeated calls in a `redraw` notification.
+//! Iterates the event groups and repeated calls in a `redraw` notification.
 //!
-//! [`Redraw`] yields event groups, and [`Event::decode_next`] decodes repeated
+//! [`Redraw`] yields event groups, and [`Event::decode_next()`] decodes repeated
 //! calls using a generated descriptor. This example reads grid resize and
 //! flush events from a supplied notification:
 //!
@@ -31,7 +31,7 @@
 //! assert!(resized && flushed);
 //! ```
 //!
-//! Unknown groups remain available through [`Event::name`] and its raw argument
+//! Unknown groups remain available through [`Event::name()`] and its raw argument
 //! iterator. The application maintains grid state and renders updates. See the
 //! [Neovim UI protocol](https://neovim.io/doc/user/api-ui-events/) for event
 //! meanings and ordering.
@@ -46,7 +46,7 @@ use mp::decode::{Array, Bin, Buf, Object};
 pub struct Redraw<B>(Array<B>);
 
 impl<B: Buf<Slice = B>> Redraw<B> {
-    /// Check that the notification is named `redraw` and take its parameter array.
+    /// Checks that the notification is named `redraw` and takes its parameter array.
     pub fn new(notification: Notification<B>) -> Result<Self, DecodeError> {
         if !name_eq(&notification.method, "redraw") {
             return Err(DecodeError::UnexpectedType("redraw notification"));
@@ -78,7 +78,7 @@ impl<B: Buf<Slice = B>> ExactSizeIterator for Redraw<B> {}
 
 /// An event name and the remaining repeated calls for that event.
 ///
-/// Iterate raw argument arrays, or use [`Self::decode_next`] with a generated
+/// Iterate raw argument arrays, or use [`Self::decode_next()`] with a generated
 /// descriptor such as [`crate::ui_events::GridResize`].
 pub struct Event<B> {
     name: Bin<B>,
@@ -93,14 +93,14 @@ impl<B> Event<B> {
 }
 
 impl<B: Buf> Event<B> {
-    /// Compare the event name with descriptor `E` without decoding its arguments.
+    /// Compares the event name with descriptor `E` without decoding its arguments.
     pub fn is<E: UiEvent>(&self) -> bool {
         name_eq(&self.name, E::NAME)
     }
 }
 
 impl<B: Buf<Slice = B>> Event<B> {
-    /// Decode the next call using `E`'s argument markers and the Rust tuple `T`.
+    /// Decodes the next call using `E`'s argument markers and the Rust tuple `T`.
     ///
     /// Returns `Ok(None)` when all calls have been visited. A different event
     /// name returns an error without consuming a call. Tuple decoding accepts

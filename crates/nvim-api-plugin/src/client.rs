@@ -61,7 +61,7 @@ impl<W> Shared<W> {
 
 /// A cloneable client sharing one serialized writer and a response registry.
 ///
-/// Construct it with [`crate::spawn`]. Cloning does not require `W: Clone`.
+/// Construct it with [`crate::spawn()`]. Cloning does not require `W: Clone`.
 /// Requests release the writer before waiting for their responses, allowing
 /// other requests and handler replies to use the same connection.
 /// A reusable Tokio buffer combines encoded chunks before writing to `W`;
@@ -160,7 +160,7 @@ impl<W> Neovim<W> {
 }
 
 impl<W: AsyncWrite + Unpin + Send + 'static> Neovim<W> {
-    /// Write and flush an API request, then wait for and decode its response.
+    /// Writes and flushes an API request, then waits for and decodes its response.
     ///
     /// Results use the owned [`Bytes`] buffer specialization. For example,
     /// request `String` for UTF-8 text or [`crate::Bin`] to keep the original
@@ -224,7 +224,7 @@ impl<W: AsyncWrite + Unpin + Send + 'static> Neovim<W> {
         })
     }
 
-    /// Write and flush a notification without expecting a response.
+    /// Writes and flushes a notification without expecting a response.
     ///
     /// For example, `nvim.notify::<api::NvimSetCurrentLine>(("hello",)).await`.
     pub async fn notify<F: ApiFn>(

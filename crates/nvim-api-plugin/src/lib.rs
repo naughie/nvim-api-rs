@@ -1,9 +1,9 @@
 //! Tokio plugin handlers and a Neovim client that waits for RPC responses.
 //!
-//! [`spawn`] starts the receive loop and handler tasks on the current Tokio
+//! [`spawn()`] starts the receive loop and handler tasks on the current Tokio
 //! runtime. Implement [`Handler`] to receive requests and notifications;
 //! [`FromParams`] decodes their arguments and [`IntoResponse`] encodes replies.
-//! [`Neovim::request`] writes and flushes a typed API call, then waits for its
+//! [`Neovim::request()`] writes and flushes a typed API call, then waits for its
 //! matching response. Handler parameters retain shared message storage, so they
 //! can remain in use while more messages are received.
 //!
@@ -89,18 +89,18 @@ pub trait Handler<W>: Send + Sync + 'static
 where
     W: AsyncWrite + Unpin + Send + 'static,
 {
-    /// Arguments decoded before calling [`Self::on_request`].
+    /// Arguments decoded before calling [`Self::on_request()`].
     ///
     /// A decoding failure sends an error reply without calling the hook.
     type Request: FromParams;
     /// The success or error value sent as the request's reply.
     type Response: IntoResponse;
-    /// Arguments decoded before calling [`Self::on_notification`].
+    /// Arguments decoded before calling [`Self::on_notification()`].
     ///
     /// A decoding failure ends the connection.
     type Notification: FromParams;
 
-    /// Handle a request and return its reply.
+    /// Handles a request and returns its reply.
     ///
     /// Each call runs in a separate task. `nvim` can make nested calls while
     /// the connection continues receiving messages.
@@ -111,7 +111,7 @@ where
         nvim: Neovim<W>,
     ) -> impl Future<Output = Self::Response> + Send;
 
-    /// Handle a notification without sending a reply.
+    /// Handles a notification without sending a reply.
     ///
     /// Each call runs in a separate task and may overlap with other hooks.
     fn on_notification(

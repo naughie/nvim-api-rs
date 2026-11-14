@@ -1,4 +1,4 @@
-//! Read complete RPC messages into caller-provided storage.
+//! Reads complete RPC messages into caller-provided storage.
 //!
 //! A receiver borrows its storage for each returned message:
 //!
@@ -50,16 +50,16 @@ use mp::decode::{Object, SeekState};
 use std::fmt;
 use std::ops::ControlFlow;
 
-/// Read bytes into the supplied destination, returning zero at EOF.
+/// Reads bytes into the supplied destination, returning zero at EOF.
 pub trait ReaderSync {
     /// The underlying reader's error type.
     type Error;
 
-    /// Fill a prefix of `buf` and return the number of bytes written there.
+    /// Fills a prefix of `buf` and returns the number of bytes written there.
     fn read(&mut self, buf: &mut [u8]) -> Result<usize, Self::Error>;
 }
 
-/// Asynchronously read bytes into a destination borrowed for the operation.
+/// Asynchronously reads bytes into a destination borrowed for the operation.
 ///
 /// Implement this with an ordinary `async fn`. The trait does not require a
 /// `Send` future; the executor and caller determine that requirement.
@@ -67,7 +67,7 @@ pub trait ReaderAsync {
     /// The underlying reader's error type.
     type Error;
 
-    /// Fill a prefix of `buf`, or return zero at EOF.
+    /// Fills a prefix of `buf`, or returns zero at EOF.
     fn read<'a>(
         &'a mut self,
         buf: &'a mut [u8],
@@ -90,7 +90,7 @@ impl<R: ReaderAsync + ?Sized> ReaderAsync for &mut R {
     }
 }
 
-/// Adapt [`std::io::Read`], retrying interrupted reads.
+/// Adapts [`std::io::Read`], retrying interrupted reads.
 #[derive(Debug)]
 pub struct StdRead<R>(pub R);
 
@@ -108,7 +108,7 @@ impl<R: std::io::Read> ReaderSync for StdRead<R> {
 }
 
 #[cfg(feature = "tokio")]
-/// Adapt a [`tokio::io::AsyncRead`] reader that implements [`Unpin`].
+/// Adapts a [`tokio::io::AsyncRead`] reader that implements [`Unpin`].
 #[derive(Debug)]
 pub struct TokioRead<R>(pub R);
 
@@ -122,7 +122,7 @@ impl<R: tokio::io::AsyncRead + Unpin> ReaderAsync for TokioRead<R> {
 }
 
 #[cfg(feature = "futures")]
-/// Adapt a [`futures_io::AsyncRead`] reader that implements [`Unpin`].
+/// Adapts a [`futures_io::AsyncRead`] reader that implements [`Unpin`].
 #[derive(Debug)]
 pub struct FuturesRead<R>(pub R);
 
@@ -184,7 +184,7 @@ pub struct Receiver<R, B> {
 }
 
 impl<R, B> Receiver<R, B> {
-    /// Use the supplied reader and storage without allocating additional storage.
+    /// Uses the supplied reader and storage without allocating additional storage.
     pub fn new(reader: R, storage: B) -> Self {
         Self {
             reader,
@@ -196,12 +196,12 @@ impl<R, B> Receiver<R, B> {
         }
     }
 
-    /// Borrow the underlying reader.
+    /// Borrows the underlying reader.
     pub fn reader(&self) -> &R {
         &self.reader
     }
 
-    /// Mutably borrow the reader; bypassing framing can consume RPC bytes.
+    /// Mutably borrows the reader; bypassing framing can consume RPC bytes.
     pub fn reader_mut(&mut self) -> &mut R {
         &mut self.reader
     }
@@ -213,12 +213,12 @@ impl<R, B: AsRef<[u8]>> Receiver<R, B> {
         &self.storage.as_ref()[self.start..self.end]
     }
 
-    /// Recover the reader, storage, and range containing unread bytes.
+    /// Recovers the reader, storage, and range containing unread bytes.
     pub fn into_parts(self) -> (R, B, std::ops::Range<usize>) {
         (self.reader, self.storage, self.start..self.end)
     }
 
-    /// Replace storage, copying unread bytes and retaining framing progress.
+    /// Replaces storage, copying unread bytes and retaining framing progress.
     ///
     /// Returns the original receiver if the replacement cannot hold its unread
     /// bytes. A full receiver can therefore be retried with larger storage:
@@ -281,7 +281,7 @@ impl<R, B: AsRef<[u8]> + AsMut<[u8]>> Receiver<R, B> {
         }
     }
 
-    /// Read one complete message, borrowing its payload from this receiver.
+    /// Reads one complete message, borrowing its payload from this receiver.
     ///
     /// A complete MessagePack value with an invalid RPC envelope is returned as
     /// [`Message::InvalidFormat`]. Partial input and framing state survive a
@@ -311,7 +311,7 @@ impl<R, B: AsRef<[u8]> + AsMut<[u8]>> Receiver<R, B> {
         }
     }
 
-    /// Asynchronously read one message with the borrowing contract of [`Self::recv`].
+    /// Asynchronously reads one message with the borrowing contract of [`Self::recv()`].
     ///
     /// Framing progress remains in the receiver across cancellation. Custom
     /// reader implementations must also preserve unread bytes when their read

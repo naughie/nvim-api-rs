@@ -9,7 +9,7 @@ use mp::encode::{Primitive, WriterAsync, WriterAsyncExt, WriterSync, WriterSyncE
 use std::fmt;
 use std::marker::PhantomData;
 
-/// Convert a writer's completion value into the result used by [`Neovim`].
+/// Converts a writer's completion value into the result used by [`Neovim`].
 ///
 /// `Result<(), E>` preserves `E`; `()` is infallible. `ControlFlow<E>` uses
 /// `Break(E)` as failure, and `Option<()>` uses `None` as failure with error `()`.
@@ -17,7 +17,7 @@ pub trait WriteResult: mp::encode::write::WriteResult {
     /// The error reported when writing cannot complete.
     type Error;
 
-    /// Convert successful completion to `Ok(())`, preserving a failure's cause.
+    /// Converts successful completion to `Ok(())`, preserving a failure's cause.
     fn into_result(self) -> Result<(), Self::Error>;
 }
 
@@ -60,15 +60,15 @@ impl WriteResult for Option<()> {
 ///
 /// Stores arguments for explicit RPC envelope encoding without performing I/O.
 /// `F` supplies the RPC name and parameter/return markers. For ordinary sends,
-/// pass the descriptor and arguments directly to [`Neovim::request`] or
-/// [`Neovim::notify`]. Handle methods can construct a `Call` for manual encoding.
+/// pass the descriptor and arguments directly to [`Neovim::request()`] or
+/// [`Neovim::notify()`]. Handle methods can construct a `Call` for manual encoding.
 pub struct Call<F, P> {
     params: P,
     function: PhantomData<fn() -> F>,
 }
 
 impl<F: ApiFn, P: Params<F::Params>> Call<F, P> {
-    /// Build a call whose arguments implement the descriptor's parameter signature.
+    /// Builds a call whose arguments implement the descriptor's parameter signature.
     pub fn new(params: P) -> Self {
         Self {
             params,
@@ -76,12 +76,12 @@ impl<F: ApiFn, P: Params<F::Params>> Call<F, P> {
         }
     }
 
-    /// Recover the arguments without encoding them.
+    /// Recovers the arguments without encoding them.
     pub fn into_params(self) -> P {
         self.params
     }
 
-    /// Encode a request envelope using the supplied message ID.
+    /// Encodes a request envelope using the supplied message ID.
     ///
     /// The converted parameters, encoding state, and chunks must be `Send`.
     /// Use this when assigning IDs and writing messages outside [`Neovim`].
@@ -102,9 +102,9 @@ impl<F: ApiFn, P: Params<F::Params>> Call<F, P> {
         .to_primitive()
     }
 
-    /// Encode a notification envelope, which has no message ID or response.
+    /// Encodes a notification envelope, which has no message ID or response.
     ///
-    /// The encoding has the same `Send` requirements as [`Self::into_request`].
+    /// The encoding has the same `Send` requirements as [`Self::into_request()`].
     pub fn into_notification(self) -> impl Primitive<State: EncodeState<Item: Send> + Send> + Send
     where
         P::Encoded: Send,
@@ -121,7 +121,7 @@ impl<F: ApiFn, P: Params<F::Params>> Call<F, P> {
 
 /// A request ID paired with the expected return marker from function `F`.
 ///
-/// Route the matching response from the same connection to [`Self::decode`].
+/// Route the matching response from the same connection to [`Self::decode()`].
 /// The token is copyable and retains its ID after decoding.
 ///
 /// ```
@@ -156,7 +156,7 @@ impl<F> fmt::Debug for Pending<F> {
 }
 
 impl<F> Pending<F> {
-    /// Construct a token for a request whose ID was assigned by the application.
+    /// Constructs a token for a request whose ID was assigned by the application.
     pub const fn new(id: MessageId) -> Self {
         Self {
             id,
@@ -169,14 +169,14 @@ impl<F> Pending<F> {
         self.id
     }
 
-    /// Check the response ID without consuming or decoding the response.
+    /// Checks the response ID without consuming or decoding the response.
     pub fn matches<B>(&self, response: &Response<B>) -> bool {
         self.id == response.msgid
     }
 }
 
 impl<F: ApiFn> Pending<F> {
-    /// Check the response ID, propagate a remote error, and decode its value as `T`.
+    /// Checks the response ID, propagates a remote error, and decodes its value as `T`.
     ///
     /// A mismatched response is returned intact in
     /// [`ResponseError::UnexpectedId`]. Borrowed results and remote errors retain
@@ -292,7 +292,7 @@ pub struct Neovim<W> {
 }
 
 impl<W> Neovim<W> {
-    /// Start a sender whose first request ID is zero.
+    /// Starts a sender whose first request ID is zero.
     pub const fn new(writer: W) -> Self {
         Self {
             writer,
@@ -300,19 +300,19 @@ impl<W> Neovim<W> {
         }
     }
 
-    /// Borrow the writer, for example to inspect a memory buffer.
+    /// Borrows the writer, for example to inspect a memory buffer.
     pub fn writer(&self) -> &W {
         &self.writer
     }
 
-    /// Mutably borrow the writer for backend-specific operations.
+    /// Mutably borrows the writer for backend-specific operations.
     ///
     /// Writing unrelated bytes here can invalidate the RPC stream.
     pub fn writer_mut(&mut self) -> &mut W {
         &mut self.writer
     }
 
-    /// Flush buffered output, returning the writer's result.
+    /// Flushes buffered output, returning the writer's result.
     ///
     /// Flush after writing a request and before waiting for its response. This
     /// forwards to the writer; it does not wait for acknowledgement from Neovim.
@@ -323,9 +323,9 @@ impl<W> Neovim<W> {
         WriterSync::flush(&mut self.writer)
     }
 
-    /// Flush buffered output asynchronously, returning the writer's result.
+    /// Flushes buffered output asynchronously, returning the writer's result.
     ///
-    /// Like [`Self::flush`], this forwards to the writer without waiting for a
+    /// Like [`Self::flush()`], this forwards to the writer without waiting for a
     /// response from Neovim.
     pub async fn flush_async(&mut self) -> W::Result
     where
@@ -334,7 +334,7 @@ impl<W> Neovim<W> {
         WriterAsync::flush(&mut self.writer).await
     }
 
-    /// Recover the writer without flushing it.
+    /// Recovers the writer without flushing it.
     pub fn into_inner(self) -> W {
         self.writer
     }
@@ -376,14 +376,14 @@ impl<W> Neovim<W> {
 }
 
 impl<W> Neovim<W> {
-    /// Write a request and return its typed response token.
+    /// Writes a request and returns its typed response token.
     ///
     /// Select a function descriptor from [`crate::api`] and pass its arguments
     /// as a tuple: `()` for no arguments, `(value,)` for one argument.
     /// Arguments retain their Rust representations until encoding.
     ///
     /// Flush a buffered writer before waiting for input, then route the matching
-    /// response to [`Pending::decode`]. Encoded parameters, states, and chunks
+    /// response to [`Pending::decode()`]. Encoded parameters, states, and chunks
     /// must be `Send`, including when using a synchronous writer.
     ///
     /// ```
@@ -420,9 +420,9 @@ impl<W> Neovim<W> {
         Ok(Pending::new(id))
     }
 
-    /// Write a notification without consuming a request ID or expecting a reply.
+    /// Writes a notification without consuming a request ID or expecting a reply.
     ///
-    /// Like [`Self::request`], select the function with a type argument and pass
+    /// Like [`Self::request()`], select the function with a type argument and pass
     /// its parameters as a tuple, for example
     /// `nvim.notify::<api::NvimSetCurrentLine>(("hello",))`.
     pub fn notify<F: ApiFn>(
@@ -436,7 +436,7 @@ impl<W> Neovim<W> {
         self.send(Call::<F, _>::new(params).into_notification())
     }
 
-    /// Write a primitive, such as an encoded RPC response, without assigning an ID.
+    /// Writes a primitive, such as an encoded RPC response, without assigning an ID.
     ///
     /// See [`crate::rpc`] for a plugin reply example. Raw primitive sending does
     /// not add `Send` bounds to the primitive or its state.
@@ -454,7 +454,7 @@ impl<W> Neovim<W> {
         Ok(())
     }
 
-    /// Write a request asynchronously, then return its response token.
+    /// Writes a request asynchronously, then returns its response token.
     ///
     /// Dropping this future before polling has no effect. Once writing starts,
     /// failure or cancellation leaves this sender unusable: later writes could
@@ -481,9 +481,9 @@ impl<W> Neovim<W> {
         Ok(Pending::new(id))
     }
 
-    /// Write a notification asynchronously, with no request ID or reply.
+    /// Writes a notification asynchronously, with no request ID or reply.
     ///
-    /// Interrupted writes follow the failure policy of [`Self::request_async`].
+    /// Interrupted writes follow the failure policy of [`Self::request_async()`].
     pub async fn notify_async<F: ApiFn>(
         &mut self,
         params: impl Params<F::Params, Encoded: Send + Primitive<State: EncodeState<Item: Send> + Send>>,
@@ -496,9 +496,9 @@ impl<W> Neovim<W> {
             .await
     }
 
-    /// Write a primitive asynchronously without changing the next request ID.
+    /// Writes a primitive asynchronously without changing the next request ID.
     ///
-    /// Interrupted writes follow the failure policy of [`Self::request_async`].
+    /// Interrupted writes follow the failure policy of [`Self::request_async()`].
     pub async fn send_async<P: Primitive, E>(&mut self, value: P) -> Result<(), SendError<E>>
     where
         W: WriterAsync,
