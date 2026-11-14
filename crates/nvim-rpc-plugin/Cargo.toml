@@ -13,8 +13,8 @@ categories = ["api-bindings", "asynchronous"]
 [dependencies]
 nvim-rpc = { workspace = true, features = ["bytes", "tokio"] }
 bytes = "1.11"
-tokio = { version = "1", features = ["io-util", "macros", "rt", "sync"] }
+tokio = { workspace = true, features = ["io-util", "macros", "rt", "sync"] }
 
 [dev-dependencies]
-tokio = { version = "1", features = ["fs", "io-std", "net", "process", "rt-multi-thread", "time"] }
+tokio = { workspace = true, features = ["fs", "io-std", "net", "process", "rt-multi-thread", "time"] }
 
