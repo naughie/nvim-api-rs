@@ -39,12 +39,7 @@ impl Primitive for Vec<u8> {
 
     fn into_state(mut self) -> Self::State {
         let len = metadata(self.len());
-        if self.len() > MAX_LEN {
-            // SAFETY: MAX_LEN <= self.len() <= capacity
-            unsafe {
-                self.set_len(MAX_LEN);
-            }
-        }
+        self.truncate(MAX_LEN);
         ByteState(Some(len), Some(self))
     }
 }
@@ -158,6 +153,34 @@ mod tests {
                 &[Marker::Bin32.to_u8(), 0x00, 0x01, 0x00, 0x00],
             );
             assert_eq!(count, 0x10000 + 5);
+        }
+    }
+
+    #[test]
+    fn owned_buffer_is_retained() {
+        for (len, marker) in [
+            (0, &[0xc4, 0x00][..]),
+            (7, &[0xc4, 0x07]),
+            (0xff, &[0xc4, 0xff]),
+            (0x100, &[0xc5, 0x01, 0x00]),
+            (0xffff, &[0xc5, 0xff, 0xff]),
+            (0x10000, &[0xc6, 0x00, 0x01, 0x00, 0x00]),
+        ] {
+            let mut buf = Vec::with_capacity(len + 16);
+            buf.extend((0..len).map(|n| n as u8));
+            let ptr = buf.as_ptr();
+            let capacity = buf.capacity();
+            let mut state = buf.into_state();
+
+            assert_eq!(state.next().unwrap().as_ref(), marker);
+            let Some(Repr::Data(buf)) = state.next() else {
+                panic!("expected binary data");
+            };
+            assert_eq!(buf.len(), len);
+            assert!(buf.iter().copied().eq((0..len).map(|n| n as u8)));
+            assert_eq!(buf.as_ptr(), ptr);
+            assert_eq!(buf.capacity(), capacity);
+            assert!(state.next().is_none());
         }
     }
 
