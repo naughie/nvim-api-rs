@@ -2,6 +2,11 @@
 members = ["crates/*", "codegen"]
 resolver = "3"
 
+[workspace.package]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/naughie/nvim-api-rs"
+
 [workspace.dependencies]
 mp = { version = "0.1.0", path = "crates/rmp-bytes", package = "rmp-bytes" }
 nvim-api = { version = "0.1.0", path = "crates/nvim-api" }

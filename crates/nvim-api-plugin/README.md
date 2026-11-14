@@ -1,5 +1,8 @@
 # nvim-api-plugin
 
+[![crates.io](https://img.shields.io/crates/v/nvim-api-plugin.svg)](https://crates.io/crates/nvim-api-plugin)
+[![docs.rs](https://docs.rs/nvim-api-plugin/badge.svg)](https://docs.rs/nvim-api-plugin)
+
 Tokio plugin handlers and a client for calling Neovim. `spawn` runs the receive
 loop, dispatches requests and notifications, and matches replies to waiting
 calls. Handlers can call Neovim while processing an incoming request.

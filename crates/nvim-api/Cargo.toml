@@ -1,7 +1,17 @@
 [package]
 name = "nvim-api"
 version = "0.1.0"
-edition = "2024"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Typed Neovim RPC calls with caller-selected arguments, results, and I/O"
+documentation = "https://docs.rs/nvim-api"
+readme = "README.md"
+keywords = ["neovim", "nvim", "rpc", "msgpack"]
+categories = ["api-bindings", "asynchronous"]
+
+[package.metadata.docs.rs]
+all-features = true
 
 [features]
 bytes = ["mp/bytes"]

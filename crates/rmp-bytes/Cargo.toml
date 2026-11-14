@@ -1,7 +1,17 @@
 [package]
 name = "rmp-bytes"
 version = "0.1.0"
-edition = "2024"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "MessagePack encoding and decoding with caller-selected buffers and I/O"
+documentation = "https://docs.rs/rmp-bytes"
+readme = "README.md"
+keywords = ["msgpack", "messagepack", "encoding", "decoding", "rpc"]
+categories = ["encoding"]
+
+[package.metadata.docs.rs]
+all-features = true
 
 [features]
 default = []

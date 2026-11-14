@@ -1,5 +1,8 @@
 # nvim-api
 
+[![crates.io](https://img.shields.io/crates/v/nvim-api.svg)](https://crates.io/crates/nvim-api)
+[![docs.rs](https://docs.rs/nvim-api/badge.svg)](https://docs.rs/nvim-api)
+
 Typed Neovim RPC calls with caller-selected argument types, result types, and
 I/O. Pass `&str`, `&[&str]`, owned values, or exact-size iterators without
 collecting them into a prescribed set of containers.

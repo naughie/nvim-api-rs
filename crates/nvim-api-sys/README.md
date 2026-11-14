@@ -1,5 +1,8 @@
 # nvim-api-sys
 
+[![crates.io](https://img.shields.io/crates/v/nvim-api-sys.svg)](https://crates.io/crates/nvim-api-sys)
+[![docs.rs](https://docs.rs/nvim-api-sys/badge.svg)](https://docs.rs/nvim-api-sys)
+
 Generated descriptions of Neovim's API: function names and signatures, UI event
 arguments, handle extension IDs, UI options, and API version constants. The input
 is Neovim's `--api-info` output.

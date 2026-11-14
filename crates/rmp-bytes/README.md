@@ -1,5 +1,8 @@
 # rmp-bytes
 
+[![crates.io](https://img.shields.io/crates/v/rmp-bytes.svg)](https://crates.io/crates/rmp-bytes)
+[![docs.rs](https://docs.rs/rmp-bytes/badge.svg)](https://docs.rs/rmp-bytes)
+
 MessagePack encoding and decoding with borrowed slices, owned buffers, and
 caller-selected I/O. Encoders produce byte chunks; decoders retain the input
 buffer and visit array or map elements as you iterate.

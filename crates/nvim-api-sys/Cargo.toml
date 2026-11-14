@@ -1,6 +1,13 @@
 [package]
 name = "nvim-api-sys"
 version = "0.12.6"
-edition = "2024"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Generated Neovim API function signatures, UI events, and type metadata"
+documentation = "https://docs.rs/nvim-api-sys"
+readme = "README.md"
+keywords = ["neovim", "nvim", "bindings", "rpc"]
+categories = ["api-bindings"]
 
 [dependencies]

@@ -1,7 +1,14 @@
 [package]
 name = "nvim-api-plugin"
 version = "0.1.0"
-edition = "2024"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Tokio plugin handlers and a Neovim client with RPC response matching"
+documentation = "https://docs.rs/nvim-api-plugin"
+readme = "README.md"
+keywords = ["neovim", "nvim", "plugin", "rpc", "tokio"]
+categories = ["api-bindings", "asynchronous"]
 
 [dependencies]
 nvim-api = { workspace = true, features = ["bytes", "tokio"] }
