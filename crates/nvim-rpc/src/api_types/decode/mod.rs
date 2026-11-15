@@ -139,32 +139,225 @@ impl<B> Decode<sys::Bool, B> for bool {
     }
 }
 
-macro_rules! _impl_int {
-    ($($ty:ty),+) => {$(
-        impl<B> Decode<sys::Int, B> for $ty {
-            fn decode(value: Object<B>) -> Result<Self, DecodeError> {
-                match value {
-                    Object::U8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
-                    Object::U16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
-                    Object::U32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
-                    Object::U64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
-                    Object::I8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
-                    Object::I16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
-                    Object::I32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
-                    Object::I64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
-                    _ => Err(DecodeError::UnexpectedType("integer")),
-                }
-            }
+impl<B> Decode<sys::Int, B> for i8 {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        match value {
+            Object::U8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            _ => Err(DecodeError::UnexpectedType("integer")),
         }
-        impl<B> Decode<sys::Object, B> for $ty {
-            fn decode(value: Object<B>) -> Result<Self, DecodeError> {
-                <Self as Decode<sys::Int, B>>::decode(value)
-            }
-        }
-    )+};
+    }
 }
 
-_impl_int!(i8, i16, i32, i64, isize, u8, u16, u32, u64, usize);
+impl<B> Decode<sys::Object, B> for i8 {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        <Self as Decode<sys::Int, B>>::decode(value)
+    }
+}
+
+impl<B> Decode<sys::Int, B> for i16 {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        match value {
+            Object::U8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            _ => Err(DecodeError::UnexpectedType("integer")),
+        }
+    }
+}
+
+impl<B> Decode<sys::Object, B> for i16 {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        <Self as Decode<sys::Int, B>>::decode(value)
+    }
+}
+
+impl<B> Decode<sys::Int, B> for i32 {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        match value {
+            Object::U8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            _ => Err(DecodeError::UnexpectedType("integer")),
+        }
+    }
+}
+
+impl<B> Decode<sys::Object, B> for i32 {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        <Self as Decode<sys::Int, B>>::decode(value)
+    }
+}
+
+impl<B> Decode<sys::Int, B> for i64 {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        match value {
+            Object::U8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            _ => Err(DecodeError::UnexpectedType("integer")),
+        }
+    }
+}
+
+impl<B> Decode<sys::Object, B> for i64 {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        <Self as Decode<sys::Int, B>>::decode(value)
+    }
+}
+
+impl<B> Decode<sys::Int, B> for isize {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        match value {
+            Object::U8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            _ => Err(DecodeError::UnexpectedType("integer")),
+        }
+    }
+}
+
+impl<B> Decode<sys::Object, B> for isize {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        <Self as Decode<sys::Int, B>>::decode(value)
+    }
+}
+
+impl<B> Decode<sys::Int, B> for u8 {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        match value {
+            Object::U8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            _ => Err(DecodeError::UnexpectedType("integer")),
+        }
+    }
+}
+
+impl<B> Decode<sys::Object, B> for u8 {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        <Self as Decode<sys::Int, B>>::decode(value)
+    }
+}
+
+impl<B> Decode<sys::Int, B> for u16 {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        match value {
+            Object::U8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            _ => Err(DecodeError::UnexpectedType("integer")),
+        }
+    }
+}
+
+impl<B> Decode<sys::Object, B> for u16 {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        <Self as Decode<sys::Int, B>>::decode(value)
+    }
+}
+
+impl<B> Decode<sys::Int, B> for u32 {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        match value {
+            Object::U8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            _ => Err(DecodeError::UnexpectedType("integer")),
+        }
+    }
+}
+
+impl<B> Decode<sys::Object, B> for u32 {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        <Self as Decode<sys::Int, B>>::decode(value)
+    }
+}
+
+impl<B> Decode<sys::Int, B> for u64 {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        match value {
+            Object::U8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            _ => Err(DecodeError::UnexpectedType("integer")),
+        }
+    }
+}
+
+impl<B> Decode<sys::Object, B> for u64 {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        <Self as Decode<sys::Int, B>>::decode(value)
+    }
+}
+
+impl<B> Decode<sys::Int, B> for usize {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        match value {
+            Object::U8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::U64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I8(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I16(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I32(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            Object::I64(n) => Self::try_from(n).map_err(|_| DecodeError::IntegerOutOfRange),
+            _ => Err(DecodeError::UnexpectedType("integer")),
+        }
+    }
+}
+
+impl<B> Decode<sys::Object, B> for usize {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        <Self as Decode<sys::Int, B>>::decode(value)
+    }
+}
 
 impl<B> Decode<sys::Float, B> for f64 {
     fn decode(value: Object<B>) -> Result<Self, DecodeError> {
@@ -252,23 +445,47 @@ impl<B> Decode<sys::Dict, B> for Map<B> {
     }
 }
 
-macro_rules! _impl_object {
-    ($ty:ty, $marker:ty, $($bound:tt)*) => {
-        impl<B $($bound)*> Decode<sys::Object, B> for $ty {
-            fn decode(value: Object<B>) -> Result<Self, DecodeError> {
-                <Self as Decode<$marker, B>>::decode(value)
-            }
-        }
-    };
+impl<B> Decode<sys::Object, B> for bool {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        <Self as Decode<sys::Bool, B>>::decode(value)
+    }
 }
 
-_impl_object!(bool, sys::Bool,);
-_impl_object!(f32, sys::Float,);
-_impl_object!(f64, sys::Float,);
-_impl_object!(String, sys::String, : Buf);
-_impl_object!(Bin<B>, sys::String,);
-_impl_object!(Array<B>, sys::Array,);
-_impl_object!(Map<B>, sys::Dict,);
+impl<B> Decode<sys::Object, B> for f32 {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        <Self as Decode<sys::Float, B>>::decode(value)
+    }
+}
+
+impl<B> Decode<sys::Object, B> for f64 {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        <Self as Decode<sys::Float, B>>::decode(value)
+    }
+}
+
+impl<B: Buf> Decode<sys::Object, B> for String {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        <Self as Decode<sys::String, B>>::decode(value)
+    }
+}
+
+impl<B> Decode<sys::Object, B> for Bin<B> {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        <Self as Decode<sys::String, B>>::decode(value)
+    }
+}
+
+impl<B> Decode<sys::Object, B> for Array<B> {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        <Self as Decode<sys::Array, B>>::decode(value)
+    }
+}
+
+impl<B> Decode<sys::Object, B> for Map<B> {
+    fn decode(value: Object<B>) -> Result<Self, DecodeError> {
+        <Self as Decode<sys::Dict, B>>::decode(value)
+    }
+}
 
 impl<'a> Decode<sys::Object, &'a [u8]> for &'a str {
     fn decode(value: Object<&'a [u8]>) -> Result<Self, DecodeError> {
@@ -440,5 +657,4 @@ _impl_tuple!(14; M0 T0, M1 T1, M2 T2, M3 T3, M4 T4, M5 T5, M6 T6, M7 T7, M8 T8, 
 _impl_tuple!(15; M0 T0, M1 T1, M2 T2, M3 T3, M4 T4, M5 T5, M6 T6, M7 T7, M8 T8, M9 T9, M10 T10, M11 T11, M12 T12, M13 T13, M14 T14);
 
 #[cfg(test)]
-#[path = "decode_tests.rs"]
 mod tests;

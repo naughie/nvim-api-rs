@@ -84,19 +84,49 @@ mod base {
     // Separates non-union markers from OneOf for recursive compatibility checks.
     pub(super) trait NonUnion: BaseType {}
 
-    macro_rules! _impl_base_type {
-        ($($ty:ty),+ $(,)?) => {
-            $(
-                impl Sealed for $ty {}
-                impl BaseType for $ty {}
-                impl NonUnion for $ty {}
-            )+
-        };
-    }
+    impl Sealed for Buffer {}
+    impl BaseType for Buffer {}
+    impl NonUnion for Buffer {}
 
-    _impl_base_type!(
-        Buffer, Window, Tabpage, Nil, String, Bool, Int, Float, Array, Dict, Object
-    );
+    impl Sealed for Window {}
+    impl BaseType for Window {}
+    impl NonUnion for Window {}
+
+    impl Sealed for Tabpage {}
+    impl BaseType for Tabpage {}
+    impl NonUnion for Tabpage {}
+
+    impl Sealed for Nil {}
+    impl BaseType for Nil {}
+    impl NonUnion for Nil {}
+
+    impl Sealed for String {}
+    impl BaseType for String {}
+    impl NonUnion for String {}
+
+    impl Sealed for Bool {}
+    impl BaseType for Bool {}
+    impl NonUnion for Bool {}
+
+    impl Sealed for Int {}
+    impl BaseType for Int {}
+    impl NonUnion for Int {}
+
+    impl Sealed for Float {}
+    impl BaseType for Float {}
+    impl NonUnion for Float {}
+
+    impl Sealed for Array {}
+    impl BaseType for Array {}
+    impl NonUnion for Array {}
+
+    impl Sealed for Dict {}
+    impl BaseType for Dict {}
+    impl NonUnion for Dict {}
+
+    impl Sealed for Object {}
+    impl BaseType for Object {}
+    impl NonUnion for Object {}
 
     impl<T: BaseType> Sealed for ArrayOf<T> {}
     impl<T: BaseType> BaseType for ArrayOf<T> {}

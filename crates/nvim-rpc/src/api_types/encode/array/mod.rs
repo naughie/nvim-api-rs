@@ -76,55 +76,85 @@ where
     }
 }
 
-macro_rules! _impl_convert_array {
-    ($wrapper:ident; $($bounds:tt)*) => {
-        impl<B, A> Like<sys::ArrayOf<B>> for Convert<$wrapper<A>>
-        where
-            B: BaseType,
-            A: IntoIterator,
-            <A as IntoIterator>::Item: Like<B>,
-            A::IntoIter: ExactSizeIterator,
-            $($bounds)*
-        {
-            type EncodeAs = Array<Elements<A, B>>;
+impl<B, A> Like<sys::ArrayOf<B>> for Convert<Array<A>>
+where
+    B: BaseType,
+    A: IntoIterator,
+    <A as IntoIterator>::Item: Like<B>,
+    A::IntoIter: ExactSizeIterator,
+{
+    type EncodeAs = Array<Elements<A, B>>;
 
-            fn encode(self) -> Self::EncodeAs {
-                Array(Elements::new(self.0.0))
-            }
-        }
-
-        impl<A> Like<sys::Array> for Convert<$wrapper<A>>
-        where
-            A: IntoIterator,
-            <A as IntoIterator>::Item: Like<sys::Object>,
-            A::IntoIter: ExactSizeIterator,
-            $($bounds)*
-        {
-            type EncodeAs = Array<Elements<A, sys::Object>>;
-
-            fn encode(self) -> Self::EncodeAs {
-                Array(Elements::new(self.0.0))
-            }
-        }
-
-        impl<A> Like<sys::Object> for Convert<$wrapper<A>>
-        where
-            A: IntoIterator,
-            <A as IntoIterator>::Item: Like<sys::Object>,
-            A::IntoIter: ExactSizeIterator,
-            $($bounds)*
-        {
-            type EncodeAs = Array<Elements<A, sys::Object>>;
-
-            fn encode(self) -> Self::EncodeAs {
-                Array(Elements::new(self.0.0))
-            }
-        }
-    };
+    fn encode(self) -> Self::EncodeAs {
+        Array(Elements::new(self.0.0))
+    }
 }
 
-_impl_convert_array!(Array;);
-_impl_convert_array!(ArrayIter; A: ExactSizeIterator,);
+impl<A> Like<sys::Array> for Convert<Array<A>>
+where
+    A: IntoIterator,
+    <A as IntoIterator>::Item: Like<sys::Object>,
+    A::IntoIter: ExactSizeIterator,
+{
+    type EncodeAs = Array<Elements<A, sys::Object>>;
+
+    fn encode(self) -> Self::EncodeAs {
+        Array(Elements::new(self.0.0))
+    }
+}
+
+impl<A> Like<sys::Object> for Convert<Array<A>>
+where
+    A: IntoIterator,
+    <A as IntoIterator>::Item: Like<sys::Object>,
+    A::IntoIter: ExactSizeIterator,
+{
+    type EncodeAs = Array<Elements<A, sys::Object>>;
+
+    fn encode(self) -> Self::EncodeAs {
+        Array(Elements::new(self.0.0))
+    }
+}
+
+impl<B, A> Like<sys::ArrayOf<B>> for Convert<ArrayIter<A>>
+where
+    B: BaseType,
+    A: IntoIterator + ExactSizeIterator,
+    <A as IntoIterator>::Item: Like<B>,
+    A::IntoIter: ExactSizeIterator,
+{
+    type EncodeAs = Array<Elements<A, B>>;
+
+    fn encode(self) -> Self::EncodeAs {
+        Array(Elements::new(self.0.0))
+    }
+}
+
+impl<A> Like<sys::Array> for Convert<ArrayIter<A>>
+where
+    A: IntoIterator + ExactSizeIterator,
+    <A as IntoIterator>::Item: Like<sys::Object>,
+    A::IntoIter: ExactSizeIterator,
+{
+    type EncodeAs = Array<Elements<A, sys::Object>>;
+
+    fn encode(self) -> Self::EncodeAs {
+        Array(Elements::new(self.0.0))
+    }
+}
+
+impl<A> Like<sys::Object> for Convert<ArrayIter<A>>
+where
+    A: IntoIterator + ExactSizeIterator,
+    <A as IntoIterator>::Item: Like<sys::Object>,
+    A::IntoIter: ExactSizeIterator,
+{
+    type EncodeAs = Array<Elements<A, sys::Object>>;
+
+    fn encode(self) -> Self::EncodeAs {
+        Array(Elements::new(self.0.0))
+    }
+}
 
 impl<B: BaseType, T: Like<B>, const N: usize> Like<sys::FixedArrayOf<B, N>>
     for Convert<Array<[T; N]>>

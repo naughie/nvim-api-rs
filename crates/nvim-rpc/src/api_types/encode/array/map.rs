@@ -31,80 +31,214 @@ where
     }
 }
 
-macro_rules! _impl_like {
-    ([$($generic:tt)*] $ty:ty) => {
-        impl<$($generic)*, B: BaseType> Like<sys::ArrayOf<B>> for $ty
-        where
-            Self: IntoIterator,
-            <Self as IntoIterator>::IntoIter: ExactSizeIterator,
-            <Self as IntoIterator>::Item: Like<B>,
-        {
-            type EncodeAs = Array<Elements<Self, B>>;
+impl<A, F, B: BaseType> Like<sys::ArrayOf<B>> for Map<A, F>
+where
+    Self: IntoIterator,
+    <Self as IntoIterator>::IntoIter: ExactSizeIterator,
+    <Self as IntoIterator>::Item: Like<B>,
+{
+    type EncodeAs = Array<Elements<Self, B>>;
 
-            fn encode(self) -> Self::EncodeAs {
-                Array(Elements::new(self))
-            }
-        }
-
-        impl<$($generic)*> Like<sys::Array> for $ty
-        where
-            Self: IntoIterator,
-            <Self as IntoIterator>::IntoIter: ExactSizeIterator,
-            <Self as IntoIterator>::Item: Like<sys::Object>,
-        {
-            type EncodeAs = Array<Elements<Self, sys::Object>>;
-
-            fn encode(self) -> Self::EncodeAs {
-                Array(Elements::new(self))
-            }
-        }
-
-        impl<$($generic)*> Like<sys::Object> for $ty
-        where
-            Self: IntoIterator,
-            <Self as IntoIterator>::IntoIter: ExactSizeIterator,
-            <Self as IntoIterator>::Item: Like<sys::Object>,
-        {
-            type EncodeAs = Array<Elements<Self, sys::Object>>;
-
-            fn encode(self) -> Self::EncodeAs {
-                Array(Elements::new(self))
-            }
-        }
-    };
+    fn encode(self) -> Self::EncodeAs {
+        Array(Elements::new(self))
+    }
 }
 
-_impl_like!([A, F] Map<A, F>);
-_impl_like!(['s, A: ?Sized, F] MapRef<'s, A, F>);
+impl<A, F> Like<sys::Array> for Map<A, F>
+where
+    Self: IntoIterator,
+    <Self as IntoIterator>::IntoIter: ExactSizeIterator,
+    <Self as IntoIterator>::Item: Like<sys::Object>,
+{
+    type EncodeAs = Array<Elements<Self, sys::Object>>;
 
-macro_rules! _impl_fixed {
-    ([$($generic:tt)*] $ty:ty) => {
-        impl<$($generic)*, B: BaseType, const N: usize> Like<sys::FixedArrayOf<B, N>> for $ty
-        where
-            Self: IntoIterator,
-            <Self as IntoIterator>::IntoIter: ExactSizeIterator,
-            <Self as IntoIterator>::Item: Like<B>,
-        {
-            type EncodeAs = Array<Elements<Self, B>>;
-
-            fn encode(self) -> Self::EncodeAs {
-                Array(Elements::new(self))
-            }
-        }
-
-        impl<$($generic)*, B: BaseType, const N: usize>
-            LikeBaseType<sys::FixedArrayOf<B, N>> for Array<Elements<$ty, B>>
-        where
-            $ty: IntoIterator,
-            <$ty as IntoIterator>::IntoIter: ExactSizeIterator,
-            <$ty as IntoIterator>::Item: Like<B>,
-        {}
-    };
+    fn encode(self) -> Self::EncodeAs {
+        Array(Elements::new(self))
+    }
 }
 
-_impl_fixed!([T, F] Map<[T; N], F>);
-_impl_fixed!(['s, T, F] Map<&'s [T; N], F>);
-_impl_fixed!([T, F] Map<Array<[T; N]>, F>);
-_impl_fixed!(['s, T, F] Map<Array<&'s [T; N]>, F>);
-_impl_fixed!(['s, T, F] MapRef<'s, [T; N], F>);
-_impl_fixed!(['s, T, F] MapRef<'s, Array<[T; N]>, F>);
+impl<A, F> Like<sys::Object> for Map<A, F>
+where
+    Self: IntoIterator,
+    <Self as IntoIterator>::IntoIter: ExactSizeIterator,
+    <Self as IntoIterator>::Item: Like<sys::Object>,
+{
+    type EncodeAs = Array<Elements<Self, sys::Object>>;
+
+    fn encode(self) -> Self::EncodeAs {
+        Array(Elements::new(self))
+    }
+}
+
+impl<'s, A: ?Sized, F, B: BaseType> Like<sys::ArrayOf<B>> for MapRef<'s, A, F>
+where
+    Self: IntoIterator,
+    <Self as IntoIterator>::IntoIter: ExactSizeIterator,
+    <Self as IntoIterator>::Item: Like<B>,
+{
+    type EncodeAs = Array<Elements<Self, B>>;
+
+    fn encode(self) -> Self::EncodeAs {
+        Array(Elements::new(self))
+    }
+}
+
+impl<'s, A: ?Sized, F> Like<sys::Array> for MapRef<'s, A, F>
+where
+    Self: IntoIterator,
+    <Self as IntoIterator>::IntoIter: ExactSizeIterator,
+    <Self as IntoIterator>::Item: Like<sys::Object>,
+{
+    type EncodeAs = Array<Elements<Self, sys::Object>>;
+
+    fn encode(self) -> Self::EncodeAs {
+        Array(Elements::new(self))
+    }
+}
+
+impl<'s, A: ?Sized, F> Like<sys::Object> for MapRef<'s, A, F>
+where
+    Self: IntoIterator,
+    <Self as IntoIterator>::IntoIter: ExactSizeIterator,
+    <Self as IntoIterator>::Item: Like<sys::Object>,
+{
+    type EncodeAs = Array<Elements<Self, sys::Object>>;
+
+    fn encode(self) -> Self::EncodeAs {
+        Array(Elements::new(self))
+    }
+}
+
+impl<T, F, B: BaseType, const N: usize> Like<sys::FixedArrayOf<B, N>> for Map<[T; N], F>
+where
+    Self: IntoIterator,
+    <Self as IntoIterator>::IntoIter: ExactSizeIterator,
+    <Self as IntoIterator>::Item: Like<B>,
+{
+    type EncodeAs = Array<Elements<Self, B>>;
+
+    fn encode(self) -> Self::EncodeAs {
+        Array(Elements::new(self))
+    }
+}
+
+impl<T, F, B: BaseType, const N: usize> LikeBaseType<sys::FixedArrayOf<B, N>>
+    for Array<Elements<Map<[T; N], F>, B>>
+where
+    Map<[T; N], F>: IntoIterator,
+    <Map<[T; N], F> as IntoIterator>::IntoIter: ExactSizeIterator,
+    <Map<[T; N], F> as IntoIterator>::Item: Like<B>,
+{
+}
+
+impl<'s, T, F, B: BaseType, const N: usize> Like<sys::FixedArrayOf<B, N>> for Map<&'s [T; N], F>
+where
+    Self: IntoIterator,
+    <Self as IntoIterator>::IntoIter: ExactSizeIterator,
+    <Self as IntoIterator>::Item: Like<B>,
+{
+    type EncodeAs = Array<Elements<Self, B>>;
+
+    fn encode(self) -> Self::EncodeAs {
+        Array(Elements::new(self))
+    }
+}
+
+impl<'s, T, F, B: BaseType, const N: usize> LikeBaseType<sys::FixedArrayOf<B, N>>
+    for Array<Elements<Map<&'s [T; N], F>, B>>
+where
+    Map<&'s [T; N], F>: IntoIterator,
+    <Map<&'s [T; N], F> as IntoIterator>::IntoIter: ExactSizeIterator,
+    <Map<&'s [T; N], F> as IntoIterator>::Item: Like<B>,
+{
+}
+
+impl<T, F, B: BaseType, const N: usize> Like<sys::FixedArrayOf<B, N>> for Map<Array<[T; N]>, F>
+where
+    Self: IntoIterator,
+    <Self as IntoIterator>::IntoIter: ExactSizeIterator,
+    <Self as IntoIterator>::Item: Like<B>,
+{
+    type EncodeAs = Array<Elements<Self, B>>;
+
+    fn encode(self) -> Self::EncodeAs {
+        Array(Elements::new(self))
+    }
+}
+
+impl<T, F, B: BaseType, const N: usize> LikeBaseType<sys::FixedArrayOf<B, N>>
+    for Array<Elements<Map<Array<[T; N]>, F>, B>>
+where
+    Map<Array<[T; N]>, F>: IntoIterator,
+    <Map<Array<[T; N]>, F> as IntoIterator>::IntoIter: ExactSizeIterator,
+    <Map<Array<[T; N]>, F> as IntoIterator>::Item: Like<B>,
+{
+}
+
+impl<'s, T, F, B: BaseType, const N: usize> Like<sys::FixedArrayOf<B, N>>
+    for Map<Array<&'s [T; N]>, F>
+where
+    Self: IntoIterator,
+    <Self as IntoIterator>::IntoIter: ExactSizeIterator,
+    <Self as IntoIterator>::Item: Like<B>,
+{
+    type EncodeAs = Array<Elements<Self, B>>;
+
+    fn encode(self) -> Self::EncodeAs {
+        Array(Elements::new(self))
+    }
+}
+
+impl<'s, T, F, B: BaseType, const N: usize> LikeBaseType<sys::FixedArrayOf<B, N>>
+    for Array<Elements<Map<Array<&'s [T; N]>, F>, B>>
+where
+    Map<Array<&'s [T; N]>, F>: IntoIterator,
+    <Map<Array<&'s [T; N]>, F> as IntoIterator>::IntoIter: ExactSizeIterator,
+    <Map<Array<&'s [T; N]>, F> as IntoIterator>::Item: Like<B>,
+{
+}
+
+impl<'s, T, F, B: BaseType, const N: usize> Like<sys::FixedArrayOf<B, N>> for MapRef<'s, [T; N], F>
+where
+    Self: IntoIterator,
+    <Self as IntoIterator>::IntoIter: ExactSizeIterator,
+    <Self as IntoIterator>::Item: Like<B>,
+{
+    type EncodeAs = Array<Elements<Self, B>>;
+
+    fn encode(self) -> Self::EncodeAs {
+        Array(Elements::new(self))
+    }
+}
+
+impl<'s, T, F, B: BaseType, const N: usize> LikeBaseType<sys::FixedArrayOf<B, N>>
+    for Array<Elements<MapRef<'s, [T; N], F>, B>>
+where
+    MapRef<'s, [T; N], F>: IntoIterator,
+    <MapRef<'s, [T; N], F> as IntoIterator>::IntoIter: ExactSizeIterator,
+    <MapRef<'s, [T; N], F> as IntoIterator>::Item: Like<B>,
+{
+}
+
+impl<'s, T, F, B: BaseType, const N: usize> Like<sys::FixedArrayOf<B, N>>
+    for MapRef<'s, Array<[T; N]>, F>
+where
+    Self: IntoIterator,
+    <Self as IntoIterator>::IntoIter: ExactSizeIterator,
+    <Self as IntoIterator>::Item: Like<B>,
+{
+    type EncodeAs = Array<Elements<Self, B>>;
+
+    fn encode(self) -> Self::EncodeAs {
+        Array(Elements::new(self))
+    }
+}
+
+impl<'s, T, F, B: BaseType, const N: usize> LikeBaseType<sys::FixedArrayOf<B, N>>
+    for Array<Elements<MapRef<'s, Array<[T; N]>, F>, B>>
+where
+    MapRef<'s, Array<[T; N]>, F>: IntoIterator,
+    <MapRef<'s, Array<[T; N]>, F> as IntoIterator>::IntoIter: ExactSizeIterator,
+    <MapRef<'s, Array<[T; N]>, F> as IntoIterator>::Item: Like<B>,
+{
+}

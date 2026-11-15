@@ -85,25 +85,19 @@ fn owned_custom_values_move_into_collection_encodings() {
 
 #[test]
 fn handle_collections_apply_owned_and_borrowed_conversions() {
-    macro_rules! _assert_handles {
-        ($handle:ident) => {
-            let handles = [$handle::new(7), $handle::new(9)];
-            assert_encoded::<types::ArrayOf<ext::$handle>>(&handles[..], b"\x92\x07\x09");
-            assert_encoded::<types::FixedArrayOf<ext::$handle, 2>>(&handles, b"\x92\x07\x09");
-            assert_encoded::<types::ArrayOf<ext::$handle>>(
-                Convert(Array(handles)),
-                b"\x92\x07\x09",
-            );
-            assert_encoded::<types::FixedArrayOf<ext::$handle, 2>>(
-                Convert(Array(handles)),
-                b"\x92\x07\x09",
-            );
-        };
+    fn check<M: BaseType, T: Copy + Like<M>>(handles: [T; 2])
+    where
+        for<'s> &'s T: Like<M>,
+    {
+        assert_encoded::<types::ArrayOf<M>>(&handles[..], b"\x92\x07\x09");
+        assert_encoded::<types::FixedArrayOf<M, 2>>(&handles, b"\x92\x07\x09");
+        assert_encoded::<types::ArrayOf<M>>(Convert(Array(handles)), b"\x92\x07\x09");
+        assert_encoded::<types::FixedArrayOf<M, 2>>(Convert(Array(handles)), b"\x92\x07\x09");
     }
 
-    _assert_handles!(Buffer);
-    _assert_handles!(Window);
-    _assert_handles!(Tabpage);
+    check::<ext::Buffer, Buffer>([Buffer::new(7), Buffer::new(9)]);
+    check::<ext::Window, Window>([Window::new(7), Window::new(9)]);
+    check::<ext::Tabpage, Tabpage>([Tabpage::new(7), Tabpage::new(9)]);
 }
 
 #[test]
