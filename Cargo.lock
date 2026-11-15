@@ -720,7 +720,7 @@ dependencies = [
 
 [[package]]
 name = "nvim-rpc"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "futures",
  "futures-io",
@@ -731,7 +731,7 @@ dependencies = [
 
 [[package]]
 name = "nvim-rpc-plugin"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "bytes",
  "nvim-rpc",
