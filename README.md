@@ -34,9 +34,9 @@ cargo build -p nvim-rpc-plugin --example plugin
 
 The plugin README includes the Lua calls to launch and use the example.
 
-For applications that manage their own receive loop, start with the
-[nvim-rpc guide](crates/nvim-rpc/README.md). It shows borrowed arguments,
-response decoding, custom argument types, and optional async I/O adapters.
+For applications that manage their own receive loop, start with
+[nvim-rpc](crates/nvim-rpc/README.md). Each crate's README links to its API
+documentation for detailed usage and contracts.
 
 ## Try it against Neovim
 

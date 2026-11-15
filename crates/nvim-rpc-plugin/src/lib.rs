@@ -85,6 +85,31 @@ use tokio::io::AsyncWrite;
 ///     async fn on_notification(&self, _: &[u8], _: Array, _: Neovim<W>) {}
 /// }
 /// ```
+///
+/// # Execution order
+///
+/// Requests and notifications are dispatched in receipt order. Each request
+/// spawns a separate task without waiting for earlier requests. Request tasks
+/// may overlap; their start and completion order depends on Tokio scheduling,
+/// and they may run in parallel on a multithreaded runtime.
+///
+/// Notifications run one at a time. A notification finishes before any later
+/// request or notification is dispatched. It does not wait for earlier request
+/// tasks to finish, so those tasks may overlap with it. The receive loop keeps
+/// reading and matching responses, allowing both hooks to await nested calls
+/// through [`Neovim::request()`].
+///
+/// For a batch `request A, notification B, request C, notification D`, the
+/// dispatcher spawns A and waits for B to finish before spawning C and running D.
+/// A may still be running during B, C, or D; C may still be running during D.
+/// The same rules apply when messages arrive in separate reads. This dispatch
+/// order follows [nvim-rs](https://github.com/KillTheMule/nvim-rs/blob/4c85d61cc6fadc64fb67d8eb46e908f5a8723396/src/rpc/handler.rs#L33-L43).
+///
+/// Request replies follow Neovim's reverse request order, even when handlers
+/// finish in a different order. A request queued behind a notification is
+/// registered on receipt, so an earlier request's reply may wait for that queued
+/// request to finish too. Argument decoding also waits for earlier notifications;
+/// a malformed request cannot send its error reply ahead of them.
 pub trait Handler<W>: Send + Sync + 'static
 where
     W: AsyncWrite + Unpin + Send + 'static,
@@ -102,8 +127,11 @@ where
 
     /// Handles a request and returns its reply.
     ///
-    /// Each call runs in a separate task. `nvim` can make nested calls while
-    /// the connection continues receiving messages.
+    /// Dispatch waits for earlier notifications to finish, then spawns a
+    /// separate task without waiting for other requests. Request tasks may
+    /// overlap each other and later notifications; their start and completion
+    /// order depends on scheduling. `nvim` can make nested calls while the
+    /// connection continues receiving messages.
     fn on_request(
         &self,
         method: &[u8],
@@ -113,7 +141,10 @@ where
 
     /// Handles a notification without sending a reply.
     ///
-    /// Each call runs in a separate task and may overlap with other hooks.
+    /// Notifications run one at a time in receipt order. Each call finishes
+    /// before any later request or notification is dispatched, but does not
+    /// wait for earlier request tasks to finish. Receiving and response
+    /// matching continue, so `nvim` can make nested calls from this hook.
     fn on_notification(
         &self,
         method: &[u8],

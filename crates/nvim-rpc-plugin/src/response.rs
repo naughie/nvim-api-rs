@@ -10,6 +10,8 @@ use std::convert::Infallible;
 /// a successful empty array. Use the explicit `Nil` primitive for a nil result.
 /// Application response types can implement this trait by converting their
 /// fields into built-in representations or untagged alternatives.
+/// [`crate::mp::encode::Untagged`] combines alternatives such as an integer and
+/// a string without a wire tag.
 /// Responses move between handler and writer tasks and therefore require
 /// `Send + 'static`.
 ///

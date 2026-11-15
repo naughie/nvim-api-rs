@@ -2,8 +2,8 @@
 
 Apply these instructions alongside `~/.codex/AGENTS.md`. They specialize those conventions for this workspace.
 Read the affected crate's README, source, manifests, and tests before changing
-its design. [CONTRIBUTING.md](CONTRIBUTING.md) owns contributor procedures;
-[codegen/README.md](codegen/README.md) owns generation instructions.
+its design. [CONTRIBUTING.md](CONTRIBUTING.md) owns contributor and regeneration
+procedures; [codegen/README.md](codegen/README.md) introduces generator commands.
 
 ## Design priorities and crate boundaries
 
@@ -89,7 +89,8 @@ stdout carries RPC bytes and diagnostics go to stderr.
 - Change generated APIs and rustdoc in `codegen/src/gen_api.rs` or
   `codegen/src/gen_api_sys.rs`, then regenerate both outputs. Do not make a
   generated-file-only fix. Review the generated source and manifest changes
-  together using the procedure in the [codegen guide](codegen/README.md).
+  together using the procedure in the
+  [contributor guide](CONTRIBUTING.md#generated-bindings).
 - Preserve diagnostics for unexpected metadata, including method-prefix
   mismatches; do not replace a reported mismatch with a silent skip. Preserve
   deliberate filtering of Lua-only signatures from the RPC facade and the
@@ -104,9 +105,11 @@ stdout carries RPC bytes and diagnostics go to stderr.
 
 Apply the inherited documentation rules to actual plugin and API workflows.
 Use small, concrete examples that demonstrate the selected representations
-and ownership. Keep the root README as the entry point, crate READMEs as usage
-guides, rustdoc as API reference, and contributor procedures in
-`CONTRIBUTING.md`; extend those homes rather than accumulating duplicate notes.
+and ownership. Keep every README within its role as an entry point: purpose,
+prerequisites, a small getting-started workflow, and documentation links. Put
+detailed API contracts and usage in rustdoc, and contributor procedures and
+generator internals in `CONTRIBUTING.md`. Extend the appropriate home rather
+than adding reference or procedural detail to a README.
 
 Function and method rustdoc links include parentheses, such as
 ``[`decode()`]``. Use third-person singular verbs when the documented item is

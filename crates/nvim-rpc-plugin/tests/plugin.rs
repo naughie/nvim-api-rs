@@ -251,6 +251,221 @@ async fn incoming_replies_follow_reverse_request_order() {
     task.abort();
 }
 
+#[derive(Debug, PartialEq, Eq)]
+enum DispatchEvent {
+    RequestStarted(u8),
+    RequestFinished(u8),
+    NotificationStarted(u8),
+    NotificationFinished(u8),
+}
+
+struct DispatchOrder {
+    events: mpsc::UnboundedSender<DispatchEvent>,
+    requests: [Arc<Notify>; 3],
+    notifications: [Arc<Notify>; 2],
+}
+
+impl<W: AsyncWrite + Unpin + Send + 'static> Handler<W> for DispatchOrder {
+    type Request = (u8,);
+    type Response = Result<u8, ()>;
+    type Notification = (u8,);
+
+    async fn on_request(&self, _: &[u8], (n,): Self::Request, _: Neovim<W>) -> Self::Response {
+        self.events.send(DispatchEvent::RequestStarted(n)).unwrap();
+        self.requests[usize::from(n - 1)].notified().await;
+        self.events.send(DispatchEvent::RequestFinished(n)).unwrap();
+        Ok(n)
+    }
+
+    async fn on_notification(&self, _: &[u8], (n,): Self::Notification, _: Neovim<W>) {
+        self.events
+            .send(DispatchEvent::NotificationStarted(n))
+            .unwrap();
+        self.notifications[usize::from(n - 1)].notified().await;
+        self.events
+            .send(DispatchEvent::NotificationFinished(n))
+            .unwrap();
+    }
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn notifications_block_later_dispatch_while_requests_overlap() {
+    use DispatchEvent::*;
+
+    for chunk_len in [4096, 1] {
+        let (stream, peer) = tokio::io::duplex(4096);
+        let (reader, writer) = tokio::io::split(stream);
+        let (peer_reader, mut peer_writer) = tokio::io::split(peer);
+        let mut receiver = Receiver::new(TokioRead(peer_reader), [0; 4096]);
+        let (events, mut received) = mpsc::unbounded_channel();
+        let requests = std::array::from_fn(|_| Arc::new(Notify::new()));
+        let notifications = std::array::from_fn(|_| Arc::new(Notify::new()));
+        let (_nvim, task) = spawn(
+            reader,
+            writer,
+            DispatchOrder {
+                events,
+                requests: requests.clone(),
+                notifications: notifications.clone(),
+            },
+        );
+        send(&mut peer_writer, (0u8, 1u32, "request", (1u8,))).await;
+        assert_eq!(bounded(received.recv()).await, Some(RequestStarted(1)));
+
+        let mut batch = Vec::new();
+        batch
+            .write_primitive((2u8, "notification", (1u8,)))
+            .consume();
+        batch
+            .write_primitive((0u8, 2u32, "request", (2u8,)))
+            .consume();
+        batch
+            .write_primitive((2u8, "notification", (2u8,)))
+            .consume();
+        batch
+            .write_primitive((0u8, 3u32, "request", (3u8,)))
+            .consume();
+        for chunk in batch.chunks(chunk_len) {
+            peer_writer.write_all(chunk).await.unwrap();
+            tokio::task::yield_now().await;
+        }
+        assert_eq!(bounded(received.recv()).await, Some(NotificationStarted(1)));
+        assert!(
+            tokio::time::timeout(Duration::from_millis(20), received.recv())
+                .await
+                .is_err()
+        );
+
+        requests[0].notify_one();
+        assert_eq!(bounded(received.recv()).await, Some(RequestFinished(1)));
+        assert!(
+            tokio::time::timeout(Duration::from_millis(20), receiver.recv_async())
+                .await
+                .is_err()
+        );
+        notifications[0].notify_one();
+        assert_eq!(
+            bounded(received.recv()).await,
+            Some(NotificationFinished(1))
+        );
+        let first = bounded(received.recv()).await.unwrap();
+        let second = bounded(received.recv()).await.unwrap();
+        assert!(matches!(
+            (first, second),
+            (RequestStarted(2), NotificationStarted(2))
+                | (NotificationStarted(2), RequestStarted(2))
+        ));
+        assert!(
+            tokio::time::timeout(Duration::from_millis(20), received.recv())
+                .await
+                .is_err()
+        );
+
+        notifications[1].notify_one();
+        assert_eq!(
+            bounded(received.recv()).await,
+            Some(NotificationFinished(2))
+        );
+        assert_eq!(bounded(received.recv()).await, Some(RequestStarted(3)));
+        requests[1].notify_one();
+        assert_eq!(bounded(received.recv()).await, Some(RequestFinished(2)));
+        assert!(
+            tokio::time::timeout(Duration::from_millis(20), receiver.recv_async())
+                .await
+                .is_err()
+        );
+        requests[2].notify_one();
+        assert_eq!(bounded(received.recv()).await, Some(RequestFinished(3)));
+        for id in [3, 2, 1] {
+            let Message::Response(response) = bounded(receiver.recv_async()).await.unwrap() else {
+                panic!("expected ordered response");
+            };
+            assert_eq!(response.msgid.0, id);
+            assert_eq!(response.result.unwrap().to_u8(), Some(id as u8));
+        }
+        task.abort();
+        assert!(task.await.unwrap_err().is_cancelled());
+    }
+}
+
+#[tokio::test]
+async fn notification_nested_calls_receive_responses_past_queued_callbacks() {
+    struct NestedNotification(mpsc::UnboundedSender<&'static str>);
+
+    impl<W: AsyncWrite + Unpin + Send + 'static> Handler<W> for NestedNotification {
+        type Request = ();
+        type Response = ();
+        type Notification = ();
+
+        async fn on_request(&self, _: &[u8], _: (), _: Neovim<W>) {
+            self.0.send("request").unwrap();
+        }
+
+        async fn on_notification(&self, method: &[u8], _: (), nvim: Neovim<W>) {
+            if method == b"nested" {
+                self.0.send("nested started").unwrap();
+                let line = nvim
+                    .request::<api::NvimGetCurrentLine, String>(())
+                    .await
+                    .unwrap();
+                assert_eq!(line, "current line");
+                self.0.send("nested finished").unwrap();
+            } else {
+                assert_eq!(method, b"later");
+                self.0.send("notification").unwrap();
+            }
+        }
+    }
+
+    let (stream, peer) = tokio::io::duplex(4096);
+    let (reader, writer) = tokio::io::split(stream);
+    let (peer_reader, mut peer_writer) = tokio::io::split(peer);
+    let mut receiver = Receiver::new(TokioRead(peer_reader), [0; 4096]);
+    let (events, mut received) = mpsc::unbounded_channel();
+    let (_nvim, task) = spawn(reader, writer, NestedNotification(events));
+    let mut batch = Vec::new();
+    batch.write_primitive((2u8, "nested", ())).consume();
+    batch.write_primitive((0u8, 10u32, "later", ())).consume();
+    batch.write_primitive((2u8, "later", ())).consume();
+    batch
+        .write_primitive((0u8, 11u32, "invalid", (1u8,)))
+        .consume();
+    peer_writer.write_all(&batch).await.unwrap();
+    assert_eq!(bounded(received.recv()).await, Some("nested started"));
+    let Message::Request(request) = bounded(receiver.recv_async()).await.unwrap() else {
+        panic!("expected nested request");
+    };
+    assert_eq!(request.method.as_slice(), b"nvim_get_current_line");
+    let id = request.msgid.0;
+    assert!(
+        tokio::time::timeout(Duration::from_millis(20), received.recv())
+            .await
+            .is_err()
+    );
+    assert!(
+        tokio::time::timeout(Duration::from_millis(20), receiver.recv_async())
+            .await
+            .is_err()
+    );
+    send(&mut peer_writer, (1u8, id, Nil, "current line")).await;
+    assert_eq!(bounded(received.recv()).await, Some("nested finished"));
+    let first = bounded(received.recv()).await.unwrap();
+    let second = bounded(received.recv()).await.unwrap();
+    assert!(matches!(
+        (first, second),
+        ("request", "notification") | ("notification", "request")
+    ));
+    for id in [11, 10] {
+        let Message::Response(response) = bounded(receiver.recv_async()).await.unwrap() else {
+            panic!("expected subsequent request response");
+        };
+        assert_eq!(response.msgid.0, id);
+        assert_eq!(response.result.is_ok(), id == 10);
+    }
+    task.abort();
+    assert!(task.await.unwrap_err().is_cancelled());
+}
+
 #[tokio::test]
 async fn cancelling_a_waiter_tolerates_its_late_response() {
     let (stream, peer) = tokio::io::duplex(4096);

@@ -6,6 +6,7 @@ use tokio::io::{AsyncRead, AsyncWrite};
 use tokio::sync::Notify;
 use tokio::task::{JoinHandle, JoinSet};
 
+use std::collections::VecDeque;
 use std::convert::Infallible;
 use std::sync::{Arc, Mutex, MutexGuard};
 
@@ -14,10 +15,15 @@ use std::sync::{Arc, Mutex, MutexGuard};
 /// `from_neovim` receives Neovim's RPC messages and `to_neovim` sends messages
 /// back. They may be process pipes, files, or socket halves. For a plugin started
 /// by Neovim, pass its stdin as `from_neovim` and stdout as `to_neovim`.
+/// Pass the underlying writer; [`Neovim`] buffers encoded chunks and flushes
+/// every complete request, notification, and reply.
+///
 /// The returned task owns the receive loop and all handler tasks. Await it to
-/// observe EOF or a connection failure; aborting it closes the connection and
-/// wakes pending requests. Messages own immutable `Bytes`. Request replies
-/// follow Neovim's reverse request order.
+/// observe EOF, transport errors, invalid notification arguments, or handler
+/// panics. EOF or a connection failure stops handler tasks and discards queued
+/// callbacks; aborting the task does the same. Closing the connection wakes
+/// pending requests. Messages own immutable [`crate::Bytes`]. See [`Handler`]
+/// for callback execution and reply ordering.
 pub fn spawn<R, W, H>(
     from_neovim: R,
     to_neovim: W,
@@ -127,6 +133,11 @@ enum Completion<R> {
     Writer(Result<(), ConnectionError>),
 }
 
+enum Callback {
+    Request(usize, crate::rpc::Request),
+    Notification(crate::rpc::Notification),
+}
+
 async fn write_replies<W, R>(
     nvim: Neovim<W>,
     replies: Arc<Replies<R>>,
@@ -174,10 +185,52 @@ where
         ready: Notify::new(),
     });
     let mut tasks = JoinSet::new();
+    let mut callbacks = VecDeque::new();
+    let mut notifying = false;
     let reply_writer = write_replies(nvim.clone(), Arc::clone(&replies));
     tasks.spawn(async move { Completion::Writer(reply_writer.await) });
 
-    let result = loop {
+    let result = 'receive: loop {
+        while !notifying {
+            let Some(callback) = callbacks.pop_front() else {
+                break;
+            };
+            tokio::task::consume_budget().await;
+            match callback {
+                Callback::Request(idx, request) => {
+                    let params = match H::Request::from_params(request.params) {
+                        Ok(params) => params,
+                        Err(error) => {
+                            replies.complete(idx, Reply::InvalidParams(error.to_string()));
+                            continue;
+                        }
+                    };
+                    let handler = Arc::clone(&handler);
+                    let nvim = nvim.clone();
+                    tasks.spawn(async move {
+                        let value = handler
+                            .on_request(request.method.as_slice(), params, nvim)
+                            .await;
+                        Completion::Request(idx, value)
+                    });
+                }
+                Callback::Notification(notification) => {
+                    let params = match H::Notification::from_params(notification.params) {
+                        Ok(params) => params,
+                        Err(error) => break 'receive Err(ConnectionError::Decode(error)),
+                    };
+                    let handler = Arc::clone(&handler);
+                    let nvim = nvim.clone();
+                    tasks.spawn(async move {
+                        handler
+                            .on_notification(notification.method.as_slice(), params, nvim)
+                            .await;
+                        Completion::Notification
+                    });
+                    notifying = true;
+                }
+            }
+        }
         let frame = if let Some(frame) = frames.buffered() {
             Ok(Some(frame))
         } else {
@@ -189,7 +242,7 @@ where
                 completed = tasks.join_next() => {
                     match completed.expect("the reply writer remains registered") {
                         Ok(Completion::Request(idx, value)) => replies.complete(idx, Reply::Value(value)),
-                        Ok(Completion::Notification) => {},
+                        Ok(Completion::Notification) => notifying = false,
                         Ok(Completion::Writer(result)) => break result,
                         Err(error) => break Err(ConnectionError::Task(Arc::new(error))),
                     }
@@ -217,35 +270,10 @@ where
                     Ok(idx) => idx,
                     Err(error) => break Err(error),
                 };
-                let params = match H::Request::from_params(request.params) {
-                    Ok(params) => params,
-                    Err(error) => {
-                        replies.complete(idx, Reply::InvalidParams(error.to_string()));
-                        continue;
-                    }
-                };
-                let handler = Arc::clone(&handler);
-                let nvim = nvim.clone();
-                tasks.spawn(async move {
-                    let value = handler
-                        .on_request(request.method.as_slice(), params, nvim)
-                        .await;
-                    Completion::Request(idx, value)
-                });
+                callbacks.push_back(Callback::Request(idx, request));
             }
             Message::Notification(notification) => {
-                let params = match H::Notification::from_params(notification.params) {
-                    Ok(params) => params,
-                    Err(error) => break Err(ConnectionError::Decode(error)),
-                };
-                let handler = Arc::clone(&handler);
-                let nvim = nvim.clone();
-                tasks.spawn(async move {
-                    handler
-                        .on_notification(notification.method.as_slice(), params, nvim)
-                        .await;
-                    Completion::Notification
-                });
+                callbacks.push_back(Callback::Notification(notification));
             }
             Message::InvalidFormat => break Err(ConnectionError::InvalidFormat),
         }

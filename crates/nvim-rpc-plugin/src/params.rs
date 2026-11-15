@@ -30,6 +30,9 @@ use nvim_rpc::sys::types;
 /// [`Array`] itself when argument layouts differ by method, then decode inside
 /// the hook after matching the method name. `()` requires an empty argument
 /// array; `Array` can be used to ignore arbitrary arguments.
+/// [`crate::Bin`], [`Array`], [`crate::Map`], and [`crate::Object`] retain shared
+/// message storage across receives. `String` validates UTF-8 and copies text
+/// into an owned string.
 ///
 /// A request decoding failure is sent as an error reply. A notification
 /// decoding failure ends the connection. Decode inside the hook when you need

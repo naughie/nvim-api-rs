@@ -66,17 +66,40 @@ cargo test -p rmp-bytes -- --ignored
 
 ## Generated bindings
 
-Edit `codegen/src/gen_api.rs` or `codegen/src/gen_api_sys.rs` for changes to
-generated code or its documentation, then regenerate both outputs:
+Edit `codegen/src/gen_api_sys.rs` for metadata descriptors or
+`codegen/src/gen_api.rs` for RPC descriptor reexports, handle call builders, and
+UI option encoding. Change generated documentation in these generators as well,
+then regenerate both outputs:
 
 ```sh
 cargo gen --nvim /path/to/nvim
 ```
 
-The generator also aligns the `nvim-rpc-sys` version and workspace dependency
-with the selected Neovim release. Review those manifest changes along with the
-generated files. See [codegen/README.md](codegen/README.md) for output paths,
-release downloads, and caching.
+The generator writes and formats:
+
+- [`crates/nvim-rpc-sys/src/generated.rs`](crates/nvim-rpc-sys/src/generated.rs):
+  function and event descriptors, UI options, extension IDs, and version constants.
+- [`crates/nvim-rpc/src/generated.rs`](crates/nvim-rpc/src/generated.rs):
+  the `api` descriptor reexports, handle methods, and UI option encoding.
+
+It also sets `nvim-rpc-sys`'s package version to Neovim's `major.minor.patch`
+and updates its workspace dependency requirement. Other package versions are
+unchanged. Review both generated files and the manifest changes together.
+See [codegen/README.md](codegen/README.md) for local executable and release
+download options, including caching.
+
+The metadata output includes Lua-only signatures. The RPC output omits functions
+with a `LuaRef` in their parameter or return types. Deprecated functions and
+handle methods receive `#[deprecated]` with their API level. A method name that
+does not match its handle prefix produces a warning and remains available only
+as a function descriptor.
+
+Check the generator and run the [workspace validation](#validation) after
+regeneration:
+
+```sh
+cargo test -p codegen
+```
 
 ### Scheduled Neovim updates
 
@@ -194,9 +217,11 @@ with fresh versions for crates that were already published.
 
 ## Documentation
 
-Keep the root README focused on choosing a crate and running an example. Crate
-READMEs provide usage guides; rustdoc explains each public API's behavior,
-ownership, errors, and cancellation contracts. Put contributor procedures here
-and generator-specific details in the codegen README. Describe our encoding and
-decoding choices where they affect callers, and link to external references
-when broader protocol or dependency background is needed.
+Keep every README within its role as an entry point: purpose, prerequisites,
+a small getting-started workflow, and links to further documentation. A README
+does not replace a usage guide, API reference, or contributor guide. Put detailed
+API behavior, representations, ownership, errors, and cancellation contracts in
+rustdoc, and contributor procedures and generator internals here. Keep the
+codegen README focused on running the tool. Describe encoding and decoding
+choices in the relevant API documentation, and link to external references when
+broader protocol or dependency background is needed.

@@ -1,6 +1,8 @@
 //! Built-in MessagePack representations.
 //!
 //! Integers, floats, booleans, strings, byte slices, and tuples encode directly.
+//! Strings encode as MessagePack strings; byte slices and `Vec<u8>` encode as
+//! binary values.
 //! Tuples and `()` encode as arrays; [`Nil`] encodes MessagePack nil. Use [`Array`]
 //! or [`ArrayIter`] for homogeneous sequences and [`Map`] or [`MapIter`] for
 //! key/value pairs. Their iterators must have an exact length for the wire header.

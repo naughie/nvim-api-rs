@@ -16,17 +16,10 @@ the child process:
 APPIMAGE_EXTRACT_AND_RUN=1 cargo gen --nvim /path/to/nvim.appimage
 ```
 
-The command prints the Neovim version, then writes and formats:
-
-- [`crates/nvim-rpc-sys/src/generated.rs`](../crates/nvim-rpc-sys/src/generated.rs):
-  function and event descriptors, UI options, extension IDs, and version constants.
-- [`crates/nvim-rpc/src/generated.rs`](../crates/nvim-rpc/src/generated.rs):
-  the `api` descriptor re-exports, handle methods, and UI option encoding.
-
-It also sets `nvim-rpc-sys`'s package version to Neovim's `major.minor.patch`
-and updates the workspace dependency requirement accordingly. Other package
-versions are unchanged. Review both generated files and the manifest changes
-together.
+The command regenerates the checked-in bindings for `nvim-rpc-sys` and
+`nvim-rpc`. Review the generated source and version changes together; see
+[Generated bindings](../CONTRIBUTING.md#generated-bindings) for output details
+and the contributor workflow.
 
 ## Download a release
 
@@ -46,23 +39,3 @@ cargo gen
 Downloaded executables are cached under `tmp/nvim/`. The no-version form downloads
 the stable release again on each run; specifying a version allows the matching
 cached executable to be reused.
-
-## Change the generator
-
-Edit `src/gen_api_sys.rs` for metadata descriptors or `src/gen_api.rs` for RPC
-descriptor reexports, handle call builders, and UI option encoding. Change
-generated documentation in these generators as well, then regenerate both
-outputs.
-
-The metadata output includes Lua-only signatures. The RPC output omits functions
-with a `LuaRef` in their parameter or return types. Deprecated functions and
-handle methods receive `#[deprecated]` with their API level. A method name that
-does not match its handle prefix produces a warning and remains available only
-as a function descriptor.
-
-Check the generated code and examples afterward:
-
-```sh
-cargo test -p codegen
-cargo test --workspace --features nvim-rpc/bytes,nvim-rpc/tokio,nvim-rpc/futures
-```
