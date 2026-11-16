@@ -375,6 +375,20 @@ pub struct Array<B> {
     len: usize,
 }
 
+impl<B: AsRef<[u8]>> Array<B> {
+    /// Borrows a view of the remaining elements without advancing this array.
+    ///
+    /// The view retains this array's current position and element count. Its
+    /// decoded values borrow the backing bytes and cannot outlive this borrow.
+    /// Advancing the view does not advance this array.
+    pub fn as_borrowed(&self) -> Array<&[u8]> {
+        Array {
+            buf: self.buf.as_ref(),
+            len: self.len,
+        }
+    }
+}
+
 impl<B: Buf> Array<B> {
     /// Decodes and consumes the next element.
     pub fn next_object(&mut self) -> Option<Object<B::Slice>> {

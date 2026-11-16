@@ -8,9 +8,10 @@ use nvim_rpc::sys::types::ApiFn;
 use nvim_rpc::{ResponseError, SendError};
 
 use tokio::io::{AsyncWrite, BufWriter};
-use tokio::sync::{Mutex, MutexGuard, oneshot, watch};
+use tokio::sync::{Mutex, MutexGuard, Notify, oneshot, watch};
 
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex as StdMutex, MutexGuard as StdMutexGuard};
 
 type Writer<W> = nvim_rpc::Neovim<TokioWrite<BufWriter<W>>>;
@@ -25,6 +26,9 @@ struct Shared<W> {
     writer: Mutex<Option<Writer<W>>>,
     state: StdMutex<State>,
     closed: watch::Sender<bool>,
+    max_pending_requests: usize,
+    close_requested: AtomicBool,
+    stop: Notify,
 }
 
 impl<W> Shared<W> {
@@ -79,7 +83,7 @@ impl<W> Clone for Neovim<W> {
 }
 
 impl<W> Neovim<W> {
-    pub(crate) fn new(writer: W) -> Self
+    pub(crate) fn new(writer: W, max_pending_requests: usize) -> Self
     where
         W: AsyncWrite,
     {
@@ -92,12 +96,50 @@ impl<W> Neovim<W> {
                     pending: HashMap::new(),
                 }),
                 closed,
+                max_pending_requests,
+                close_requested: AtomicBool::new(false),
+                stop: Notify::new(),
             }),
         }
     }
 
-    pub(crate) fn close(&self, error: ConnectionError) {
+    /// Closes the shared connection and wakes all pending requests.
+    ///
+    /// All client clones become unusable immediately. The connection task stops
+    /// its handler tasks and discards queued callbacks. Await that task to wait
+    /// for their cleanup. Repeated calls preserve the first connection error.
+    pub fn close(&self) {
+        // Publish the first cause before the receive task observes a stop.
+        self.close_with_error(ConnectionError::Closed);
+        self.inner.close_requested.store(true, Ordering::Release);
+        self.inner.stop.notify_one();
+    }
+
+    pub(crate) fn is_close_requested(&self) -> bool {
+        self.inner.close_requested.load(Ordering::Acquire)
+    }
+
+    pub(crate) async fn close_requested(&self) {
+        loop {
+            let stop = self.inner.stop.notified();
+            if self.is_close_requested() {
+                return;
+            }
+            stop.await;
+        }
+    }
+
+    pub(crate) async fn finish_close(&self) {
+        self.close();
+        self.inner.writer.lock().await.take();
+    }
+
+    pub(crate) fn close_with_error(&self, error: ConnectionError) {
         self.inner.close(error);
+    }
+
+    pub(crate) fn is_closed(&self) -> bool {
+        self.inner.state().error.is_some()
     }
 
     pub(crate) fn connection_error(&self) -> ConnectionError {
@@ -148,11 +190,11 @@ impl<W> Neovim<W> {
             SendError::IdsExhausted => Error::IdsExhausted,
             SendError::Write(error) => {
                 let error = ConnectionError::from(error);
-                self.close(error.clone());
+                self.close_with_error(error.clone());
                 error.into()
             }
             SendError::Failed => {
-                self.close(ConnectionError::Interrupted);
+                self.close_with_error(ConnectionError::Interrupted);
                 self.connection_error().into()
             }
         }
@@ -185,7 +227,7 @@ impl<W: AsyncWrite + Unpin + Send + 'static> Neovim<W> {
         let mut writer = self.writer().await?;
         let id = writer.sender().next_request_id().ok_or_else(|| {
             if writer.sender().is_failed() {
-                self.close(ConnectionError::Interrupted);
+                self.close_with_error(ConnectionError::Interrupted);
                 self.connection_error().into()
             } else {
                 Error::IdsExhausted
@@ -197,8 +239,12 @@ impl<W: AsyncWrite + Unpin + Send + 'static> Neovim<W> {
             if let Some(error) = &state.error {
                 return Err(error.clone().into());
             }
-            let previous = state.pending.insert(id, waiter);
-            debug_assert!(previous.is_none());
+            if state.pending.len() >= self.inner.max_pending_requests {
+                return Err(ConnectionError::Limit("pending RPC requests").into());
+            }
+            // The writer lock serializes allocation and the core sender never
+            // reuses a request ID, so this ID cannot already have a waiter.
+            state.pending.insert(id, waiter);
         }
         writer.active = true;
         let pending = tokio::select! {
@@ -209,7 +255,6 @@ impl<W: AsyncWrite + Unpin + Send + 'static> Neovim<W> {
             } => result.map_err(|error| self.write_error(error))?,
             () = self.closed() => return Err(self.connection_error().into()),
         };
-        debug_assert_eq!(id, pending.id());
         writer.active = false;
         drop(writer);
 
@@ -218,7 +263,7 @@ impl<W: AsyncWrite + Unpin + Send + 'static> Neovim<W> {
             ResponseError::Remote(value) => Error::Remote(value),
             ResponseError::Decode(error) => Error::Decode(error),
             ResponseError::UnexpectedId { response, .. } => {
-                self.close(ConnectionError::UnexpectedResponse(response.msgid));
+                self.close_with_error(ConnectionError::UnexpectedResponse(response.msgid));
                 self.connection_error().into()
             }
         })
@@ -281,6 +326,11 @@ pub(crate) struct WriteGuard<'a, W> {
 
 impl<W> WriteGuard<'_, W> {
     fn sender(&mut self) -> &mut Writer<W> {
+        // Construction stores Some(guard); only Drop takes that outer slot,
+        // and Drop cannot run while this mutable borrow exists. Construction
+        // also checks the connection is open under the writer lock. Every
+        // inner take requires that same lock, held exclusively by this guard,
+        // so the writer remains Some until the guard is dropped.
         self.writer
             .as_mut()
             .expect("write guard holds the writer lock")

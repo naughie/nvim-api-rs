@@ -4,6 +4,12 @@ The workspace separates MessagePack I/O, generated Neovim signatures, typed
 calls, and Tokio plugin dispatch. Keep changes within the layer that owns the
 behavior.
 
+`nvim-rpc-ui` owns retained redraw state, frame delivery, UI input helpers, and
+embedded-process lifetimes. It uses `nvim-rpc-plugin` for RPC dispatch and the
+client. Keep request matching, writer serialization, and connection shutdown in
+the plugin layer. Applications implement `Backend` and own toolkit objects and
+integration.
+
 ## Design constraints
 
 The core libraries let callers choose borrowed or owned storage. Preserve paths
@@ -38,6 +44,7 @@ the core crates separately when changing feature gates or dependencies:
 ```sh
 cargo test -p rmp-bytes --no-default-features
 cargo test -p nvim-rpc --no-default-features
+cargo test -p nvim-rpc-ui
 ```
 
 The allocation and efficiency tests check the borrowing and storage contracts.
@@ -50,9 +57,41 @@ The live tests are ignored by default. Set `NVIM_BIN` and select them explicitly
 ```sh
 NVIM_BIN=/path/to/nvim cargo test -p nvim-rpc --test live -- --ignored --test-threads=1
 NVIM_BIN=/path/to/nvim cargo test -p nvim-rpc-plugin --test live -- --ignored
+NVIM_BIN=/path/to/nvim cargo test -p nvim-rpc-ui --test session -- --ignored --test-threads=1
 ```
 
 For an AppImage without FUSE, also set `APPIMAGE_EXTRACT_AND_RUN=1`.
+
+Backend presentation, UI model replay, allocation/sharing, mock connection,
+and input tests run without Neovim. Preserve every flush in local `Ui` dispatch
+and ordered events when connection frames coalesce. Check that a failed
+`Ui::redraw()` stops processing and that cancelling a frame wait does not consume
+a frame. Backend failures during connection presentation must leave the
+connection available for recovery or shutdown.
+
+UI connections share the plugin dispatcher and response matching. Their tests
+check ordered events under coalescing, nested requests while presentation is
+idle, concrete error delivery, and shutdown of later callbacks. Run shared RPC
+lifecycle tests in `nvim-rpc-plugin`. Connection waits must remain reusable
+after cancellation, including while a writer guard is still held. Supplied
+transports must not acquire process ownership.
+
+### UI redraw performance
+
+Measure decoding, redraw processing, and frame publication in a release build:
+
+```sh
+cargo run --release -p nvim-rpc-ui --example replay -- 100000
+```
+
+The example replays typing and whole-row scrolling at 120×40 cells while retaining
+the previous frame. Timings exclude Neovim RPC latency, text shaping, toolkit
+work, and GPU presentation. Record the workload and build configuration when
+comparing measurements.
+
+The UI allocation and sharing tests run with the regular test suite. When
+changing frame storage or grid updates, check that retained frames stay stable
+and that unchanged grids and rows remain shared.
 
 ### Large boundary tests
 
@@ -165,11 +204,11 @@ or merging a fork's PR does not publish crates. The workflow checks out the
 PR's merge commit, checks formatting and runs the all-features workspace tests,
 then uses crates.io trusted publishing to obtain a temporary upload token.
 
-It publishes `rmp-bytes`, `nvim-rpc-sys`, `nvim-rpc`, and `nvim-rpc-plugin` in
-that order. Each `cargo publish` verifies the packaged crate and waits for its
-registry index entry before the next dependent crate is published. `codegen`
-is not published. The workflow does not require a long-lived crates.io token
-in GitHub secrets.
+It publishes `rmp-bytes`, `nvim-rpc-sys`, `nvim-rpc`, `nvim-rpc-plugin`, and
+`nvim-rpc-ui` in that order. Each `cargo publish` verifies the packaged crate and
+waits for its registry index entry before the next dependent crate is published.
+`codegen` is not published. The workflow does not require a long-lived crates.io
+token in GitHub secrets.
 
 Complete this setup before merging the first automated update PR:
 
@@ -183,6 +222,7 @@ Complete this setup before merging the first automated update PR:
    cargo publish -p nvim-rpc-sys --locked --registry crates-io
    cargo publish -p nvim-rpc --locked --registry crates-io
    cargo publish -p nvim-rpc-plugin --locked --registry crates-io
+   cargo publish -p nvim-rpc-ui --locked --registry crates-io
    ```
 
 2. In GitHub **Settings → Environments**, create an environment named
@@ -190,7 +230,7 @@ Complete this setup before merging the first automated update PR:
    branch. Leave required reviewers and wait timers unset so publishing starts
    automatically after you merge. If the action policy is restricted, also
    allow `rust-lang/crates-io-auth-action` under **Settings → Actions → General**.
-3. For **each of the four crates**, open crates.io **Settings → Trusted
+3. For **each of the five crates**, open crates.io **Settings → Trusted
    Publishing**, add a GitHub publisher, and use these values:
 
    | Field | Value |

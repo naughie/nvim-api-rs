@@ -6,7 +6,9 @@ UI clients, and programs that control an editor.
 Arguments can be borrowed slices, owned values, or iterators. Results can borrow
 the input buffer or be decoded into owned Rust values. The core crates let the
 caller supply the transport, receive storage, and event loop. `nvim-rpc-plugin`
-provides a Tokio layer with owned messages and spawned handlers.
+provides Tokio RPC dispatch and a client that waits for responses.
+`nvim-rpc-ui` adds a backend trait, UI state, keyboard input, and embedded editor
+sessions using the same RPC connection.
 
 ## Crates
 
@@ -14,6 +16,7 @@ provides a Tokio layer with owned messages and spawned handlers.
 | --- | --- |
 | [nvim-rpc](crates/nvim-rpc) | Typed API descriptors, handles, result decoding, an RPC sender and receiver, and redraw event decoding |
 | [nvim-rpc-plugin](crates/nvim-rpc-plugin) | Tokio plugin handlers and a cloneable client that waits for responses |
+| [nvim-rpc-ui](crates/nvim-rpc-ui) | A backend trait, UI state, keyboard input, and embedded Neovim sessions |
 | [nvim-rpc-sys](crates/nvim-rpc-sys) | Generated Neovim function signatures, UI event signatures, type markers, and API version metadata |
 | [rmp-bytes](crates/rmp-bytes) | MessagePack encoding and decoding over caller-selected writers and buffers |
 | [codegen](codegen) | The tool that regenerates the Neovim API bindings |
@@ -37,6 +40,11 @@ The plugin README includes the Lua calls to launch and use the example.
 For applications that manage their own receive loop, start with
 [nvim-rpc](crates/nvim-rpc/README.md). Each crate's README links to its API
 documentation for detailed usage and contracts.
+
+For a UI frontend, start with [nvim-rpc-ui](crates/nvim-rpc-ui/README.md).
+Implement `Backend` for your toolkit and receive frames from an embedded editor
+or an existing Neovim connection. Its [API documentation](https://docs.rs/nvim-rpc-ui)
+covers drawing, input handling, and sharing a plugin connection.
 
 ## Try it against Neovim
 

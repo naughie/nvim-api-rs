@@ -82,7 +82,13 @@ mod tests {
     fn crate_version_matches_generated_neovim_version() {
         let (major, minor, patch) = crate::VERSION;
         assert_eq!(
-            env!("CARGO_PKG_VERSION"),
+            concat!(
+                env!("CARGO_PKG_VERSION_MAJOR"),
+                ".",
+                env!("CARGO_PKG_VERSION_MINOR"),
+                ".",
+                env!("CARGO_PKG_VERSION_PATCH")
+            ),
             format!("{major}.{minor}.{patch}")
         );
     }

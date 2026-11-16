@@ -79,22 +79,23 @@ class PublishTests(unittest.TestCase):
         ) as run:
             publisher.publish(self.root)
         names = [c.args[0][3] for c in run.call_args_list]
-        self.assertEqual(set(names), {"rmp-bytes", "nvim-rpc-sys", "nvim-rpc", "nvim-rpc-plugin"})
-        self.assertEqual(len(names), 4)
+        self.assertEqual(set(names), {"rmp-bytes", "nvim-rpc-sys", "nvim-rpc", "nvim-rpc-plugin", "nvim-rpc-ui"})
+        self.assertEqual(len(names), 5)
         self.assertLess(names.index("rmp-bytes"), names.index("nvim-rpc"))
         self.assertLess(names.index("nvim-rpc-sys"), names.index("nvim-rpc"))
         self.assertLess(names.index("nvim-rpc"), names.index("nvim-rpc-plugin"))
+        self.assertLess(names.index("nvim-rpc"), names.index("nvim-rpc-ui"))
         for c in run.call_args_list:
             self.assertEqual(c.args[0][-3:], ["--locked", "--registry", "crates-io"])
             self.assertEqual(c.kwargs, {"cwd": self.root, "check": True})
 
     def test_partial_release_resumes_without_republishing(self):
-        with patch.object(publisher, "is_published", side_effect=[True, True, False, False]), patch.object(
+        with patch.object(publisher, "is_published", side_effect=[True, True, False, False, False]), patch.object(
             publisher, "wait_for_index"
         ) as wait, patch.object(publisher.subprocess, "run") as run:
             publisher.publish(self.root)
         self.assertEqual(wait.call_args_list, [call("rmp-bytes", "0.1.1"), call("nvim-rpc-sys", "0.1.1")])
-        self.assertEqual([c.args[0][3] for c in run.call_args_list], ["nvim-rpc", "nvim-rpc-plugin"])
+        self.assertEqual([c.args[0][3] for c in run.call_args_list], ["nvim-rpc", "nvim-rpc-plugin", "nvim-rpc-ui"])
 
     def test_failed_upload_stops_before_publishing_dependents(self):
         with patch.object(publisher, "is_published", return_value=False) as check, patch.object(

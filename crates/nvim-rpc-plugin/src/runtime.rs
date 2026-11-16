@@ -1,6 +1,6 @@
 use crate::frame::Frames;
 use crate::rpc::{Message, MessageId};
-use crate::{ConnectionError, FromParams, Handler, Neovim};
+use crate::{ConnectionError, ConnectionOptions, FromParams, Handler, Neovim};
 
 use tokio::io::{AsyncRead, AsyncWrite};
 use tokio::sync::Notify;
@@ -23,7 +23,9 @@ use std::sync::{Arc, Mutex, MutexGuard};
 /// panics. EOF or a connection failure stops handler tasks and discards queued
 /// callbacks; aborting the task does the same. Closing the connection wakes
 /// pending requests. Messages own immutable [`crate::Bytes`]. See [`Handler`]
-/// for callback execution and reply ordering.
+/// for callback execution and reply ordering. This compatibility API leaves
+/// incoming frames and pending-work counts unbounded; use [`crate::connect()`]
+/// for explicit bounds and managed task ownership.
 pub fn spawn<R, W, H>(
     from_neovim: R,
     to_neovim: W,
@@ -34,11 +36,32 @@ where
     W: AsyncWrite + Unpin + Send + 'static,
     H: Handler<W>,
 {
-    let nvim = Neovim::new(to_neovim);
+    spawn_with_options(
+        from_neovim,
+        to_neovim,
+        handler,
+        ConnectionOptions::UNLIMITED,
+        false,
+    )
+}
+
+pub(crate) fn spawn_with_options<R, W, H>(
+    from_neovim: R,
+    to_neovim: W,
+    handler: H,
+    options: ConnectionOptions,
+    drain_on_eof: bool,
+) -> (Neovim<W>, JoinHandle<Result<(), ConnectionError>>)
+where
+    R: AsyncRead + Unpin + Send + 'static,
+    W: AsyncWrite + Unpin + Send + 'static,
+    H: Handler<W>,
+{
+    let nvim = Neovim::new(to_neovim, options.max_pending_requests);
     let guard = CloseGuard(nvim.clone());
     let task = tokio::spawn(async move {
         let guard = guard;
-        run(from_neovim, guard.0.clone(), handler).await
+        run(from_neovim, guard.0.clone(), handler, options, drain_on_eof).await
     });
     (nvim, task)
 }
@@ -47,7 +70,7 @@ struct CloseGuard<W>(Neovim<W>);
 
 impl<W> Drop for CloseGuard<W> {
     fn drop(&mut self) {
-        self.0.close(ConnectionError::Closed);
+        self.0.close_with_error(ConnectionError::Closed);
     }
 }
 
@@ -64,6 +87,7 @@ struct Slot<R> {
 struct Replies<R> {
     state: Mutex<ReplyState<R>>,
     ready: Notify,
+    max_pending: usize,
 }
 
 struct ReplyState<R> {
@@ -92,6 +116,9 @@ impl<R> Replies<R> {
 
     fn push(&self, id: MessageId) -> Result<usize, ConnectionError> {
         let mut state = self.state();
+        if state.stack.len() >= self.max_pending {
+            return Err(ConnectionError::Limit("pending RPC replies"));
+        }
         if state.stack.iter().any(|slot| slot.id == id) {
             return Err(ConnectionError::InvalidFormat);
         }
@@ -102,7 +129,9 @@ impl<R> Replies<R> {
 
     fn complete(&self, idx: usize, reply: Reply<R>) {
         let mut state = self.state();
-        // Only completed slots are popped, so an unfinished slot keeps its index.
+        // Registration returns idx < len. Pushes append; pops remove only
+        // completed suffix slots. This unfinished slot therefore still exists
+        // at idx, and idx + 1 <= len <= usize::MAX.
         state.stack[idx].reply = Some(reply);
         let ready = !state.receiving && idx + 1 == state.stack.len();
         drop(state);
@@ -122,8 +151,8 @@ impl<R> Replies<R> {
             return None;
         }
         state.stack.last()?.reply.as_ref()?;
-        let slot = state.stack.pop().expect("the stack is nonempty");
-        Some((slot.id, slot.reply.expect("the top reply is complete")))
+        let slot = state.stack.pop()?;
+        Some((slot.id, slot.reply?))
     }
 }
 
@@ -169,13 +198,19 @@ where
     }
 }
 
-async fn run<R, W, H>(reader: R, nvim: Neovim<W>, handler: H) -> Result<(), ConnectionError>
+async fn run<R, W, H>(
+    reader: R,
+    nvim: Neovim<W>,
+    handler: H,
+    options: ConnectionOptions,
+    drain_on_eof: bool,
+) -> Result<(), ConnectionError>
 where
     R: AsyncRead + Unpin + Send + 'static,
     W: AsyncWrite + Unpin + Send + 'static,
     H: Handler<W>,
 {
-    let mut frames = Frames::new(reader);
+    let mut frames = Frames::new(reader, options.max_rpc_bytes);
     let handler = Arc::new(handler);
     let replies = Arc::new(Replies {
         state: Mutex::new(ReplyState {
@@ -183,19 +218,27 @@ where
             receiving: false,
         }),
         ready: Notify::new(),
+        max_pending: options.max_pending_replies,
     });
     let mut tasks = JoinSet::new();
     let mut callbacks = VecDeque::new();
     let mut notifying = false;
+    let mut eof = false;
     let reply_writer = write_replies(nvim.clone(), Arc::clone(&replies));
     tasks.spawn(async move { Completion::Writer(reply_writer.await) });
 
     let result = 'receive: loop {
+        if nvim.is_close_requested() {
+            break Err(nvim.connection_error());
+        }
         while !notifying {
             let Some(callback) = callbacks.pop_front() else {
                 break;
             };
             tokio::task::consume_budget().await;
+            if (!eof && nvim.is_closed()) || nvim.is_close_requested() {
+                break 'receive Err(nvim.connection_error());
+            }
             match callback {
                 Callback::Request(idx, request) => {
                     let params = match H::Request::from_params(request.params) {
@@ -231,6 +274,21 @@ where
                 }
             }
         }
+        if eof {
+            let completed = tokio::select! {
+                () = nvim.close_requested() => break Err(nvim.connection_error()),
+                completed = tasks.join_next() => completed,
+            };
+            match completed {
+                Some(Ok(Completion::Request(_, _))) | Some(Ok(Completion::Writer(Ok(())))) => {}
+                Some(Ok(Completion::Notification)) => notifying = false,
+                Some(Ok(Completion::Writer(Err(ConnectionError::Closed)))) => {}
+                Some(Ok(Completion::Writer(Err(e)))) => break Err(e),
+                Some(Err(e)) => break Err(ConnectionError::Task(Arc::new(e))),
+                None => break Ok(()),
+            }
+            continue;
+        }
         let frame = if let Some(frame) = frames.buffered() {
             Ok(Some(frame))
         } else {
@@ -240,7 +298,8 @@ where
                 () = nvim.closed() => break Err(nvim.connection_error()),
                 frame = frames.next() => frame,
                 completed = tasks.join_next() => {
-                    match completed.expect("the reply writer remains registered") {
+                    let Some(completed) = completed else { break Err(ConnectionError::Closed); };
+                    match completed {
                         Ok(Completion::Request(idx, value)) => replies.complete(idx, Reply::Value(value)),
                         Ok(Completion::Notification) => notifying = false,
                         Ok(Completion::Writer(result)) => break result,
@@ -255,9 +314,17 @@ where
         };
         let frame = match frame {
             Ok(Some(frame)) => frame,
+            Ok(None) if drain_on_eof => {
+                eof = true;
+                nvim.close_with_error(ConnectionError::Closed);
+                continue;
+            }
             Ok(None) => break Ok(()),
             Err(error) => break Err(error),
         };
+        // Frames returns exactly one complete value bounded by SeekState,
+        // including every nested element. Header reads and lazy array/map
+        // iteration therefore have all required bytes in this owned frame.
         let message: Message = crate::mp::decode::Object::from_buf_unchecked(frame).into();
         match message {
             Message::Response(response) => {
@@ -266,6 +333,9 @@ where
                 }
             }
             Message::Request(request) => {
+                if callbacks.len() >= options.max_pending_callbacks {
+                    break Err(ConnectionError::Limit("pending RPC callbacks"));
+                }
                 let idx = match replies.push(request.msgid) {
                     Ok(idx) => idx,
                     Err(error) => break Err(error),
@@ -273,12 +343,15 @@ where
                 callbacks.push_back(Callback::Request(idx, request));
             }
             Message::Notification(notification) => {
+                if callbacks.len() >= options.max_pending_callbacks {
+                    break Err(ConnectionError::Limit("pending RPC callbacks"));
+                }
                 callbacks.push_back(Callback::Notification(notification));
             }
             Message::InvalidFormat => break Err(ConnectionError::InvalidFormat),
         }
     };
-    nvim.close(
+    nvim.close_with_error(
         result
             .as_ref()
             .err()
@@ -301,6 +374,7 @@ mod tests {
                 receiving: false,
             }),
             ready: Notify::new(),
+            max_pending: usize::MAX,
         };
         let oldest = replies.push(MessageId(10)).unwrap();
         let middle = replies.push(MessageId(11)).unwrap();
