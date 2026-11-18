@@ -563,6 +563,147 @@ fn same_width_resize_shares_unchanged_rows_and_ascii_cells_share_text() {
 }
 
 #[test]
+fn unicode_cell_reuse_preserves_text_runs_and_retained_snapshots() {
+    for text in ["界", "日本語", "é", "e\u{301}", "👩\u{200d}💻", "ab"] {
+        let mut model = Model::default();
+        let first = replay(
+            &mut model,
+            (
+                ("grid_resize", (1, 4, 1)),
+                (
+                    "grid_line",
+                    (1, 0, 0, ((text, 3, 2), (text,), ("", 4)), false),
+                ),
+                ("flush", ()),
+            ),
+        )
+        .unwrap();
+        let second = replay(
+            &mut model,
+            (
+                ("grid_line", (1, 0, 0, ((text, 5, 3),), true)),
+                ("flush", ()),
+            ),
+        )
+        .unwrap();
+        let before = &first[0].state.grids[&GridId(1)];
+        let after = &second[0].state.grids[&GridId(1)];
+        let a = before.cell(0, 0).unwrap();
+        for col in 0..3 {
+            let b = before.cell(0, col).unwrap();
+            let c = after.cell(0, col).unwrap();
+            assert_eq!(b.text.as_bytes(), text.as_bytes());
+            assert_eq!(c.text.as_bytes(), text.as_bytes());
+            assert_eq!(b.highlight, HighlightId(3));
+            assert_eq!(c.highlight, HighlightId(5));
+            assert!(Arc::ptr_eq(&a.text, &b.text));
+            assert!(Arc::ptr_eq(&a.text, &c.text));
+        }
+        assert_eq!(before.cell(0, 3).unwrap().text.as_ref(), "");
+        assert_eq!(before.cell(0, 3).unwrap().highlight, HighlightId(4));
+        assert!(!before.rows[0].wrap);
+        assert!(after.rows[0].wrap);
+
+        let mut other = Model::default();
+        let other_frame = replay(
+            &mut other,
+            (
+                ("grid_resize", (1, 1, 1)),
+                ("grid_line", (1, 0, 0, ((text, 0),), false)),
+                ("flush", ()),
+            ),
+        )
+        .unwrap();
+        assert!(!Arc::ptr_eq(
+            &a.text,
+            &other_frame[0].state.grids[&GridId(1)]
+                .cell(0, 0)
+                .unwrap()
+                .text
+        ));
+
+        for n in 0..8192 {
+            let replacement = format!("字{n}");
+            replay(
+                &mut model,
+                (("grid_line", (1, 0, 0, ((replacement.as_str(), 0),), false)),),
+            )
+            .unwrap();
+        }
+        drop(model);
+        assert_eq!(before.cell(0, 0).unwrap().text.as_bytes(), text.as_bytes());
+        assert_eq!(after.cell(0, 0).unwrap().text.as_bytes(), text.as_bytes());
+    }
+}
+
+#[test]
+fn cached_cells_still_validate_utf8_and_string_byte_limits() {
+    let mut model = Model::new(Limits {
+        max_string_bytes: 16,
+        ..Limits::default()
+    });
+    let frames = replay(
+        &mut model,
+        (
+            ("grid_resize", (1, 1, 1)),
+            ("grid_line", (1, 0, 0, (("😀😀😀😀", 0),), false)),
+            ("flush", ()),
+        ),
+    )
+    .unwrap();
+    assert_eq!(
+        frames[0].state.grids[&GridId(1)]
+            .cell(0, 0)
+            .unwrap()
+            .text
+            .as_ref(),
+        "😀😀😀😀"
+    );
+    assert!(matches!(
+        replay(
+            &mut model,
+            (("grid_line", (1, 0, 0, (("😀😀😀😀x", 0),), false)),)
+        ),
+        Err(ProtocolError::Limit("string bytes"))
+    ));
+    assert!(model.is_failed());
+
+    let mut model = Model::default();
+    replay(
+        &mut model,
+        (
+            ("grid_resize", (1, 1, 1)),
+            ("grid_line", (1, 0, 0, (("界", 0),), false)),
+        ),
+    )
+    .unwrap();
+    let mut bytes = Vec::new();
+    bytes
+        .write_primitive((
+            2u8,
+            "redraw",
+            (("grid_line", (1, 0, 0, (("界", 0),), false)),),
+        ))
+        .consume();
+    let pos = bytes
+        .windows("界".len())
+        .position(|v| v == "界".as_bytes())
+        .unwrap();
+    bytes[pos] = 0xff;
+    let Message::Notification(notification) = nvim_rpc::rpc::decode(&mut bytes.as_slice()).unwrap()
+    else {
+        panic!("expected redraw notification");
+    };
+    assert!(matches!(
+        model.apply_redraw(notification, |_| panic!("unexpected flush")),
+        Err(ProtocolError::Decode(
+            nvim_rpc::api_types::DecodeError::InvalidUtf8(_)
+        ))
+    ));
+    assert!(model.is_failed());
+}
+
+#[test]
 fn overlapping_scrolls_match_snapshot_copies_for_subregions_and_extreme_deltas() {
     fn seeded() -> (Model, Frame) {
         let mut model = Model::default();
