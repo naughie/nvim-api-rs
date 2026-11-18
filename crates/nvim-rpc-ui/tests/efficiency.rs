@@ -222,3 +222,39 @@ fn unpublished_whole_row_scrolls_need_no_scratch_allocation() {
     });
     assert_eq!(count, 0);
 }
+
+#[test]
+fn warmed_unicode_cell_entries_allocate_no_more_than_ascii() {
+    fn measure(text: &str) -> usize {
+        let mut model = Model::default();
+        let initial = redraw((("grid_resize", (1, 4, 1)),));
+        apply(&mut model, &initial, |_| panic!("unexpected flush"));
+        let bytes = redraw((
+            (
+                "grid_line",
+                (1, 0, 0, ((text, 0), (text,), (text,), (text,)), false),
+            ),
+            ("flush", ()),
+        ));
+        let mut retained = frame(&mut model, &bytes);
+        let (_, count) = allocations(|| {
+            for _ in 0..16 {
+                retained = frame(&mut model, &bytes);
+            }
+        });
+        assert_eq!(
+            retained.state.grids[&GridId(1)]
+                .cell(0, 0)
+                .unwrap()
+                .text
+                .as_ref(),
+            text
+        );
+        count
+    }
+
+    let ascii = measure("x");
+    for text in ["界", "e\u{301}", "👩\u{200d}💻", "ab"] {
+        assert_eq!(measure(text), ascii, "cell text {text:?}");
+    }
+}

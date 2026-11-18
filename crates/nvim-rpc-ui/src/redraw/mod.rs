@@ -3,6 +3,7 @@ use crate::{ProtocolError, RedrawError};
 
 mod decode;
 use decode::*;
+mod cell_text;
 mod grid;
 mod widgets;
 mod windows;
@@ -33,6 +34,7 @@ pub struct Model {
     state: Arc<State>,
     committed: Arc<State>,
     limits: Limits,
+    cell_text: cell_text::Cache,
     damage: Damage,
     events: Vec<Event>,
     sequence: u64,
@@ -53,6 +55,7 @@ impl Model {
             committed: Arc::clone(&state),
             state,
             limits,
+            cell_text: cell_text::Cache::default(),
             damage: Damage::default(),
             events: Vec::new(),
             sequence: 0,
