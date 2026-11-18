@@ -10,8 +10,7 @@ use std::fmt;
 
 /// One logical key, committed text, or an already encoded Neovim key sequence.
 ///
-/// Text and sequences borrow their source; constructing an input does not copy
-/// or allocate string storage.
+/// Text and sequences borrow their source.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum KeyInput<'a> {
     AsciiKey {
@@ -261,8 +260,8 @@ impl SpecialKey {
 
 /// Encoded key bytes that borrow unchanged source text.
 ///
-/// The source text must remain alive when borrowed; the original [`KeyInput`]
-/// need not. Inline keys and escaped text are stored in this value.
+/// Borrows source text independently of the original [`KeyInput`]. Inline keys
+/// and escaped text are stored in this value.
 /// Implements `AsRef<str>` and `Display` without materializing an extra string.
 pub struct EncodedKey<'a>(Encoding<'a>);
 enum Encoding<'a> {

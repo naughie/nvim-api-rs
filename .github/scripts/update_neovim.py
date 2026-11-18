@@ -15,6 +15,14 @@ def version(s):
     return tuple(map(int, s.split(".")))
 
 
+def sys_neovim_version(s):
+    # Crate revisions target the same upstream release, regardless of revision.
+    m = re.fullmatch(r"([0-9]+\.[0-9]+\.[0-9]+)(?:-r(?:0|[1-9][0-9]*))?", s)
+    if m is None:
+        raise ValueError(f"expected a Neovim version with an optional -rN revision, got {s!r}")
+    return version(m[1])
+
+
 def latest_release(pages):
     versions = []
     for page in pages:
@@ -39,7 +47,7 @@ def read_manifest(path):
 
 def needs_update(root, target):
     current = read_manifest(root / "crates/nvim-rpc-sys/Cargo.toml")["package"]["version"]
-    return version(target) > version(current)
+    return version(target) > sys_neovim_version(current)
 
 
 def replace_version(text, section, key, new):

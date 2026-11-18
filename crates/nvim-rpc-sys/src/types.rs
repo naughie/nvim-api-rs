@@ -4,9 +4,7 @@
 //! requiring descriptor values. Their associated types use the markers in this
 //! module and [`crate::ext_types`]; tuples represent parameter lists.
 //!
-//! Markers describe the API type without choosing Rust storage or an encoding.
-//! For example, [`ArrayOf<String>`] identifies string elements without requiring
-//! a `Vec` or owning any text. Bindings provide the actual representations.
+//! Markers describe API types; bindings select their Rust storage and encoding.
 //!
 //! [`Ref`] marks Lua-only function references. It has no RPC representation in
 //! `nvim-rpc`.
@@ -14,9 +12,6 @@
 use std::marker::PhantomData;
 
 /// The full name and signature of a Neovim API function.
-///
-/// Function descriptors are used as types; obtaining the name does not require
-/// constructing a descriptor or supplying runtime arguments.
 ///
 /// ```
 /// use nvim_rpc_sys::{functions::NvimSetCurrentLine, types::{self, ApiFn}};
@@ -37,8 +32,8 @@ pub trait ApiFn {
 
 /// A method signature with its handle receiver separated from its arguments.
 ///
-/// Generated methods also implement [`ApiFn`]. Qualify `NAME` with the trait
-/// when both traits are in scope:
+/// Generated methods also implement [`ApiFn`], whose `NAME` retains the full
+/// API prefix:
 ///
 /// ```
 /// use nvim_rpc_sys::functions::NvimBufLineCount;
@@ -94,7 +89,6 @@ pub struct Array;
 /// An array whose elements have marker `T`.
 ///
 /// For example, [`crate::functions::NvimBufGetLines`] returns `ArrayOf<String>`.
-/// The marker does not choose a Rust container or allocate storage.
 pub struct ArrayOf<T>(PhantomData<T>);
 /// An array of exactly `N` elements with marker `T`.
 ///
@@ -118,6 +112,4 @@ pub struct Object;
 /// normalized or implicitly reordered.
 pub struct OneOf<A, B>(PhantomData<fn() -> (A, B)>);
 /// A Lua function reference used by Lua-only APIs.
-///
-/// This marker does not provide a way to send a Rust function over RPC.
 pub enum Ref {}

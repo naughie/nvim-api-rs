@@ -30,8 +30,7 @@ use std::str::Utf8Error;
 /// assert_eq!(borrowed.as_ptr(), bytes[1..].as_ptr());
 /// ```
 ///
-/// Borrowed strings and bytes require a slice-backed input and retain its
-/// lifetime. `String` and `Vec<u8>` allocate owned storage. Integer conversions
+/// Borrowed strings and bytes require a slice-backed input. Integer conversions
 /// check the destination's range, including the full `u64` range for a `u64`
 /// output. UTF-8 is checked when producing `&str` or `String`; use bytes to
 /// retain strings containing arbitrary byte sequences.

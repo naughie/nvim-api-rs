@@ -70,9 +70,6 @@ use tokio::io::AsyncWrite;
 /// empty array. For a nil result, return [`mp::encode::primitive::Nil`] as the
 /// success value of a `Result` response.
 ///
-/// The writer and handler are shared across spawned tasks, so `W` must be
-/// `Send + 'static` and the handler must be `Send + Sync + 'static`.
-///
 /// ```
 /// use nvim_rpc_plugin::{Array, Handler, Neovim};
 /// use tokio::io::AsyncWrite;

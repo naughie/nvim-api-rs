@@ -7,7 +7,7 @@ use rmp::Marker;
 /// Encodes an exactly sized collection as a MessagePack array.
 ///
 /// `Array([1u8, 2, 3])` consumes an array; `Array(&["a", "b"][..])`
-/// borrows a string slice. Each yielded element must implement [`Encode`].
+/// borrows a string slice.
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Array<A>(pub A);
 /// Encodes an [`ExactSizeIterator`] without collecting its elements.

@@ -5,14 +5,15 @@ use std::io::Write;
 
 /// Adapts a [`std::io::Write`] destination to [`WriterSync`].
 ///
-/// The adapter calls `write_all` for each encoding chunk. Use [`WriterSync::flush()`]
-/// when the destination's buffering or transport requires it.
+/// The adapter calls [`std::io::Write::write_all()`] for each encoding chunk.
+/// Use [`WriterSync::flush()`] when the destination's buffering or transport
+/// requires it.
 pub struct StdWrite<W> {
     inner: W,
 }
 
 impl<W> StdWrite<W> {
-    /// Wraps a standard I/O writer without writing or allocating.
+    /// Wraps a standard I/O writer.
     pub fn new(wtr: W) -> Self {
         Self { inner: wtr }
     }

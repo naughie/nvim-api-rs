@@ -17,8 +17,7 @@
 //! ```
 //!
 //! Arrays, mutable slices, and pre-sized vectors can supply storage. Receiving
-//! never grows it automatically. Messages and decoded borrowed values must no
-//! longer be in use before another mutable receive or storage replacement.
+//! never grows it automatically.
 //!
 //! With the `tokio` feature, the same framing works over Tokio I/O:
 //!

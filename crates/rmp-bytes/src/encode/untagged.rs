@@ -6,7 +6,6 @@ use super::primitive::{Sealed, State};
 /// `Left(7i64)` encodes the integer `7`; `Right("text")` encodes the string
 /// `"text"`. Neither the variant name nor its position appears on the wire.
 /// Nest this type to compose more alternatives; nesting does not add wire data.
-/// The adapter does not allocate or erase the payload's type or ownership.
 ///
 /// ```
 /// use rmp_bytes::encode::{Untagged, WriterSyncExt as _};

@@ -58,7 +58,6 @@ impl ConnectionOptions {
 /// Use [`Self::wait()`] to observe completion and finish releasing the writer.
 /// Clean EOF closes the client immediately, then drains callbacks already
 /// received in dispatch order. Explicit closure discards pending callbacks.
-/// Supplied transports never acquire process ownership.
 pub struct Connection<W> {
     pub client: Neovim<W>,
     task: ReceiveTask,

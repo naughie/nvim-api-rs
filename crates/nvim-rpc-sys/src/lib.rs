@@ -20,9 +20,8 @@
 //! string_result::<NvimGetCurrentLine>();
 //! ```
 //!
-//! [`types::String`] describes the API type. It does not contain the returned
-//! text. Similarly, [`ext_types::Buffer`] describes a buffer parameter; runtime
-//! buffer IDs are represented by the `Buffer` handle in `nvim-rpc`.
+//! Runtime buffer IDs are represented by the `Buffer` handle in `nvim-rpc`;
+//! [`ext_types::Buffer`] is its signature marker.
 //!
 //! # Functions and handle methods
 //!
@@ -67,9 +66,8 @@
 //! println!("Generated from Neovim {major}.{minor}.{patch}, API level {API_LEVEL}");
 //! ```
 //!
-//! The version constants describe the metadata used to generate this crate;
-//! they do not query a running Neovim instance. Building this crate uses the
-//! checked-in source and does not run Neovim or the generator.
+//! The version constants describe the metadata used to generate the checked-in
+//! source. Building this crate does not require Neovim or the generator.
 
 pub mod types;
 

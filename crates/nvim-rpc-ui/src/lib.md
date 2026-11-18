@@ -245,12 +245,11 @@ platform provides the corresponding key information. `Modifiers` records Shift,
 Control, Alt/Meta, and Command/Super. Do not apply Shift again to a character
 already translated by the keyboard layout.
 
-`KeyInput<'a>` is `Copy` and borrows text as `&'a str`. `to_nvim()` takes the input
-by value and returns the encoded notation. Its result may outlive the input
-wrapper while the borrowed source text remains valid.
+`KeyInput::to_nvim()` returns encoded notation that borrows unchanged source
+text independently of the input wrapper. Escaping literal `<` allocates an
+owned string.
 
-Send keys with [`Client::send_key()`]; keep borrowed text alive until the
-future completes or is dropped. [`Client::input()`] accepts Neovim notation,
+Send keys with [`Client::send_key()`]. [`Client::input()`] accepts Neovim notation,
 so escape literal `<` as `<LT>` when using it directly. Both methods retry
 partial input acceptance and serialize concurrent input sequences. Input
 already accepted by Neovim remains accepted if the call is cancelled. Use
@@ -301,9 +300,10 @@ resuming, and compute damage from the last successfully painted state with
 For an application-managed dispatcher, [`Ui::redraw()`] returns
 [`RedrawError::Protocol`] for notification errors and [`RedrawError::Backend`]
 for presentation errors. Either failure stops the current notification
-immediately. [`Ui::is_failed()`] then returns `true` and rejects subsequent
-redraws. Create a fresh UI attachment before continuing; the unprocessed
-notification may contain required updates. Earlier frames remain valid.
+immediately. [`Ui::is_failed()`] then returns `true`, and subsequent redraws
+return [`ProtocolError::Failed`]. Create a fresh UI attachment before continuing;
+the unprocessed notification may contain required updates. Earlier frames remain
+valid.
 
 Configure [`Limits`] to bound grids, grid cells, individual strings and binary
 values, collections, retained messages, value nesting, and pending events.

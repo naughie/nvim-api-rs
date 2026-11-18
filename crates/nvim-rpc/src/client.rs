@@ -285,7 +285,6 @@ enum State {
 ///
 /// The sender owns no reader, response registry, or background task. Receive
 /// and dispatch messages with [`crate::Receiver`] or the application's parser.
-/// Access through `&mut self` keeps writes through this sender sequential.
 pub struct Neovim<W> {
     writer: W,
     state: State,
@@ -379,7 +378,7 @@ impl<W> Neovim<W> {
     /// Writes a request and returns its typed response token.
     ///
     /// Select a function descriptor from [`crate::api`] and pass its arguments
-    /// as a tuple: `()` for no arguments, `(value,)` for one argument.
+    /// as a tuple.
     /// Arguments retain their Rust representations until encoding.
     ///
     /// Flush a buffered writer before waiting for input, then route the matching

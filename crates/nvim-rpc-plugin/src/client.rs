@@ -214,7 +214,7 @@ impl<W: AsyncWrite + Unpin + Send + 'static> Neovim<W> {
     /// the Rust result representation. For example,
     /// `nvim.request::<api::NvimGetCurrentLine, Bin>(()).await` keeps raw bytes,
     /// while `nvim.request::<api::NvimGetCurrentLine, String>(()).await` checks
-    /// UTF-8 and returns an owned string. Use `_` when the result type is inferred.
+    /// UTF-8 and returns an owned string.
     pub async fn request<F, T>(
         &self,
         params: impl Params<F::Params, Encoded: Send + Primitive<State: EncodeState<Item: Send> + Send>>

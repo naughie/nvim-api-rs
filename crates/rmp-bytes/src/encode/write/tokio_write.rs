@@ -19,7 +19,7 @@ pub struct TokioWrite<W> {
 }
 
 impl<W> TokioWrite<W> {
-    /// Wraps a Tokio writer. The adapter does not start a task.
+    /// Wraps a Tokio writer.
     pub fn new(wtr: W) -> Self {
         Self { inner: wtr }
     }

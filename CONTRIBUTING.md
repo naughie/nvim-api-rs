@@ -170,7 +170,8 @@ The [Update Neovim bindings workflow](.github/workflows/update-neovim.yml) check
 upstream releases daily at 02:17 UTC (11:17 Japan time). It selects the highest
 numeric stable release, excluding drafts, prereleases, and the moving `stable`
 and `nightly` tags. If `nvim-rpc-sys` already targets that version or a newer one,
-the run finishes without changes.
+the run finishes without changes. A crate revision such as `0.12.6-r2` still
+targets Neovim `0.12.6` for this comparison.
 
 For a newer release, the workflow runs `cargo gen` with the explicit version.
 It keeps `nvim-rpc-sys` aligned with Neovim, increments the patch versions of all

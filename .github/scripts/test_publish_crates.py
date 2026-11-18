@@ -12,12 +12,15 @@ import publish_crates as publisher
 
 class RegistryTests(unittest.TestCase):
     def test_published_version_is_recognized(self):
-        response = {"version": {"crate": "nvim-rpc", "num": "0.1.1", "yanked": False}}
-        with patch.object(publisher, "urlopen", return_value=BytesIO(json.dumps(response).encode())) as get:
-            self.assertTrue(publisher.is_published("nvim-rpc", "0.1.1"))
-        request = get.call_args.args[0]
-        self.assertEqual(request.full_url, "https://crates.io/api/v1/crates/nvim-rpc/0.1.1")
-        self.assertIn("User-agent", request.headers)
+        for name, version in [("nvim-rpc", "0.1.1"), ("nvim-rpc-sys", "0.12.6-r2")]:
+            response = {"version": {"crate": name, "num": version, "yanked": False}}
+            with self.subTest(name=name), patch.object(
+                publisher, "urlopen", return_value=BytesIO(json.dumps(response).encode())
+            ) as get:
+                self.assertTrue(publisher.is_published(name, version))
+                request = get.call_args.args[0]
+                self.assertEqual(request.full_url, f"https://crates.io/api/v1/crates/{name}/{version}")
+                self.assertIn("User-agent", request.headers)
 
     def test_only_not_found_is_treated_as_unpublished(self):
         for status in (404, 403, 429, 500):
@@ -56,6 +59,16 @@ class RegistryTests(unittest.TestCase):
         ), self.assertRaises(TimeoutError):
             publisher.wait_for_index("nvim-rpc", "0.1.1")
 
+    def test_index_wait_matches_the_exact_sys_revision(self):
+        old = b'{"vers":"0.12.6-r1","yanked":false}\n'
+        new = old + b'{"vers":"0.12.6-r2","yanked":false}\n'
+        with patch.object(publisher, "fetch", side_effect=[old, new]) as get, patch.object(
+            publisher.time, "sleep"
+        ) as sleep:
+            publisher.wait_for_index("nvim-rpc-sys", "0.12.6-r2")
+        self.assertEqual(get.call_args.args[0], "https://index.crates.io/nv/im/nvim-rpc-sys")
+        sleep.assert_called_once_with(5)
+
     def test_yanked_index_entry_fails(self):
         with patch.object(
             publisher, "fetch", return_value=b'{"vers":"0.1.1","yanked":true}\n'
@@ -71,7 +84,8 @@ class PublishTests(unittest.TestCase):
         for name in publisher.CRATES:
             path = self.root / "crates" / name / "Cargo.toml"
             path.parent.mkdir(parents=True)
-            path.write_text(f'[package]\nname = "{name}"\nversion = "0.1.1"\n')
+            version = "0.12.6-r2" if name == "nvim-rpc-sys" else "0.1.1"
+            path.write_text(f'[package]\nname = "{name}"\nversion = "{version}"\n')
 
     def test_dependencies_are_published_before_dependents(self):
         with patch.object(publisher, "is_published", return_value=False), patch.object(
@@ -94,7 +108,7 @@ class PublishTests(unittest.TestCase):
             publisher, "wait_for_index"
         ) as wait, patch.object(publisher.subprocess, "run") as run:
             publisher.publish(self.root)
-        self.assertEqual(wait.call_args_list, [call("rmp-bytes", "0.1.1"), call("nvim-rpc-sys", "0.1.1")])
+        self.assertEqual(wait.call_args_list, [call("rmp-bytes", "0.1.1"), call("nvim-rpc-sys", "0.12.6-r2")])
         self.assertEqual([c.args[0][3] for c in run.call_args_list], ["nvim-rpc", "nvim-rpc-plugin", "nvim-rpc-ui"])
 
     def test_failed_upload_stops_before_publishing_dependents(self):

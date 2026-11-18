@@ -128,9 +128,7 @@ impl<B> Object<B> {
         }
     }
 
-    /// Returns `Some(n)` if `self` is a `f32` object; otherwise `None`.
-    ///
-    /// Does not perform any type casting.
+    /// Returns the value if this is [`Self::F32`].
     pub fn to_f32(&self) -> Option<f32> {
         if let &Self::F32(value) = self {
             Some(value)
@@ -139,9 +137,7 @@ impl<B> Object<B> {
         }
     }
 
-    /// Returns `Some(n)` if `self` is a `f64` object; otherwise `None`.
-    ///
-    /// Does not perform any type casting.
+    /// Returns the value if this is [`Self::F64`].
     pub fn to_f64(&self) -> Option<f64> {
         if let &Self::F64(value) = self {
             Some(value)
@@ -380,8 +376,8 @@ impl<B: AsRef<[u8]>> Array<B> {
     ///
     /// The iterator retains this array's current position and remaining element
     /// count. It decodes elements lazily from the same backing bytes; no elements
-    /// are decoded or copied by this method. Its decoded values cannot outlive
-    /// this borrow. Advancing the returned iterator does not advance this array.
+    /// are decoded or copied by this method. Advancing the returned iterator
+    /// does not advance this array.
     pub fn with_borrowed_buffer(&self) -> Array<&[u8]> {
         Array {
             buf: self.buf.as_ref(),

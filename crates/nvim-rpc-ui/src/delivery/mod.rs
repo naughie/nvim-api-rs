@@ -20,7 +20,7 @@ use std::sync::{Mutex, MutexGuard};
 /// `redraw` and `nvim_error_event` notifications are consumed by the UI model
 /// before later callbacks are dispatched. Invalid UI or application notification
 /// arguments close the shared connection; [`Frames::recv()`] drains the pending
-/// frame before reporting the error. Construction starts no tasks.
+/// frame before reporting the error.
 pub struct UiHandler<H> {
     handler: H,
     model: Mutex<Model>,

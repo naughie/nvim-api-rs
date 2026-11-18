@@ -64,8 +64,7 @@
 //!
 //! Nest `OneOf` and `Untagged` for more alternatives. For example,
 //! `OneOf<Int, OneOf<String, Array>>` pairs with
-//! `Untagged<i64, Untagged<&str, Array<_>>>`. This composition supports three,
-//! four, five, six, or more alternatives without a separate enum for each arity.
+//! `Untagged<i64, Untagged<&str, Array<_>>>`.
 //! Order and nesting are part of the Rust type; the library does not normalize
 //! these expressions or add wire tags for nested branches.
 //!
@@ -204,9 +203,8 @@ mod string;
 
 /// Maps an iterable's elements before converting them to the requested API type.
 ///
-/// Consumes `A`, which may own or borrow its elements. `F` must implement `Fn`;
-/// it is called once per visited element during encoding. The source iterator
-/// must have an exact length. No intermediate collection is created.
+/// Consumes an exactly sized iterable `A` and calls `F` once per visited element
+/// during encoding, without an intermediate collection.
 ///
 /// ```
 /// use nvim_rpc::api_types::encode::Map;
@@ -239,9 +237,8 @@ pub struct Map<A, F>(pub A, pub F);
 
 /// Maps shared references to an iterable's elements without consuming the source.
 ///
-/// `F` receives `&'s T` and may return a value borrowing that element. The
-/// resulting encoding cannot outlive the source. Conversion remains lazy and
-/// requires an exactly sized iterator, as with [`Map`].
+/// `F` receives `&'s T` and may return a value borrowing that element. Conversion
+/// remains lazy and requires an exactly sized iterator, as with [`Map`].
 /// Borrowed `[T; N]` and `Array<[T; N]>` sources also support
 /// `FixedArrayOf<B, N>`.
 ///

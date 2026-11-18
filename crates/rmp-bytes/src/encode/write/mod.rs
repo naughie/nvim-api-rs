@@ -29,7 +29,7 @@
 //! ```
 //!
 //! Neither trait requires `Send`, and an async implementation's future need not
-//! be `Send`. Choose the executor and any task spawning at the application layer.
+//! be `Send`.
 
 use super::Encode;
 use super::primitive::{Primitive, State};
@@ -75,7 +75,7 @@ pub trait WriterAsync {
     /// The implementation's success/failure representation.
     type Result: WriteResult;
 
-    /// Writes the entire chunk without requiring a named future type.
+    /// Writes the entire chunk, or returns a failure result.
     fn write_all<'a>(&'a mut self, buf: &'a [u8]) -> impl Future<Output = Self::Result> + 'a;
 
     /// Flushes buffered bytes asynchronously, or succeeds immediately for memory buffers.

@@ -18,6 +18,7 @@ class ReleaseTests(unittest.TestCase):
                 release("v0.13.0", prerelease=True),
                 release("v1.0.0", draft=True),
                 release("v0.12.11-rc1"),
+                release("v0.12.12-r2"),
                 release("v0.12.9"),
             ],
             [release("v0.12.10"), release("v0.11.99")],
@@ -29,9 +30,22 @@ class ReleaseTests(unittest.TestCase):
             updater.latest_release([[]])
 
     def test_invalid_versions_fail(self):
-        for value in ["0.12", "v0.12.6", "0.12.6-rc1", "0.12.6+dev", "01.2.3"]:
+        for value in ["0.12", "v0.12.6", "0.12.6-r2", "0.12.6-rc1", "0.12.6+dev", "01.2.3"]:
             with self.subTest(value=value), self.assertRaises(ValueError):
                 updater.version(value)
+
+    def test_sys_revisions_target_the_base_neovim_release(self):
+        for value in ["0.12.6", "0.12.6-r0", "0.12.6-r2", "0.12.6-r12"]:
+            with self.subTest(value=value):
+                self.assertEqual(updater.sys_neovim_version(value), (0, 12, 6))
+
+    def test_invalid_sys_versions_fail(self):
+        for value in [
+            "0.12", "01.2.3-r1", "0.12.6-r", "0.12.6-r01", "0.12.6-r-1",
+            "0.12.6-rc1", "0.12.6-r2+dev", "v0.12.6", "v0.12.6-r2", "vv0.12.6-r2",
+        ]:
+            with self.subTest(value=value), self.assertRaises(ValueError):
+                updater.sys_neovim_version(value)
 
 
 class UpdateTests(unittest.TestCase):
@@ -44,14 +58,14 @@ class UpdateTests(unittest.TestCase):
             '[workspace.dependencies]\n'
             'mp = { version = "0.1.9", path = "crates/rmp-bytes", package = "rmp-bytes" } # alias\n'
             'nvim-rpc = { version = "0.2.3", path = "crates/nvim-rpc" }\n'
-            'nvim-rpc-sys = { version = "0.12.6", path = "crates/nvim-rpc-sys" }\n'
+            'nvim-rpc-sys = { version = "=0.12.6-r2", path = "crates/nvim-rpc-sys" }\n'
             'external = { version = "1" }\n'
         )
         for name, version in [
             ("rmp-bytes", "0.1.9"),
             ("nvim-rpc", "0.2.3"),
             ("nvim-rpc-plugin", "0.3.1"),
-            ("nvim-rpc-sys", "0.12.6"),
+            ("nvim-rpc-sys", "0.12.6-r2"),
         ]:
             path = self.root / "crates" / name / "Cargo.toml"
             path.parent.mkdir(parents=True)
@@ -61,10 +75,22 @@ class UpdateTests(unittest.TestCase):
             )
 
     def test_current_and_older_releases_are_skipped(self):
-        self.assertTrue(updater.needs_update(self.root, "0.12.7"))
-        self.assertTrue(updater.needs_update(self.root, "0.13.0"))
-        self.assertFalse(updater.needs_update(self.root, "0.12.6"))
-        self.assertFalse(updater.needs_update(self.root, "0.11.99"))
+        path = self.root / "crates/nvim-rpc-sys/Cargo.toml"
+        text = path.read_text()
+        for current in ["0.12.6", "0.12.6-r2", "0.12.6-r12"]:
+            with self.subTest(current=current):
+                path.write_text(text.replace('"0.12.6-r2"', f'"{current}"'))
+                self.assertTrue(updater.needs_update(self.root, "0.12.7"))
+                self.assertTrue(updater.needs_update(self.root, "0.13.0"))
+                self.assertFalse(updater.needs_update(self.root, "0.12.6"))
+                self.assertFalse(updater.needs_update(self.root, "0.11.99"))
+
+    def test_revision_of_current_release_is_not_regenerated(self):
+        before = {p: p.read_bytes() for p in self.root.rglob("Cargo.toml")}
+        with patch.object(updater.subprocess, "run") as run:
+            updater.update(self.root, "0.12.6")
+        run.assert_not_called()
+        self.assertEqual(before, {p: p.read_bytes() for p in before})
 
     def test_bumps_packages_and_aliased_workspace_requirements(self):
         changes = updater.bumped_manifests(self.root)
@@ -84,7 +110,7 @@ class UpdateTests(unittest.TestCase):
         deps = updater.tomllib.loads(text)["workspace"]["dependencies"]
         self.assertEqual(deps["mp"]["version"], "0.1.10")
         self.assertEqual(deps["nvim-rpc"]["version"], "0.2.4")
-        self.assertEqual(deps["nvim-rpc-sys"]["version"], "0.12.6")
+        self.assertEqual(deps["nvim-rpc-sys"]["version"], "=0.12.6-r2")
         self.assertEqual(deps["external"]["version"], "1")
         self.assertIn("# alias", text)
 
@@ -96,7 +122,10 @@ class UpdateTests(unittest.TestCase):
                     self.root / "Cargo.toml",
                     self.root / "crates/nvim-rpc-sys/Cargo.toml",
                 ]:
-                    path.write_text(path.read_text().replace('"0.12.6"', '"0.12.7"'))
+                    text = path.read_text()
+                    text = text.replace('"0.12.6-r2"', '"0.12.7"')
+                    text = text.replace('"=0.12.6-r2"', '"0.12.7"')
+                    path.write_text(text)
 
         with patch.object(updater.subprocess, "run", side_effect=cargo) as run:
             updater.update(self.root, "0.12.7")
