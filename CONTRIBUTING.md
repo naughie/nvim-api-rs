@@ -78,25 +78,41 @@ transports must not acquire process ownership.
 
 ### UI redraw performance
 
-Measure decoding, redraw processing, and frame publication in a release build:
+Measure decoding, redraw processing, frame publication, and synthetic CPU
+painting in a release build:
 
 ```sh
 cargo run --release -p nvim-rpc-ui --example replay -- 100000
 ```
 
-The example retains the previous frame and replays typing, whole-row scrolling,
-and 120-entry rows on a 120×40 grid. Rows cover ASCII, repeated CJK, combining
-sequences, emoji, and multi-character strings. CJK working sets of 256, 1,024,
-and 4,096 scalars show how reuse varies with vocabulary size. Two further streams
-draw from 15,360 CJK scalars to exercise cache churn; the mostly unique stream
-replaces every eighth entry with one recurring character. Each row entry is
-encoded separately, without a repeat run. Fixtures are encoded before measurement.
+The immediate-delivery workloads retain the previous frame and replay typing,
+whole-row scrolling, and 120-entry rows on a 120×40 grid. Rows cover ASCII,
+repeated CJK, combining sequences, emoji, and multi-character strings. CJK
+working sets of 256, 1,024, and 4,096 scalars show how reuse varies with
+vocabulary size. Two further streams draw from 15,360 CJK scalars to exercise
+cache churn; the mostly unique stream replaces every eighth entry with one
+recurring character. Each row entry is encoded separately, without a repeat
+run. Fixtures are encoded before measurement.
 
-Throughput follows 1,000 warm-up frames. A separate pass of up to 1,000 frames
-counts allocation and reallocation calls on the current thread; setup and
-fixture encoding are excluded. Timings exclude Neovim RPC latency, text shaping,
-toolkit work, and GPU presentation. Record the workload and build configuration
-when comparing measurements.
+These workloads measure decoding, model updates, and immediate frame delivery
+without painting. Throughput follows 1,000 warm-up frames. A separate pass of
+up to 1,000 frames counts allocation and reallocation calls on the current
+thread; setup and fixture encoding are excluded.
+
+The burst workloads use two 240×80 grids and paint once per eight flushes. They
+compare `Frame::coalesce()` with `Frame::coalesce_incremental()` for cursor-only
+updates and sparse cell updates. A CPU backend traverses every cell selected by
+the resulting damage and reads its text and highlight. The output reports total
+time, CPU paint time, cells visited, and cursor updates. Full repaint visits
+38,400 cells per paint; incremental cursor updates visit none, and the sparse
+updates visit two three-cell bounding regions. The frame count is rounded up
+to a multiple of eight for these workloads.
+
+These measurements exclude Neovim RPC latency, real text shaping, rasterization,
+FFI transfer, toolkit work, and GPU presentation. Burst timings reflect work
+selected by damage with a synthetic CPU cost. Measure a real backend separately
+for GUI frame rates. Record the workload and build configuration when comparing
+measurements.
 
 The UI allocation and sharing tests run with the regular test suite. When
 changing frame storage or grid updates, check that retained frames stay stable
@@ -125,7 +141,8 @@ example on baseline `8d0f27c` and the cache implementation: Linux x86_64,
 Intel Core i7-14700KF, rustc 1.99.1, release build, 100,000 measured frames per
 workload, pinned to CPU 0 with `taskset -c 0 target/release/examples/replay 100000`.
 The allocation column compares baseline and cache calls per frame. Repeat the
-comparison with the same example source on both revisions; timings vary with
+cache comparison with the replay example from `0cfe6df` on both revisions;
+that source does not require the incremental-coalescing API. Timings vary with
 the machine and workload.
 
 | Workload | Baseline µs/frame | Cache µs/frame | Allocations/frame, baseline → cache |

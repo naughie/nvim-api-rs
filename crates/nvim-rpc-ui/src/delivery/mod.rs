@@ -9,8 +9,10 @@
 //! Receive frames through [`Frames::recv()`] or [`Frames::present_next()`] on
 //! the toolkit's owning thread. The backend needs no `Send` or `Sync` bounds.
 //! Frame delivery does not wait for drawing. Later frames are coalesced with
-//! any unconsumed frame, preserving ordered events and requesting a full
-//! repaint. There is at most one pending frame with at most
+//! any unconsumed frame, preserving ordered events. By default this requests
+//! a full repaint; select [`Coalescing::Incremental`] through
+//! [`Frames::set_coalescing()`] to combine bounded incremental damage. There
+//! is at most one pending frame with at most
 //! [`Limits::max_pending_events`] events. The model separately limits
 //! unflushed events. Application-retained frames are outside these limits.
 //!
@@ -23,8 +25,8 @@
 mod error;
 pub use error::Error;
 mod frames;
-pub use frames::Frames;
 use frames::Sender;
+pub use frames::{Coalescing, Frames};
 
 use crate::{Limits, Model, RedrawError};
 
@@ -50,9 +52,10 @@ impl<H> UiHandler<H> {
     ///
     /// Dropping the receiver ends the connection when the next frame is
     /// published. Dropping this handler finishes the stream after its pending
-    /// frame. `limits` controls both the model and coalesced event count.
+    /// frame. `limits` controls the model, coalesced event count, and incremental
+    /// damage bounds. Select the coalescing policy on the returned [`Frames`].
     pub fn new(handler: H, limits: Limits) -> (Self, Frames) {
-        let (frames, receiver) = Frames::channel(limits.max_pending_events);
+        let (frames, receiver) = Frames::channel(limits.max_pending_events, limits.max_grids);
         (
             Self {
                 handler,

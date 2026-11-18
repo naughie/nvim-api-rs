@@ -95,6 +95,32 @@ fn frame(model: &mut Model, bytes: &[u8]) -> Frame {
 }
 
 #[test]
+fn cursor_only_coalescing_does_not_allocate_or_copy_grids() {
+    let mut model = Model::default();
+    let initial = frame(
+        &mut model,
+        &redraw((("grid_resize", (1, 120, 40)), ("flush", ()))),
+    );
+    let mut pending = frame(
+        &mut model,
+        &redraw((("grid_cursor_goto", (1, 10, 20)), ("flush", ()))),
+    );
+    let next = frame(
+        &mut model,
+        &redraw((("grid_cursor_goto", (1, 10, 21)), ("flush", ()))),
+    );
+    let latest = Arc::clone(&next.state);
+    let (result, count) = allocations(|| pending.coalesce_incremental(next, 0, 1));
+    result.unwrap();
+    assert_eq!(count, 0);
+    assert!(Arc::ptr_eq(&pending.state, &latest));
+    assert!(Arc::ptr_eq(&pending.state.grids, &initial.state.grids));
+    assert!(pending.damage.cursor);
+    assert!(!pending.damage.full);
+    assert!(pending.damage.grids.is_empty());
+}
+
+#[test]
 fn empty_flushes_reuse_published_state_without_allocating() {
     let mut model = Model::default();
     let initial = frame(

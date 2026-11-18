@@ -19,7 +19,7 @@ mod ui;
 pub use ui::Ui;
 
 mod delivery;
-pub use delivery::{Error as FrameError, Frames, UiHandler};
+pub use delivery::{Coalescing, Error as FrameError, Frames, UiHandler};
 mod input;
 pub use input::{Client, ClientError};
 mod connection;
@@ -41,7 +41,10 @@ pub use nvim_rpc_plugin::NoHandler;
 ///
 /// Frame damage is relative to the previous published frame. Use
 /// [`State::diff_since()`] for damage relative to the last painted state, or
-/// [`Frame::coalesce()`] to retain ordered events while deferring presentation.
+/// [`Frame::coalesce_incremental()`] to combine incremental damage and retain
+/// ordered events while deferring presentation. [`Frame::coalesce()`] requests
+/// a full repaint instead. Connection delivery selects this policy through
+/// [`Frames::set_coalescing()`].
 /// The application handles presentation errors according to the driver's
 /// recovery contract.
 pub trait Backend {
