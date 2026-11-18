@@ -251,6 +251,116 @@ async fn incoming_replies_follow_reverse_request_order() {
     task.abort();
 }
 
+#[tokio::test]
+async fn duplicate_incoming_ids_reject_unfinished_and_completed_slots() {
+    for complete_older in [false, true] {
+        let (stream, peer) = tokio::io::duplex(4096);
+        let (reader, writer) = tokio::io::split(stream);
+        let (peer_reader, mut peer_writer) = tokio::io::split(peer);
+        let mut receiver = Receiver::new(TokioRead(peer_reader), [0; 4096]);
+        let (started, mut starts) = mpsc::unbounded_channel();
+        let (finished, mut finishes) = mpsc::unbounded_channel();
+        let older = Arc::new(Notify::new());
+        let (_nvim, task) = spawn(
+            reader,
+            writer,
+            Ordered {
+                started,
+                finished,
+                older: Arc::clone(&older),
+                newer: Arc::new(Notify::new()),
+            },
+        );
+        send(&mut peer_writer, (0u8, 10u32, "ordered", (1i32,))).await;
+        assert_eq!(bounded(starts.recv()).await, Some(1));
+        send(&mut peer_writer, (0u8, 11u32, "ordered", (2i32,))).await;
+        assert_eq!(bounded(starts.recv()).await, Some(2));
+        if complete_older {
+            older.notify_one();
+            assert_eq!(bounded(finishes.recv()).await, Some(1));
+            assert!(
+                tokio::time::timeout(Duration::from_millis(20), receiver.recv_async())
+                    .await
+                    .is_err()
+            );
+        }
+
+        send(&mut peer_writer, (0u8, 10u32, "ordered", (1i32,))).await;
+        assert!(matches!(
+            bounded(task).await.unwrap(),
+            Err(ConnectionError::InvalidFormat)
+        ));
+    }
+}
+
+#[tokio::test]
+async fn deep_reply_stacks_preserve_reverse_order_and_reuse_retired_ids() {
+    use nvim_rpc::api_types::Decode;
+    use nvim_rpc::sys::types;
+
+    struct Gated {
+        started: mpsc::UnboundedSender<u32>,
+        gate: Arc<Notify>,
+    }
+
+    impl<W: AsyncWrite + Unpin + Send + 'static> Handler<W> for Gated {
+        type Request = (u32,);
+        type Response = Result<u32, ()>;
+        type Notification = ();
+
+        async fn on_request(&self, _: &[u8], (id,): Self::Request, _: Neovim<W>) -> Self::Response {
+            self.started.send(id).unwrap();
+            self.gate.notified().await;
+            Ok(id)
+        }
+
+        async fn on_notification(&self, _: &[u8], _: (), _: Neovim<W>) {}
+    }
+
+    bounded(async {
+        let (stream, peer) = tokio::io::duplex(4096);
+        let (reader, writer) = tokio::io::split(stream);
+        let (peer_reader, mut peer_writer) = tokio::io::split(peer);
+        let mut receiver = Receiver::new(TokioRead(peer_reader), [0; 4096]);
+        let (started, mut starts) = mpsc::unbounded_channel();
+        let gate = Arc::new(Notify::new());
+        let (_nvim, task) = spawn(
+            reader,
+            writer,
+            Gated {
+                started,
+                gate: Arc::clone(&gate),
+            },
+        );
+        let mut batch = Vec::new();
+        for id in 0..4096u32 {
+            batch.write_primitive((0u8, id, "gated", (id,))).consume();
+        }
+
+        for _ in 0..2 {
+            peer_writer.write_all(&batch).await.unwrap();
+            let mut ids = Vec::new();
+            for _ in 0..4096 {
+                ids.push(starts.recv().await.unwrap());
+            }
+            ids.sort_unstable();
+            assert_eq!(ids, (0..4096).collect::<Vec<_>>());
+            gate.notify_waiters();
+            for id in (0..4096u32).rev() {
+                let Message::Response(response) = receiver.recv_async().await.unwrap() else {
+                    panic!("expected response from deep reply stack");
+                };
+                assert_eq!(response.msgid.0, id);
+                let value = <u32 as Decode<types::Object, _>>::decode(response.result.unwrap());
+                assert_eq!(value.unwrap(), id);
+            }
+        }
+        task.abort();
+        assert!(task.await.unwrap_err().is_cancelled());
+    })
+    .await;
+}
+
 #[derive(Debug, PartialEq, Eq)]
 enum DispatchEvent {
     RequestStarted(u8),

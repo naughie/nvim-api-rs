@@ -90,14 +90,23 @@ pub(super) fn tabpage(v: Obj<'_>) -> Result<Tabpage> {
     <Tabpage as Decode<ext_types::Tabpage, _>>::decode(v).map_err(Into::into)
 }
 
-pub(super) fn text(v: Obj<'_>, limits: Limits) -> Result<Arc<str>> {
+pub(super) fn string(v: Obj<'_>, limits: Limits) -> Result<&str> {
     let text = <&str as Decode<types::String, _>>::decode(v)?;
     if text.len() > limits.max_string_bytes {
         return Err(ProtocolError::Limit("string bytes"));
     }
+    Ok(text)
+}
+
+pub(super) fn text(v: Obj<'_>, limits: Limits) -> Result<Arc<str>> {
+    let text = string(v, limits)?;
+    Ok(ascii_text(text).unwrap_or_else(|| Arc::from(text)))
+}
+
+pub(super) fn ascii_text(text: &str) -> Option<Arc<str>> {
     if text.is_empty() {
         static EMPTY: OnceLock<Arc<str>> = OnceLock::new();
-        return Ok(Arc::clone(EMPTY.get_or_init(|| Arc::from(""))));
+        return Some(Arc::clone(EMPTY.get_or_init(|| Arc::from(""))));
     }
     if let [byte] = text.as_bytes()
         && byte.is_ascii()
@@ -111,9 +120,9 @@ pub(super) fn text(v: Obj<'_>, limits: Limits) -> Result<Arc<str>> {
             })
         });
         // is_ascii() proves byte < 128, the fixed array's length.
-        return Ok(Arc::clone(&chars[usize::from(*byte)]));
+        return Some(Arc::clone(&chars[usize::from(*byte)]));
     }
-    Ok(Arc::from(text))
+    None
 }
 
 pub(super) fn array(v: Obj<'_>) -> Result<Args<'_>> {

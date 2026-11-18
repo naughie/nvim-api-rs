@@ -6,7 +6,7 @@ use tokio::io::{AsyncRead, AsyncWrite};
 use tokio::sync::Notify;
 use tokio::task::{JoinHandle, JoinSet};
 
-use std::collections::VecDeque;
+use std::collections::{HashSet, VecDeque};
 use std::convert::Infallible;
 use std::sync::{Arc, Mutex, MutexGuard};
 
@@ -92,8 +92,15 @@ struct Replies<R> {
 
 struct ReplyState<R> {
     stack: Vec<Slot<R>>,
+    // Empty while scanning shallow stacks; otherwise contains every stack ID,
+    // including completed slots. Index until drained, retaining capacity for reuse.
+    ids: HashSet<MessageId>,
     receiving: bool,
 }
+
+// Linear lookup wins on shallow stacks; release-mode burst and interleaved
+// measurements put the crossover around 64 pending slots.
+const REPLY_INDEX_THRESHOLD: usize = 64;
 
 impl<R> Replies<R> {
     fn state(&self) -> MutexGuard<'_, ReplyState<R>> {
@@ -119,11 +126,21 @@ impl<R> Replies<R> {
         if state.stack.len() >= self.max_pending {
             return Err(ConnectionError::Limit("pending RPC replies"));
         }
-        if state.stack.iter().any(|slot| slot.id == id) {
-            return Err(ConnectionError::InvalidFormat);
+        let ReplyState { stack, ids, .. } = &mut *state;
+        if ids.is_empty() && stack.len() < REPLY_INDEX_THRESHOLD {
+            if stack.iter().any(|slot| slot.id == id) {
+                return Err(ConnectionError::InvalidFormat);
+            }
+        } else {
+            if ids.is_empty() {
+                ids.extend(stack.iter().map(|slot| slot.id));
+            }
+            if !ids.insert(id) {
+                return Err(ConnectionError::InvalidFormat);
+            }
         }
-        let idx = state.stack.len();
-        state.stack.push(Slot { id, reply: None });
+        let idx = stack.len();
+        stack.push(Slot { id, reply: None });
         Ok(idx)
     }
 
@@ -152,6 +169,9 @@ impl<R> Replies<R> {
         }
         state.stack.last()?.reply.as_ref()?;
         let slot = state.stack.pop()?;
+        if !state.ids.is_empty() {
+            state.ids.remove(&slot.id);
+        }
         Some((slot.id, slot.reply?))
     }
 }
@@ -215,6 +235,7 @@ where
     let replies = Arc::new(Replies {
         state: Mutex::new(ReplyState {
             stack: Vec::new(),
+            ids: HashSet::new(),
             receiving: false,
         }),
         ready: Notify::new(),
@@ -366,16 +387,21 @@ where
 mod tests {
     use super::*;
 
-    #[test]
-    fn nested_completions_keep_their_slots_as_newer_replies_are_sent() {
-        let replies = Replies {
+    fn replies<R>(max_pending: usize) -> Replies<R> {
+        Replies {
             state: Mutex::new(ReplyState {
                 stack: Vec::new(),
+                ids: HashSet::new(),
                 receiving: false,
             }),
             ready: Notify::new(),
-            max_pending: usize::MAX,
-        };
+            max_pending,
+        }
+    }
+
+    #[test]
+    fn nested_completions_keep_their_slots_as_newer_replies_are_sent() {
+        let replies = replies(usize::MAX);
         let oldest = replies.push(MessageId(10)).unwrap();
         let middle = replies.push(MessageId(11)).unwrap();
         let newest = replies.push(MessageId(12)).unwrap();
@@ -398,5 +424,164 @@ mod tests {
             ));
         }
         assert!(replies.pop_ready().is_none());
+    }
+
+    #[test]
+    fn duplicate_ids_remain_registered_until_their_slots_are_popped() {
+        for depth in [1, REPLY_INDEX_THRESHOLD, REPLY_INDEX_THRESHOLD + 1, 4096] {
+            let replies = replies(usize::MAX);
+            let depth = u32::try_from(depth).unwrap();
+            for id in 0..depth {
+                assert_eq!(replies.push(MessageId(id)).unwrap(), id as usize);
+            }
+
+            replies.begin_batch();
+            for id in 0..depth {
+                assert!(matches!(
+                    replies.push(MessageId(id)),
+                    Err(ConnectionError::InvalidFormat)
+                ));
+                replies.complete(id as usize, Reply::Value(id));
+                assert!(matches!(
+                    replies.push(MessageId(id)),
+                    Err(ConnectionError::InvalidFormat)
+                ));
+            }
+            assert!(!replies.is_ready());
+            assert!(replies.pop_ready().is_none());
+            replies.end_batch();
+
+            for id in (0..depth).rev() {
+                assert!(matches!(
+                    replies.pop_ready(),
+                    Some((MessageId(actual), Reply::Value(value))) if actual == id && value == id
+                ));
+                // Reusing the popped ID leaves every older slot registered.
+                let idx = replies.push(MessageId(id)).unwrap();
+                assert_eq!(idx, id as usize);
+                replies.complete(idx, Reply::InvalidParams("invalid arguments".into()));
+                assert!(matches!(
+                    replies.push(MessageId(id)),
+                    Err(ConnectionError::InvalidFormat)
+                ));
+                assert!(matches!(
+                    replies.pop_ready(),
+                    Some((MessageId(actual), Reply::InvalidParams(error)))
+                        if actual == id && error == "invalid arguments"
+                ));
+            }
+            assert!(replies.pop_ready().is_none());
+            assert!(replies.pop_ready().is_none());
+        }
+    }
+
+    #[test]
+    fn indexes_deep_stacks_until_drained_and_reuses_storage() {
+        let replies = replies(usize::MAX);
+        let threshold = u32::try_from(REPLY_INDEX_THRESHOLD).unwrap();
+        for _ in 0..2 {
+            for id in 0..threshold {
+                replies.push(MessageId(id)).unwrap();
+                assert!(replies.state().ids.is_empty());
+            }
+            replies.push(MessageId(threshold)).unwrap();
+            {
+                let state = replies.state();
+                assert_eq!(state.ids.len(), state.stack.len());
+                assert!(state.stack.iter().all(|slot| state.ids.contains(&slot.id)));
+            }
+            for id in (0..=threshold).rev() {
+                replies.complete(id as usize, Reply::Value(id));
+                assert!(replies.state().ids.contains(&MessageId(id)));
+                assert!(replies.pop_ready().is_some());
+                assert!(!replies.state().ids.contains(&MessageId(id)));
+                assert_eq!(replies.state().ids.len(), id as usize);
+            }
+            let capacity = replies.state().ids.capacity();
+            assert!(capacity > 0);
+            let idx = replies.push(MessageId(u32::MAX)).unwrap();
+            assert!(replies.state().ids.is_empty());
+            replies.complete(idx, Reply::Value(u32::MAX));
+            assert!(replies.pop_ready().is_some());
+            assert_eq!(replies.state().ids.capacity(), capacity);
+        }
+    }
+
+    #[test]
+    fn pending_reply_limit_precedes_duplicate_rejection() {
+        for max_pending in [0, 1, REPLY_INDEX_THRESHOLD + 1] {
+            let replies = replies::<u32>(max_pending);
+            for id in 0..u32::try_from(max_pending).unwrap() {
+                replies.push(MessageId(id)).unwrap();
+            }
+            for id in [0, u32::MAX] {
+                assert!(matches!(
+                    replies.push(MessageId(id)),
+                    Err(ConnectionError::Limit("pending RPC replies"))
+                ));
+            }
+            assert_eq!(replies.state().stack.len(), max_pending);
+        }
+    }
+
+    #[test]
+    #[ignore = "manual release-mode reply-stack benchmark; prints timings"]
+    fn benchmark_reply_stacks() {
+        use std::hint::black_box;
+        use std::time::Instant;
+
+        fn fill(replies: &Replies<u64>, depth: u32) {
+            for id in 0..depth {
+                black_box(replies.push(MessageId(black_box(id))).unwrap());
+            }
+        }
+
+        fn drain(replies: &Replies<u64>, depth: u32) {
+            for idx in 0..depth {
+                replies.complete(idx as usize, Reply::Value(u64::from(idx)));
+            }
+            for _ in 0..depth {
+                black_box(replies.pop_ready().unwrap());
+            }
+        }
+
+        for depth in [1, 4, 16, 32, 64, 128, 4096, 16384] {
+            let cycles = 262_144 / depth;
+            let reused = replies(usize::MAX);
+            fill(&reused, depth);
+            drain(&reused, depth);
+            let start = Instant::now();
+            for _ in 0..cycles {
+                fill(&reused, depth);
+                drain(&reused, depth);
+            }
+            eprintln!(
+                "reused burst, depth {depth}: {:.2} ns/request",
+                start.elapsed().as_nanos() as f64 / f64::from(cycles * depth),
+            );
+
+            let start = Instant::now();
+            for _ in 0..cycles {
+                let fresh = replies(usize::MAX);
+                fill(&fresh, depth);
+                drain(&fresh, depth);
+            }
+            eprintln!(
+                "fresh burst, depth {depth}: {:.2} ns/request",
+                start.elapsed().as_nanos() as f64 / f64::from(cycles * depth),
+            );
+
+            fill(&reused, depth);
+            let start = Instant::now();
+            for _ in 0..262_144 {
+                let idx = reused.push(MessageId(black_box(depth))).unwrap();
+                reused.complete(idx, Reply::Value(u64::from(depth)));
+                black_box(reused.pop_ready().unwrap());
+            }
+            eprintln!(
+                "interleaved, depth {depth}: {:.2} ns/request",
+                start.elapsed().as_nanos() as f64 / 262_144.0,
+            );
+        }
     }
 }
