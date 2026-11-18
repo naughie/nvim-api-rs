@@ -158,6 +158,29 @@ with similar throughput and twice the retention bound. The 512-slot choice keeps
 a 32 KiB payload budget while covering the tested small repeated vocabularies;
 it does not guarantee reuse for all text that would fit within that budget.
 
+### RPC reply-stack performance
+
+Measure incoming reply registration, completion, and retirement in a release
+build:
+
+```sh
+cargo test -p nvim-rpc-plugin --release --lib benchmark_reply_stacks -- --ignored --nocapture
+```
+
+The benchmark covers fresh and reused bursts at depths from 1 to 16,384, plus
+interleaved push/complete/pop operations above unfinished older requests. It
+includes the reply-state mutex and readiness notifications, but excludes RPC
+decoding, transport I/O, and handler tasks. Compare repeated runs with the same
+workload and build configuration.
+
+Reply registration scans shallow stacks and builds a standard `HashSet` when
+adding a request above 64 pending slots. Release-mode comparisons against linear
+scans and always-on indexing placed the sustained-depth crossover around 64
+slots; constructing the index can still cost more for bursts just above that
+depth. Membership includes completed replies until they are popped for writing.
+The index remains active until the stack drains, then shallow scans resume while
+the allocated set storage is retained for reuse.
+
 ### Large boundary tests
 
 Some `rmp-bytes` tests traverse `u32::MAX`-length iterators. They are ignored in
