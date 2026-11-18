@@ -367,7 +367,7 @@ fn assert_borrowed_array_view<B: Buf<Slice = B> + AsRef<[u8]>>(buf: B) {
     assert_eq!(array.remaining_len(), 3);
 
     let text_ptr = {
-        let mut view: Array<&[u8]> = array.as_borrowed();
+        let mut view: Array<&[u8]> = array.with_borrowed_buffer();
         assert_eq!(view.remaining_len(), 3);
         assert_eq!(view.size_hint(), (3, Some(3)));
         let Object::Str(text) = view.next().unwrap() else {
@@ -396,7 +396,7 @@ fn assert_borrowed_array_view<B: Buf<Slice = B> + AsRef<[u8]>>(buf: B) {
     };
     assert_eq!(text.as_slice(), b"two");
     assert_eq!(text.as_slice().as_ptr(), text_ptr);
-    assert_eq!(array.as_borrowed().remaining_len(), 2);
+    assert_eq!(array.with_borrowed_buffer().remaining_len(), 2);
 
     let Object::Array(mut nested) = array.next().unwrap() else {
         panic!("expected the original nested array");
@@ -406,7 +406,7 @@ fn assert_borrowed_array_view<B: Buf<Slice = B> + AsRef<[u8]>>(buf: B) {
     assert!(nested.next().is_none());
     assert_eq!(array.next().unwrap().to_bool(), Some(true));
     assert!(array.next().is_none());
-    let mut empty = array.as_borrowed();
+    let mut empty = array.with_borrowed_buffer();
     assert_eq!(empty.remaining_len(), 0);
     assert_eq!(empty.size_hint(), (0, Some(0)));
     assert!(empty.next().is_none());

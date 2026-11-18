@@ -108,8 +108,8 @@ impl Model {
     ///
     /// Handles `redraw` and `nvim_error_event`; other methods return `false`
     /// without changing the model. Pass notifications in receive order. Borrow
-    /// shared parameter storage with [`Array::as_borrowed()`] when the dispatcher
-    /// needs to retain it or route an unhandled notification elsewhere.
+    /// shared parameter storage with [`Array::with_borrowed_buffer()`] when the
+    /// dispatcher needs to retain it or route an unhandled notification elsewhere.
     ///
     /// Redraw frames are published at each `flush`. An API error publishes the
     /// last flushed state with all earlier pending events followed by the

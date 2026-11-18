@@ -66,7 +66,7 @@ impl<B: Backend> Ui<B> {
     ) -> Result<bool, RedrawError<B::Error>> {
         self.model.apply_notification_with(
             notification.method.as_slice(),
-            notification.params.as_borrowed(),
+            notification.params.with_borrowed_buffer(),
             |frame| self.backend.present(frame),
         )
     }

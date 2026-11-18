@@ -87,11 +87,10 @@ where
     }
 
     async fn on_notification(&self, method: &[u8], params: Array, nvim: Neovim<W>) {
+        let args = params.with_borrowed_buffer();
         let result = self
             .model()
-            .apply_notification_with(method, params.as_borrowed(), |frame| {
-                self.frames.send(frame)
-            });
+            .apply_notification_with(method, args, |frame| self.frames.send(frame));
         let error = match result {
             Ok(true) => return,
             Ok(false) => match H::Notification::from_params(params) {

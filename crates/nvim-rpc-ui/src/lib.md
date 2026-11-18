@@ -259,8 +259,8 @@ or `Ui::backend_mut()`.
 
 For applications that need to publish frames separately from presentation,
 [`Model::apply_notification()`] provides state updates and a callback for each
-frame. Borrow shared parameter storage with `Array::as_borrowed()`; the original
-array keeps its position for further dispatch. API errors publish the last
+frame. Use `Array::with_borrowed_buffer()` to borrow the parameter bytes while
+the original array keeps its position for further dispatch. API errors publish the last
 flushed state with any earlier pending events before the error event; unfinished
 screen changes remain pending until the next flush.
 Unknown redraw events are exposed as `Event::Unknown`; known events accept

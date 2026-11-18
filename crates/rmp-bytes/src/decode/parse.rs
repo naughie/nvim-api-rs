@@ -376,12 +376,13 @@ pub struct Array<B> {
 }
 
 impl<B: AsRef<[u8]>> Array<B> {
-    /// Borrows a view of the remaining elements without advancing this array.
+    /// Creates an array iterator with a borrowed byte buffer.
     ///
-    /// The view retains this array's current position and element count. Its
-    /// decoded values borrow the backing bytes and cannot outlive this borrow.
-    /// Advancing the view does not advance this array.
-    pub fn as_borrowed(&self) -> Array<&[u8]> {
+    /// The iterator retains this array's current position and remaining element
+    /// count. It decodes elements lazily from the same backing bytes; no elements
+    /// are decoded or copied by this method. Its decoded values cannot outlive
+    /// this borrow. Advancing the returned iterator does not advance this array.
+    pub fn with_borrowed_buffer(&self) -> Array<&[u8]> {
         Array {
             buf: self.buf.as_ref(),
             len: self.len,
