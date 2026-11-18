@@ -78,20 +78,44 @@ transports must not acquire process ownership.
 
 ### UI redraw performance
 
-Measure decoding, redraw processing, and frame publication in a release build:
+Run the replay example in release mode to measure decoding, model updates, and
+frame delivery without a Neovim process:
 
 ```sh
 cargo run --release -p nvim-rpc-ui --example replay -- 100000
 ```
 
-The example replays typing and whole-row scrolling at 120×40 cells while retaining
-the previous frame. Timings exclude Neovim RPC latency, text shaping, toolkit
-work, and GPU presentation. Record the workload and build configuration when
-comparing measurements.
+The argument selects the measured frame count per workload. Immediate delivery
+retains the preceding frame and reports throughput and allocations per frame.
+Its workloads cover typing, scrolling, repeated Unicode text, and larger working
+sets with little reuse. Eight-frame bursts compare full and incremental
+coalescing with a CPU backend that visits the cells selected by damage. Their
+output includes total time, paint time, cells visited, and cursor updates; the
+frame count rounds up to complete bursts.
 
-The UI allocation and sharing tests run with the regular test suite. When
-changing frame storage or grid updates, check that retained frames stay stable
-and that unchanged grids and rows remain shared.
+Fixtures and warm-up are outside the measurements. Allocation counts come from
+a separate pass on the current thread. The synthetic painter does not measure
+text shaping, toolkit integration, GPU rendering, or RPC latency. Compare the
+same workloads and build configuration, and measure a real backend separately
+when evaluating GUI performance.
+
+The regular UI tests verify allocation and sharing contracts. When changing
+frame storage or grid updates, preserve retained snapshots and sharing of
+unchanged grids and rows.
+
+### RPC reply-stack performance
+
+Measure reply registration, completion, and retirement without transport I/O:
+
+```sh
+cargo test -p nvim-rpc-plugin --release --lib benchmark_reply_stacks -- --ignored --nocapture
+```
+
+The benchmark covers fresh and reused request bursts at several depths and
+interleaved operations above unfinished older requests. It includes locking and
+readiness notifications; decoding and handler execution are outside the
+measurement. Compare repeated runs with the same workload and build
+configuration.
 
 ### Large boundary tests
 

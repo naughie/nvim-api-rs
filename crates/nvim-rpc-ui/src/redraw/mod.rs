@@ -4,6 +4,7 @@ use crate::{ProtocolError, RedrawError};
 mod decode;
 use decode::*;
 mod grid;
+mod text;
 mod widgets;
 mod windows;
 
@@ -33,6 +34,7 @@ pub struct Model {
     state: Arc<State>,
     committed: Arc<State>,
     limits: Limits,
+    cell_text: text::Cache,
     damage: Damage,
     events: Vec<Event>,
     sequence: u64,
@@ -53,6 +55,7 @@ impl Model {
             committed: Arc::clone(&state),
             state,
             limits,
+            cell_text: text::Cache::default(),
             damage: Damage::default(),
             events: Vec::new(),
             sequence: 0,
@@ -394,22 +397,15 @@ impl Model {
     }
 
     fn dirty(&mut self, grid: GridId, top: usize, bottom: usize, left: usize, right: usize) {
-        // One bounding rectangle per grid keeps pending damage bounded between flushes.
-        if let Some(d) = self.damage.grids.iter_mut().find(|d| d.grid == grid) {
-            d.top = d.top.min(top);
-            d.bottom = d.bottom.max(bottom);
-            d.left = d.left.min(left);
-            d.right = d.right.max(right);
-        } else if self.damage.grids.len() < self.limits.max_grids {
-            self.damage.grids.push(GridDamage {
+        self.damage.record_grid(
+            GridDamage {
                 grid,
                 top,
                 bottom,
                 left,
                 right,
-            });
-        } else {
-            self.damage.full = true;
-        }
+            },
+            self.limits.max_grids,
+        );
     }
 }

@@ -7,7 +7,9 @@ pub use widgets::{
     BufferItem, Chunk, Cmdline, CompletionItem, Content, HistoryEntry, Message, Messages,
     PopupAnchor, Popupmenu, Tab, Tabline, Wildmenu,
 };
+mod damage;
 mod diff;
+pub use damage::{Damage, GridDamage};
 mod frame;
 
 use nvim_rpc::Window;
@@ -42,6 +44,10 @@ pub enum Value {
 #[derive(Debug, Clone, Copy)]
 pub struct Limits {
     /// Maximum number of grids present at once.
+    ///
+    /// Also bounds each damage list when connection delivery uses
+    /// [`crate::Coalescing::Incremental`]. Exceeding a damage-list bound requests
+    /// a full repaint rather than returning a protocol error.
     pub max_grids: usize,
     /// Maximum total number of cells across all current grids.
     pub max_cells: usize,
@@ -114,39 +120,6 @@ pub struct State {
     pub busy: bool,
 }
 
-/// A rectangular region of grid cells that needs repainting.
-///
-/// `top..bottom` and `left..right` are half-open cell ranges.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct GridDamage {
-    pub grid: GridId,
-    pub top: usize,
-    pub bottom: usize,
-    pub left: usize,
-    pub right: usize,
-}
-
-/// Repaint and layout changes between UI states.
-///
-/// [`Frame::damage`] describes changes since the previous published frame.
-/// [`State::diff_since()`] computes damage against a snapshot selected by the
-/// caller, including changes across skipped frames.
-#[derive(Debug, Clone, Default)]
-pub struct Damage {
-    /// Changed cell regions, with at most one bounding rectangle per grid.
-    pub grids: Vec<GridDamage>,
-    /// Grids removed between the compared states.
-    pub removed_grids: Vec<GridId>,
-    /// Requests a repaint of the complete current state.
-    pub full: bool,
-    /// Grid sizes, placements, visibility, or viewports changed.
-    pub layout: bool,
-    /// The cursor position, style, or busy state changed.
-    pub cursor: bool,
-    /// External UI components or highlight-group mappings changed.
-    pub widgets: bool,
-}
-
 /// An application event received from Neovim.
 ///
 /// Grid and widget changes are available through [`Frame::state`]. These
@@ -200,8 +173,9 @@ pub enum Event {
 /// A UI state snapshot, repaint information, and ordered application events.
 ///
 /// The frame owns its data and remains valid after the input buffer, model, or
-/// connection is dropped. Damage is relative to the previous published frame.
-/// Process events in order even when drawing is deferred.
+/// connection is dropped. Uncoalesced damage is relative to the previous
+/// published frame; coalesced damage covers all combined frames. Process events
+/// in order even when drawing is deferred.
 #[derive(Debug, Clone)]
 pub struct Frame {
     pub sequence: u64,

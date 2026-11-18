@@ -9,7 +9,7 @@ use nvim_rpc::sys::{ext_types, types};
 use nvim_rpc::{Buffer, Tabpage, Window};
 
 use std::collections::BTreeMap;
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 
 pub(super) fn bad(event: &str, reason: &'static str) -> ProtocolError {
     ProtocolError::Invalid {
@@ -90,30 +90,16 @@ pub(super) fn tabpage(v: Obj<'_>) -> Result<Tabpage> {
     <Tabpage as Decode<ext_types::Tabpage, _>>::decode(v).map_err(Into::into)
 }
 
-pub(super) fn text(v: Obj<'_>, limits: Limits) -> Result<Arc<str>> {
+pub(super) fn string(v: Obj<'_>, limits: Limits) -> Result<&str> {
     let text = <&str as Decode<types::String, _>>::decode(v)?;
     if text.len() > limits.max_string_bytes {
         return Err(ProtocolError::Limit("string bytes"));
     }
-    if text.is_empty() {
-        static EMPTY: OnceLock<Arc<str>> = OnceLock::new();
-        return Ok(Arc::clone(EMPTY.get_or_init(|| Arc::from(""))));
-    }
-    if let [byte] = text.as_bytes()
-        && byte.is_ascii()
-    {
-        static ASCII: OnceLock<[Arc<str>; 128]> = OnceLock::new();
-        let chars = ASCII.get_or_init(|| {
-            std::array::from_fn(|n| {
-                let c = [n as u8];
-                // from_fn supplies 0 <= n < 128, so c is one valid ASCII byte.
-                Arc::from(std::str::from_utf8(&c).expect("ASCII is valid UTF-8"))
-            })
-        });
-        // is_ascii() proves byte < 128, the fixed array's length.
-        return Ok(Arc::clone(&chars[usize::from(*byte)]));
-    }
-    Ok(Arc::from(text))
+    Ok(text)
+}
+
+pub(super) fn text(v: Obj<'_>, limits: Limits) -> Result<Arc<str>> {
+    Ok(super::text::shared(string(v, limits)?))
 }
 
 pub(super) fn array(v: Obj<'_>) -> Result<Args<'_>> {

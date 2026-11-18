@@ -19,7 +19,7 @@ mod ui;
 pub use ui::Ui;
 
 mod delivery;
-pub use delivery::{Error as FrameError, Frames, UiHandler};
+pub use delivery::{Coalescing, Error as FrameError, Frames, UiHandler};
 mod input;
 pub use input::{Client, ClientError};
 mod connection;
@@ -39,10 +39,8 @@ pub use nvim_rpc_plugin::NoHandler;
 /// implementation may retain a frame and schedule a later paint. Process its
 /// events in order, including when painting is deferred or coalesced.
 ///
-/// Frame damage is relative to the previous published frame. Use
-/// [`State::diff_since()`] for damage relative to the last painted state, or
-/// [`Frame::coalesce()`] to retain ordered events while deferring presentation.
-/// The application handles presentation errors according to the driver's
+/// See [incremental painting](crate#incremental-painting) for repaint baselines
+/// and deferred drawing. Handle presentation errors according to the driver's
 /// recovery contract.
 pub trait Backend {
     type Error;

@@ -74,7 +74,8 @@ impl Model {
                 let cells = array(next(&mut a)?)?;
                 bounded_len(cells.len(), limits)?;
                 let wrap = boolean(next(&mut a)?)?;
-                let grid = self.grid_mut(id)?;
+                let grid = grid_mut(&mut self.state, id)?;
+                let cell_text = &mut self.cell_text;
                 if row >= grid.height || col > grid.width {
                     return invalid(name, "cell coordinates outside grid");
                 }
@@ -88,7 +89,7 @@ impl Model {
                 let mut highlight = None;
                 for cell in cells {
                     let mut cell = array(cell)?;
-                    let text = text(next(&mut cell)?, limits)?;
+                    let text = cell_text.intern(string(next(&mut cell)?, limits)?);
                     if let Some(value) = cell.next() {
                         highlight = Some(hl_id(value)?);
                     }
@@ -118,7 +119,7 @@ impl Model {
             }
             "grid_clear" => {
                 let id = grid_id(next(&mut a)?)?;
-                let grid = self.grid_mut(id)?;
+                let grid = grid_mut(&mut self.state, id)?;
                 let (width, height) = (grid.width, grid.height);
                 let row = Arc::new(Row {
                     cells: vec![Cell::default(); width],
@@ -141,14 +142,7 @@ impl Model {
                     Arc::make_mut(&mut self.state).cursor = None;
                     self.damage.cursor = true;
                 }
-                if !self.damage.removed_grids.contains(&id) {
-                    if self.damage.removed_grids.len() < limits.max_grids {
-                        self.damage.removed_grids.push(id);
-                    } else {
-                        self.damage.full = true;
-                    }
-                }
-                self.damage.layout = true;
+                self.damage.record_removal(id, limits.max_grids);
             }
             "grid_cursor_goto" => {
                 let id = grid_id(next(&mut a)?)?;
@@ -173,7 +167,7 @@ impl Model {
                 let right = index(next(&mut a)?)?;
                 let rows = integer(next(&mut a)?)?;
                 let cols = integer(next(&mut a)?)?;
-                let grid = self.grid_mut(id)?;
+                let grid = grid_mut(&mut self.state, id)?;
                 if top > bottom || bottom > grid.height || left > right || right > grid.width {
                     return invalid(name, "scroll region outside grid");
                 }
@@ -184,13 +178,13 @@ impl Model {
         }
         Ok(())
     }
+}
 
-    fn grid_mut(&mut self, id: GridId) -> Result<&mut Grid> {
-        Arc::make_mut(&mut Arc::make_mut(&mut self.state).grids)
-            .get_mut(&id)
-            .map(Arc::make_mut)
-            .ok_or_else(|| bad("grid", "unknown grid"))
-    }
+fn grid_mut(state: &mut Arc<State>, id: GridId) -> Result<&mut Grid> {
+    Arc::make_mut(&mut Arc::make_mut(state).grids)
+        .get_mut(&id)
+        .map(Arc::make_mut)
+        .ok_or_else(|| bad("grid", "unknown grid"))
 }
 
 fn scroll(

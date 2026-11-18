@@ -60,10 +60,6 @@ assert_eq!((drawn, handled), (1, 1));
 # Ok::<(), Infallible>(())
 ```
 
-A backend may schedule painting through the toolkit's event loop. Process
-`Frame::events` in receive order, including bells, title changes, and connection
-requests, even when an intermediate state will not be painted.
-
 ## Start an embedded editor
 
 Use [`Embedded::spawn()`] within a running Tokio runtime with I/O enabled.
@@ -118,9 +114,10 @@ in a later frame.
 If your runtime and toolkit have separate event loops, receive frames with
 [`Frames::recv()`] and transfer them to the toolkit thread. Present the owned
 frame through your backend there. Receiving does not wait for painting.
-Unconsumed updates are combined into the latest state with full-repaint damage,
-while retaining their events in order. Exceeding [`Limits::max_pending_events`]
-ends UI processing and closes the shared connection.
+Unconsumed updates are combined into the latest state while retaining their
+events in order. See [incremental painting](#incremental-painting) for damage
+handling and coalescing policies. Exceeding [`Limits::max_pending_events`] ends
+UI processing and closes the shared connection.
 
 ## Add UI handling to a plugin
 
@@ -184,21 +181,41 @@ clipping, IME preedit, and conversion to pixel coordinates belong to the backend
 
 ### Incremental painting
 
-`Frame::damage` records changes since the preceding published frame. Use its
-grid rectangles to update affected cell regions, and its flags to update layout,
-cursor, or widgets. With `damage.full`, redraw from the complete current state
-and remove grids or placements that are no longer present.
+[`Frame::damage`] describes changes since the preceding published frame, or
+across the combined updates when frames have coalesced. Use its grid rectangles,
+removed-grid IDs, and layout, cursor, and widget flags to update your display.
+When `damage.full` is set, redraw the complete current state and discard grids
+and placements absent from it.
 
-To skip painting intermediate states, retain the last painted `Arc<State>` and
-call `frame.state.diff_since(&last_painted)`. The returned damage describes
-changes from that snapshot, including removed grids. It may conservatively
-include unchanged regions. Update the baseline after painting succeeds.
+[`Frames`] retains one pending frame and combines later updates into it.
+Coalescing requests a full repaint by default. Select
+[`Coalescing::Incremental`] to combine damage instead:
 
-This comparison covers state, not one-time events. Handle every frame's events
-in receive order, or combine pending frames with `Frame::coalesce()`. Coalescing
-retains the latest state and all events in order, requests a full repaint, and
-returns an error if the supplied event limit would be exceeded. Leave the
-existing pending frame available for handling when that happens.
+```rust,no_run
+# fn configure(connection: &mut nvim_rpc_ui::Connection<tokio::io::Sink>) {
+use nvim_rpc_ui::Coalescing;
+
+connection.frames.set_coalescing(Coalescing::Incremental);
+# }
+```
+
+Configure the receiver before attaching the UI when possible. For an embedded
+editor, use [`Embedded::frames()`]; for a plugin, configure the receiver returned
+by [`UiHandler::new()`] before starting the dispatcher. Policy changes apply to
+future merges; they do not replace damage already queued.
+
+When your application defers painting after receiving frames, combine them with
+[`Frame::coalesce()`] or [`Frame::coalesce_incremental()`]. Both retain the latest
+state and every event in order. The incremental method requires consecutive
+frames from the same attachment and may conservatively include unchanged cells
+or request a full repaint. See its method documentation for damage bounds and
+fallback conditions. A coalescing error leaves the pending frame available for
+handling.
+
+If you skip received frames, retain the last successfully painted `Arc<State>`
+and use [`State::diff_since()`] to compute damage relative to that snapshot.
+Update the baseline only after painting succeeds. This compares state; handle
+every frame's events in receive order independently of painting.
 
 Window exposure, font or DPI changes, and graphics-device loss can also require
 repainting without receiving a new frame.
@@ -260,9 +277,9 @@ or `Ui::backend_mut()`.
 For applications that need to publish frames separately from presentation,
 [`Model::apply_notification()`] provides state updates and a callback for each
 frame. Use `Array::with_borrowed_buffer()` to borrow the parameter bytes while
-the original array keeps its position for further dispatch. API errors publish the last
-flushed state with any earlier pending events before the error event; unfinished
-screen changes remain pending until the next flush.
+the original array keeps its position for further dispatch. API errors publish
+the last flushed state with any earlier pending events before the error event;
+unfinished screen changes remain pending until the next flush.
 Unknown redraw events are exposed as `Event::Unknown`; known events accept
 additional trailing arguments. `Value::String` preserves API string bytes,
 including non-UTF-8 data, in options and event metadata. Grid cells and other

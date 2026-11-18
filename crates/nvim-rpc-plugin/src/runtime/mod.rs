@@ -1,14 +1,16 @@
 use crate::frame::Frames;
-use crate::rpc::{Message, MessageId};
+use crate::rpc::Message;
 use crate::{ConnectionError, ConnectionOptions, FromParams, Handler, Neovim};
 
+mod replies;
+use replies::{Replies, Reply, SlotId};
+
 use tokio::io::{AsyncRead, AsyncWrite};
-use tokio::sync::Notify;
 use tokio::task::{JoinHandle, JoinSet};
 
 use std::collections::VecDeque;
 use std::convert::Infallible;
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::Arc;
 
 /// Starts a connection and its handler tasks on the current Tokio runtime.
 ///
@@ -74,96 +76,14 @@ impl<W> Drop for CloseGuard<W> {
     }
 }
 
-enum Reply<R> {
-    Value(R),
-    InvalidParams(String),
-}
-
-struct Slot<R> {
-    id: MessageId,
-    reply: Option<Reply<R>>,
-}
-
-struct Replies<R> {
-    state: Mutex<ReplyState<R>>,
-    ready: Notify,
-    max_pending: usize,
-}
-
-struct ReplyState<R> {
-    stack: Vec<Slot<R>>,
-    receiving: bool,
-}
-
-impl<R> Replies<R> {
-    fn state(&self) -> MutexGuard<'_, ReplyState<R>> {
-        self.state.lock().unwrap_or_else(|error| error.into_inner())
-    }
-
-    fn begin_batch(&self) {
-        self.state().receiving = true;
-    }
-
-    fn end_batch(&self) {
-        let mut state = self.state();
-        let ready = state.receiving && state.stack.last().is_some_and(|slot| slot.reply.is_some());
-        state.receiving = false;
-        drop(state);
-        if ready {
-            self.ready.notify_one();
-        }
-    }
-
-    fn push(&self, id: MessageId) -> Result<usize, ConnectionError> {
-        let mut state = self.state();
-        if state.stack.len() >= self.max_pending {
-            return Err(ConnectionError::Limit("pending RPC replies"));
-        }
-        if state.stack.iter().any(|slot| slot.id == id) {
-            return Err(ConnectionError::InvalidFormat);
-        }
-        let idx = state.stack.len();
-        state.stack.push(Slot { id, reply: None });
-        Ok(idx)
-    }
-
-    fn complete(&self, idx: usize, reply: Reply<R>) {
-        let mut state = self.state();
-        // Registration returns idx < len. Pushes append; pops remove only
-        // completed suffix slots. This unfinished slot therefore still exists
-        // at idx, and idx + 1 <= len <= usize::MAX.
-        state.stack[idx].reply = Some(reply);
-        let ready = !state.receiving && idx + 1 == state.stack.len();
-        drop(state);
-        if ready {
-            self.ready.notify_one();
-        }
-    }
-
-    fn is_ready(&self) -> bool {
-        let state = self.state();
-        !state.receiving && state.stack.last().is_some_and(|slot| slot.reply.is_some())
-    }
-
-    fn pop_ready(&self) -> Option<(MessageId, Reply<R>)> {
-        let mut state = self.state();
-        if state.receiving {
-            return None;
-        }
-        state.stack.last()?.reply.as_ref()?;
-        let slot = state.stack.pop()?;
-        Some((slot.id, slot.reply?))
-    }
-}
-
 enum Completion<R> {
-    Request(usize, R),
+    Request(SlotId, R),
     Notification,
     Writer(Result<(), ConnectionError>),
 }
 
 enum Callback {
-    Request(usize, crate::rpc::Request),
+    Request(SlotId, crate::rpc::Request),
     Notification(crate::rpc::Notification),
 }
 
@@ -176,13 +96,9 @@ where
     R: crate::IntoResponse,
 {
     loop {
-        let ready = replies.ready.notified();
-        if !replies.is_ready() {
-            tokio::select! {
-                () = ready => {},
-                () = nvim.closed() => return Err(nvim.connection_error()),
-            }
-            continue;
+        tokio::select! {
+            () = replies.wait_ready() => {},
+            () = nvim.closed() => return Err(nvim.connection_error()),
         }
         let mut writer = nvim.writer().await?;
         let Some((id, reply)) = replies.pop_ready() else {
@@ -212,14 +128,7 @@ where
 {
     let mut frames = Frames::new(reader, options.max_rpc_bytes);
     let handler = Arc::new(handler);
-    let replies = Arc::new(Replies {
-        state: Mutex::new(ReplyState {
-            stack: Vec::new(),
-            receiving: false,
-        }),
-        ready: Notify::new(),
-        max_pending: options.max_pending_replies,
-    });
+    let replies = Arc::new(Replies::new(options.max_pending_replies));
     let mut tasks = JoinSet::new();
     let mut callbacks = VecDeque::new();
     let mut notifying = false;
@@ -360,43 +269,4 @@ where
     );
     tasks.shutdown().await;
     result
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn nested_completions_keep_their_slots_as_newer_replies_are_sent() {
-        let replies = Replies {
-            state: Mutex::new(ReplyState {
-                stack: Vec::new(),
-                receiving: false,
-            }),
-            ready: Notify::new(),
-            max_pending: usize::MAX,
-        };
-        let oldest = replies.push(MessageId(10)).unwrap();
-        let middle = replies.push(MessageId(11)).unwrap();
-        let newest = replies.push(MessageId(12)).unwrap();
-        replies.complete(middle, Reply::Value(11));
-        assert!(replies.pop_ready().is_none());
-        replies.complete(newest, Reply::Value(12));
-        assert!(matches!(
-            replies.pop_ready(),
-            Some((MessageId(12), Reply::Value(12)))
-        ));
-
-        let nested = replies.push(MessageId(13)).unwrap();
-        replies.complete(oldest, Reply::Value(10));
-        assert!(replies.pop_ready().is_none());
-        replies.complete(nested, Reply::Value(13));
-        for id in [13, 11, 10] {
-            assert!(matches!(
-                replies.pop_ready(),
-                Some((MessageId(actual), Reply::Value(value))) if actual == id && value == id
-            ));
-        }
-        assert!(replies.pop_ready().is_none());
-    }
 }

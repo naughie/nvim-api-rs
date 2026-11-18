@@ -95,6 +95,32 @@ fn frame(model: &mut Model, bytes: &[u8]) -> Frame {
 }
 
 #[test]
+fn cursor_only_coalescing_does_not_allocate_or_copy_grids() {
+    let mut model = Model::default();
+    let initial = frame(
+        &mut model,
+        &redraw((("grid_resize", (1, 120, 40)), ("flush", ()))),
+    );
+    let mut pending = frame(
+        &mut model,
+        &redraw((("grid_cursor_goto", (1, 10, 20)), ("flush", ()))),
+    );
+    let next = frame(
+        &mut model,
+        &redraw((("grid_cursor_goto", (1, 10, 21)), ("flush", ()))),
+    );
+    let latest = Arc::clone(&next.state);
+    let (result, count) = allocations(|| pending.coalesce_incremental(next, 0, 1));
+    result.unwrap();
+    assert_eq!(count, 0);
+    assert!(Arc::ptr_eq(&pending.state, &latest));
+    assert!(Arc::ptr_eq(&pending.state.grids, &initial.state.grids));
+    assert!(pending.damage.cursor);
+    assert!(!pending.damage.full);
+    assert!(pending.damage.grids.is_empty());
+}
+
+#[test]
 fn empty_flushes_reuse_published_state_without_allocating() {
     let mut model = Model::default();
     let initial = frame(
@@ -221,4 +247,40 @@ fn unpublished_whole_row_scrolls_need_no_scratch_allocation() {
         apply(&mut model, &bytes, |_| panic!("unexpected flush"));
     });
     assert_eq!(count, 0);
+}
+
+#[test]
+fn warmed_unicode_cell_entries_allocate_no_more_than_ascii() {
+    fn measure(text: &str) -> usize {
+        let mut model = Model::default();
+        let initial = redraw((("grid_resize", (1, 4, 1)),));
+        apply(&mut model, &initial, |_| panic!("unexpected flush"));
+        let bytes = redraw((
+            (
+                "grid_line",
+                (1, 0, 0, ((text, 0), (text,), (text,), (text,)), false),
+            ),
+            ("flush", ()),
+        ));
+        let mut retained = frame(&mut model, &bytes);
+        let (_, count) = allocations(|| {
+            for _ in 0..16 {
+                retained = frame(&mut model, &bytes);
+            }
+        });
+        assert_eq!(
+            retained.state.grids[&GridId(1)]
+                .cell(0, 0)
+                .unwrap()
+                .text
+                .as_ref(),
+            text
+        );
+        count
+    }
+
+    let ascii = measure("x");
+    for text in ["界", "e\u{301}", "👩\u{200d}💻", "ab"] {
+        assert_eq!(measure(text), ascii, "cell text {text:?}");
+    }
 }
