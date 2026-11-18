@@ -3,9 +3,9 @@
 [![crates.io](https://img.shields.io/crates/v/nvim-rpc-plugin.svg)](https://crates.io/crates/nvim-rpc-plugin)
 [![docs.rs](https://docs.rs/nvim-rpc-plugin/badge.svg)](https://docs.rs/nvim-rpc-plugin)
 
-Tokio plugin handlers and a client for calling Neovim. `spawn` runs the receive
-loop, dispatches requests and notifications, and matches replies to waiting
-calls. Handlers can call Neovim while processing an incoming request.
+Tokio RPC connections, application handlers, and a client for calling Neovim.
+The receive loop dispatches requests and notifications and matches replies to
+waiting calls. Handlers can call Neovim while processing an incoming request.
 
 This crate owns message buffers and starts Tokio tasks. Use
 [`nvim-rpc`](../nvim-rpc) to manage buffers and dispatch in your application.
@@ -43,6 +43,12 @@ Stdout carries RPC bytes; write diagnostics to stderr.
 Implement `Handler<W>` and call `spawn(from_neovim, to_neovim, handler)` within
 a Tokio runtime. The [stdio example](examples/plugin.rs) shows custom arguments,
 responses, and calls back into Neovim.
+
+Use `connect(reader, writer, handler, options)` for a managed connection with
+resource limits and cancellation-safe cleanup waits. Use `NoHandler` when the
+application provides no RPC methods. See the
+[`Connection` reference](https://docs.rs/nvim-rpc-plugin/latest/nvim_rpc_plugin/struct.Connection.html)
+for ownership and shutdown behavior.
 
 See the API reference for:
 

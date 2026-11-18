@@ -10,7 +10,7 @@ from urllib.request import Request, urlopen
 
 
 # The two independent libraries must be available before their dependents.
-CRATES = ("rmp-bytes", "nvim-rpc-sys", "nvim-rpc", "nvim-rpc-plugin")
+CRATES = ("rmp-bytes", "nvim-rpc-sys", "nvim-rpc", "nvim-rpc-plugin", "nvim-rpc-ui")
 USER_AGENT = "nvim-rpc-rs publishing (https://github.com/naughie/nvim-rpc-rs)"
 
 

@@ -11,22 +11,26 @@ pub(crate) struct Frames<R> {
     buf: BytesMut,
     scanned: usize,
     state: SeekState,
+    max_bytes: usize,
 }
 
 impl<R> Frames<R> {
-    pub(crate) fn new(reader: R) -> Self {
+    pub(crate) fn new(reader: R, max_bytes: usize) -> Self {
         Self {
             reader,
             buf: BytesMut::new(),
             scanned: 0,
             state: SeekState::new(),
+            max_bytes,
         }
     }
 
     pub(crate) fn buffered(&mut self) -> Option<Bytes> {
-        let mut cursor = &self.buf[self.scanned..];
+        let mut cursor = self.buf.get(self.scanned..)?;
         match self.state.transit(&mut cursor) {
             ControlFlow::Break(n) => {
+                // transit consumes at most buf.len() - scanned bytes, so
+                // scanned + n <= buf.len() <= usize::MAX and split_to is valid.
                 let len = self.scanned + n.get();
                 self.scanned = 0;
                 Some(self.buf.split_to(len).freeze())
@@ -46,8 +50,14 @@ impl<R: AsyncRead + Unpin> Frames<R> {
                 return Ok(Some(frame));
             }
 
+            if self.buf.len() >= self.max_bytes {
+                return Err(ConnectionError::Limit("RPC frame bytes"));
+            }
+            // The comparison above proves len < max_bytes, so subtraction
+            // cannot underflow; limiting each read also bounds buffer growth.
+            let remaining = (self.max_bytes - self.buf.len()).min(8192) as u64;
             let n = (&mut self.reader)
-                .take(8192)
+                .take(remaining)
                 .read_buf(&mut self.buf)
                 .await?;
             if n == 0 {
@@ -91,7 +101,7 @@ mod tests {
     #[tokio::test]
     async fn fragments_nested_values_and_retains_following_frames() {
         let bytes = b"\x92\xdb\x00\x00\x00\x03abc\xc7\x02\x05xy\xc3";
-        let mut frames = Frames::new(Chunked(bytes));
+        let mut frames = Frames::new(Chunked(bytes), usize::MAX);
         assert_eq!(frames.next().await.unwrap().unwrap(), &bytes[..14]);
         assert_eq!(frames.next().await.unwrap().unwrap(), &b"\xc3"[..]);
         assert!(frames.next().await.unwrap().is_none());
@@ -99,7 +109,7 @@ mod tests {
 
     #[tokio::test]
     async fn separates_coalesced_frames() {
-        let mut frames = Frames::new(&b"\xc0\xc3\x91\x01"[..]);
+        let mut frames = Frames::new(&b"\xc0\xc3\x91\x01"[..], usize::MAX);
         for bytes in [&b"\xc0"[..], &b"\xc3"[..], &b"\x91\x01"[..]] {
             assert_eq!(frames.next().await.unwrap().unwrap(), bytes);
         }
@@ -108,7 +118,7 @@ mod tests {
 
     #[tokio::test]
     async fn reports_incomplete_bytes_after_complete_frames() {
-        let mut frames = Frames::new(&b"\xc0\xda\x00"[..]);
+        let mut frames = Frames::new(&b"\xc0\xda\x00"[..], usize::MAX);
         assert_eq!(frames.next().await.unwrap().unwrap(), &b"\xc0"[..]);
         assert!(matches!(
             frames.next().await,
@@ -132,7 +142,7 @@ mod tests {
             }
         }
 
-        let Err(ConnectionError::Io(e)) = Frames::new(Fails).next().await else {
+        let Err(ConnectionError::Io(e)) = Frames::new(Fails, usize::MAX).next().await else {
             panic!("expected the reader's error");
         };
         assert_eq!(e.kind(), io::ErrorKind::BrokenPipe);

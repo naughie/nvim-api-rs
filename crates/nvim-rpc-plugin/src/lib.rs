@@ -1,7 +1,8 @@
 //! Tokio plugin handlers and a Neovim client that waits for RPC responses.
 //!
-//! [`spawn()`] starts the receive loop and handler tasks on the current Tokio
-//! runtime. Implement [`Handler`] to receive requests and notifications;
+//! [`connect()`] starts a managed connection with resource bounds and repeatable
+//! shutdown waits. [`spawn()`] returns the receive task directly. Both use the
+//! current Tokio runtime. Implement [`Handler`] to receive requests and notifications;
 //! [`FromParams`] decodes their arguments and [`IntoResponse`] encodes replies.
 //! [`Neovim::request()`] writes and flushes a typed API call, then waits for its
 //! matching response. Handler parameters retain shared message storage, so they
@@ -55,6 +56,8 @@ pub use client::Neovim;
 mod frame;
 mod runtime;
 pub use runtime::spawn;
+mod connection;
+pub use connection::{Connection, ConnectionOptions, connect};
 
 use tokio::io::AsyncWrite;
 
@@ -151,4 +154,21 @@ where
         params: Self::Notification,
         nvim: Neovim<W>,
     ) -> impl Future<Output = ()> + Send;
+}
+
+/// Ignores notifications and rejects requests with a method error.
+///
+/// Use this handler when a connection only sends calls to Neovim.
+pub struct NoHandler;
+
+impl<W: AsyncWrite + Unpin + Send + 'static> Handler<W> for NoHandler {
+    type Request = Array;
+    type Response = Result<std::convert::Infallible, &'static str>;
+    type Notification = Array;
+
+    async fn on_request(&self, _: &[u8], _: Array, _: Neovim<W>) -> Self::Response {
+        Err("RPC client does not implement this method")
+    }
+
+    async fn on_notification(&self, _: &[u8], _: Array, _: Neovim<W>) {}
 }

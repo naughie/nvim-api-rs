@@ -15,6 +15,8 @@ pub enum ConnectionError {
     Task(Arc<tokio::task::JoinError>),
     Interrupted,
     Closed,
+    Limit(&'static str),
+    InvalidOptions(&'static str),
 }
 
 impl From<io::Error> for ConnectionError {
@@ -36,10 +38,16 @@ impl fmt::Display for ConnectionError {
             Self::Task(e) => write!(f, "plugin task failed: {e}"),
             Self::Interrupted => f.write_str("RPC write was interrupted"),
             Self::Closed => f.write_str("RPC connection is closed"),
+            Self::Limit(s) => write!(f, "RPC connection limit exceeded: {s}"),
+            Self::InvalidOptions(s) => write!(f, "invalid RPC connection options: {s}"),
         }
     }
 }
 
+// Preserving the existing cause chain requires std::error::Error::source().
+// That standard trait fixes its return type to dyn Error: concrete enums,
+// generics, and opaque return types cannot implement the required signature.
+// Omitting this method would remove the established source() behavior.
 impl std::error::Error for ConnectionError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
@@ -77,6 +85,8 @@ impl fmt::Display for Error {
     }
 }
 
+// The standard source() signature likewise requires dyn Error here to retain
+// this error's existing cause chain; a concrete or opaque return cannot replace it.
 impl std::error::Error for Error {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {

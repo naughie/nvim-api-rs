@@ -12,7 +12,7 @@ categories = ["api-bindings", "asynchronous"]
 
 [dependencies]
 nvim-rpc = { workspace = true, features = ["bytes", "tokio"] }
-bytes = "1.11"
+bytes.workspace = true
 tokio = { workspace = true, features = ["io-util", "macros", "rt", "sync"] }
 
 [dev-dependencies]

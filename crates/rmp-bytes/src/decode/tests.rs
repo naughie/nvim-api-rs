@@ -359,6 +359,72 @@ fn parse_bytes_array16() {
     ]));
 }
 
+fn assert_borrowed_array_view<B: Buf<Slice = B> + AsRef<[u8]>>(buf: B) {
+    let Object::Array(mut array) = ObjectParser::new(buf).next_object().unwrap() else {
+        panic!("expected an array");
+    };
+    assert_eq!(array.next().unwrap().to_u8(), Some(1));
+    assert_eq!(array.remaining_len(), 3);
+
+    let text_ptr = {
+        let mut view: Array<&[u8]> = array.with_borrowed_buffer();
+        assert_eq!(view.remaining_len(), 3);
+        assert_eq!(view.size_hint(), (3, Some(3)));
+        let Object::Str(text) = view.next().unwrap() else {
+            panic!("expected a string");
+        };
+        assert_eq!(text.as_slice(), b"two");
+        assert_eq!(view.remaining_len(), 2);
+        assert_eq!(array.remaining_len(), 3);
+
+        let Object::Array(mut nested) = view.next().unwrap() else {
+            panic!("expected a nested array");
+        };
+        assert_eq!(nested.next().unwrap().to_u8(), Some(3));
+        assert_eq!(nested.next().unwrap().to_bool(), Some(false));
+        assert!(nested.next().is_none());
+        assert_eq!(view.next().unwrap().to_bool(), Some(true));
+        assert_eq!(view.remaining_len(), 0);
+        assert!(view.next().is_none());
+        assert!(view.next().is_none());
+        assert_eq!(array.remaining_len(), 3);
+        text.as_slice().as_ptr()
+    };
+
+    let Object::Str(text) = array.next().unwrap() else {
+        panic!("expected the original string");
+    };
+    assert_eq!(text.as_slice(), b"two");
+    assert_eq!(text.as_slice().as_ptr(), text_ptr);
+    assert_eq!(array.with_borrowed_buffer().remaining_len(), 2);
+
+    let Object::Array(mut nested) = array.next().unwrap() else {
+        panic!("expected the original nested array");
+    };
+    assert_eq!(nested.next().unwrap().to_u8(), Some(3));
+    assert_eq!(nested.next().unwrap().to_bool(), Some(false));
+    assert!(nested.next().is_none());
+    assert_eq!(array.next().unwrap().to_bool(), Some(true));
+    assert!(array.next().is_none());
+    let mut empty = array.with_borrowed_buffer();
+    assert_eq!(empty.remaining_len(), 0);
+    assert_eq!(empty.size_hint(), (0, Some(0)));
+    assert!(empty.next().is_none());
+}
+
+#[test]
+fn borrowed_array_view_keeps_position_order_and_storage() {
+    assert_borrowed_array_view(&b"\x94\x01\xa3two\x92\x03\xc2\xc3"[..]);
+}
+
+#[cfg(feature = "bytes")]
+#[test]
+fn borrowed_bytes_array_view_keeps_position_order_and_storage() {
+    assert_borrowed_array_view(bytes::Bytes::from_static(
+        b"\x94\x01\xa3two\x92\x03\xc2\xc3",
+    ));
+}
+
 #[test]
 fn seek_large_lengths_remain_incomplete() {
     for bytes in [

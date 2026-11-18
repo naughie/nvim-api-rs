@@ -24,7 +24,7 @@ futures-write = ["dep:futures-util"]
 rpc = []
 
 [dependencies]
-bytes = { version = "1.11", optional = true }
+bytes = { workspace = true, optional = true }
 rmp = "0.8"
 
 futures-util = { workspace = true, optional = true, features = ["io"] }

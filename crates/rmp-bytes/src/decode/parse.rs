@@ -375,6 +375,21 @@ pub struct Array<B> {
     len: usize,
 }
 
+impl<B: AsRef<[u8]>> Array<B> {
+    /// Creates an array iterator with a borrowed byte buffer.
+    ///
+    /// The iterator retains this array's current position and remaining element
+    /// count. It decodes elements lazily from the same backing bytes; no elements
+    /// are decoded or copied by this method. Its decoded values cannot outlive
+    /// this borrow. Advancing the returned iterator does not advance this array.
+    pub fn with_borrowed_buffer(&self) -> Array<&[u8]> {
+        Array {
+            buf: self.buf.as_ref(),
+            len: self.len,
+        }
+    }
+}
+
 impl<B: Buf> Array<B> {
     /// Decodes and consumes the next element.
     pub fn next_object(&mut self) -> Option<Object<B::Slice>> {

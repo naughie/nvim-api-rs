@@ -189,3 +189,101 @@ async fn eof_cancels_active_notifications_and_discards_queued_callbacks() {
 async fn notification_panics_close_the_connection_without_dispatching_queued_callbacks() {
     stop_blocked_notification(Stop::Panic).await;
 }
+
+#[tokio::test]
+async fn closing_the_shared_client_wakes_requests_and_stops_handler_tasks() {
+    timeout(Duration::from_secs(2), async {
+        let (transport, peer) = duplex(4096);
+        let (reader, writer) = split(transport);
+        let (peer_reader, mut peer_writer) = split(peer);
+        let mut receiver = Receiver::new(TokioRead(peer_reader), [0; 4096]);
+        let (events, mut received) = mpsc::unbounded_channel();
+        let (nvim, driver) = spawn(
+            reader,
+            writer,
+            BlockedNotification {
+                events,
+                release: Arc::new(Notify::new()),
+                panic: false,
+            },
+        );
+        let client = nvim.clone();
+        let request =
+            tokio::spawn(
+                async move { client.request::<api::NvimGetCurrentLine, String>(()).await },
+            );
+        assert!(matches!(
+            receiver.recv_async().await.unwrap(),
+            Message::Request(_)
+        ));
+        let mut bytes = Vec::new();
+        bytes.write_primitive((2u8, "block", ())).consume();
+        peer_writer.write_all(&bytes).await.unwrap();
+        assert_eq!(received.recv().await, Some("started"));
+
+        nvim.close();
+        nvim.close();
+        assert!(matches!(
+            request.await.unwrap(),
+            Err(Error::Connection(ConnectionError::Closed))
+        ));
+        assert!(matches!(
+            driver.await.unwrap(),
+            Err(ConnectionError::Closed)
+        ));
+        assert_eq!(received.recv().await, Some("dropped"));
+        assert_eq!(received.recv().await, None);
+        assert!(matches!(
+            nvim.notify::<api::NvimGetCurrentLine>(()).await,
+            Err(Error::Connection(ConnectionError::Closed))
+        ));
+    })
+    .await
+    .expect("explicit connection close timed out");
+}
+
+#[tokio::test]
+async fn closing_from_a_notification_discards_already_queued_callbacks() {
+    struct Stopper(mpsc::UnboundedSender<&'static str>);
+
+    impl<W: AsyncWrite + Unpin + Send + 'static> Handler<W> for Stopper {
+        type Request = ();
+        type Response = ();
+        type Notification = ();
+
+        async fn on_request(&self, _: &[u8], _: (), _: Neovim<W>) {
+            self.0.send("later request").unwrap();
+        }
+
+        async fn on_notification(&self, method: &[u8], _: (), nvim: Neovim<W>) {
+            if method == b"stop" {
+                self.0.send("stopping").unwrap();
+                nvim.close();
+            } else {
+                self.0.send("later notification").unwrap();
+            }
+        }
+    }
+
+    timeout(Duration::from_secs(2), async {
+        let mut bytes = Vec::new();
+        bytes.write_primitive((2u8, "stop", ())).consume();
+        bytes.write_primitive((2u8, "later", ())).consume();
+        bytes.write_primitive((0u8, 17u32, "later", ())).consume();
+        for _ in 0..32 {
+            let (transport, mut peer) = duplex(4096);
+            let (reader, writer) = split(transport);
+            let (events, mut received) = mpsc::unbounded_channel();
+            let (_, driver) = spawn(reader, writer, Stopper(events));
+            peer.write_all(&bytes).await.unwrap();
+            assert!(matches!(
+                driver.await.unwrap(),
+                Err(ConnectionError::Closed)
+            ));
+            assert_eq!(received.recv().await, Some("stopping"));
+            assert_eq!(received.recv().await, None);
+        }
+    })
+    .await
+    .expect("closing from a notification did not stop queued callbacks");
+}

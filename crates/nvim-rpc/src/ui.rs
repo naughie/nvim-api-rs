@@ -51,7 +51,14 @@ impl<B: Buf<Slice = B>> Redraw<B> {
         if !name_eq(&notification.method, "redraw") {
             return Err(DecodeError::UnexpectedType("redraw notification"));
         }
-        Ok(Self(notification.params))
+        Ok(Self::from_params(notification.params))
+    }
+
+    /// Iterates an already-dispatched redraw notification's parameter array.
+    ///
+    /// Use [`Self::new()`] when the notification name has not been checked.
+    pub fn from_params(params: Array<B>) -> Self {
+        Self(params)
     }
 }
 
