@@ -78,16 +78,30 @@ transports must not acquire process ownership.
 
 ### UI redraw performance
 
-Measure decoding, redraw processing, and frame publication in a release build:
+Measure decoding, redraw processing, frame publication, and synthetic CPU
+painting in a release build:
 
 ```sh
 cargo run --release -p nvim-rpc-ui --example replay -- 100000
 ```
 
-The example replays typing and whole-row scrolling at 120×40 cells while retaining
-the previous frame. Timings exclude Neovim RPC latency, text shaping, toolkit
-work, and GPU presentation. Record the workload and build configuration when
-comparing measurements.
+The first two workloads replay typing and whole-row scrolling at 120×40 cells
+while retaining the previous frame. They measure decoding, model updates, and
+immediate frame delivery without painting.
+
+The burst workloads use two 240×80 grids and paint once per eight flushes. They
+compare `Frame::coalesce()` with `Frame::coalesce_incremental()` for cursor-only
+updates and sparse cell updates. A CPU backend traverses every cell selected by
+the resulting damage and reads its text and highlight. The output reports total
+time, CPU paint time, cells visited, and cursor updates. Full repaint visits
+38,400 cells per paint; incremental cursor updates visit none, and the sparse
+updates visit two three-cell bounding regions. The frame count is rounded up
+to a multiple of eight for these workloads.
+
+These measurements exclude Neovim RPC latency, real text shaping, rasterization,
+FFI transfer, toolkit work, and GPU presentation. They measure the work selected
+by damage and a synthetic CPU cost, rather than a GUI backend's frame rate.
+Record the workload and build configuration when comparing measurements.
 
 The UI allocation and sharing tests run with the regular test suite. When
 changing frame storage or grid updates, check that retained frames stay stable

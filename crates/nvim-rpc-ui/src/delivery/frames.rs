@@ -7,11 +7,25 @@ use tokio::sync::Notify;
 
 use std::sync::{Arc, Mutex, MutexGuard};
 
+/// Selects repaint damage for frames combined before reception.
+#[derive(Debug, Clone, Copy, Default)]
+pub enum Coalescing {
+    /// Requests a full repaint whenever pending frames are combined.
+    #[default]
+    FullRepaint,
+    /// Combines incremental damage, falling back to a full repaint when needed.
+    ///
+    /// Uses [`Frame::coalesce_incremental()`] with the handler's event and grid
+    /// limits. Each surviving grid has at most one bounding rectangle.
+    Incremental,
+}
+
 struct Pending {
     frame: Option<Frame>,
     error: Option<Error>,
     closed: bool,
     receiver_alive: bool,
+    coalescing: Coalescing,
 }
 
 struct Shared {
@@ -28,6 +42,7 @@ impl Shared {
 pub(super) struct Sender {
     shared: Arc<Shared>,
     max_events: usize,
+    max_grids: usize,
 }
 
 impl Sender {
@@ -39,10 +54,15 @@ impl Sender {
         if pending.closed {
             return Err(Error::Protocol(crate::ProtocolError::Failed));
         }
+        let coalescing = pending.coalescing;
         if let Some(previous) = &mut pending.frame {
-            previous
-                .coalesce(frame, self.max_events)
-                .map_err(Error::Protocol)?;
+            match coalescing {
+                Coalescing::FullRepaint => previous.coalesce(frame, self.max_events),
+                Coalescing::Incremental => {
+                    previous.coalesce_incremental(frame, self.max_events, self.max_grids)
+                }
+            }
+            .map_err(Error::Protocol)?;
         } else {
             pending.frame = Some(frame);
         }
@@ -73,20 +93,24 @@ impl Drop for Sender {
 ///
 /// Frames remain in receive order. Intermediate states may be coalesced when
 /// presentation is slower than redraw processing; their ordered events are
-/// preserved. Await the plugin driver separately for connection failures.
+/// preserved. Coalescing requests a full repaint by default. Select
+/// [`Coalescing::Incremental`] through [`Self::set_coalescing()`] to preserve
+/// bounded incremental damage. Await the plugin driver separately for
+/// connection failures.
 pub struct Frames {
     shared: Arc<Shared>,
     finished: bool,
 }
 
 impl Frames {
-    pub(super) fn channel(max_events: usize) -> (Sender, Self) {
+    pub(super) fn channel(max_events: usize, max_grids: usize) -> (Sender, Self) {
         let shared = Arc::new(Shared {
             pending: Mutex::new(Pending {
                 frame: None,
                 error: None,
                 closed: false,
                 receiver_alive: true,
+                coalescing: Coalescing::default(),
             }),
             ready: Notify::new(),
         });
@@ -94,12 +118,22 @@ impl Frames {
             Sender {
                 shared: Arc::clone(&shared),
                 max_events,
+                max_grids,
             },
             Self {
                 shared,
                 finished: false,
             },
         )
+    }
+
+    /// Selects how future pending-frame merges combine repaint damage.
+    ///
+    /// The default is [`Coalescing::FullRepaint`]. Changing the policy does not
+    /// recompute damage already queued; a pending full repaint remains required.
+    /// Events retain their receive order and the same configured event limit.
+    pub fn set_coalescing(&mut self, coalescing: Coalescing) {
+        self.shared.pending().coalescing = coalescing;
     }
 
     /// Waits for the next frame or terminal UI processing error.
@@ -166,7 +200,7 @@ impl Drop for Frames {
 mod tests {
     use super::*;
 
-    use crate::{Damage, Event};
+    use crate::{Damage, Event, GridId};
 
     use tokio::time::{Duration, timeout};
 
@@ -180,8 +214,114 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn coalescing_policy_preserves_cursor_updates_and_events() {
+        for policy in [
+            None,
+            Some(Coalescing::FullRepaint),
+            Some(Coalescing::Incremental),
+        ] {
+            let (sender, mut frames) = Frames::channel(2, 2);
+            if let Some(policy) = policy {
+                frames.set_coalescing(policy);
+            }
+            let mut first = frame(1);
+            first.damage.cursor = true;
+            let mut next = frame(2);
+            next.damage.cursor = true;
+            let state = Arc::clone(&next.state);
+            sender.send(first).unwrap();
+            sender.send(next).unwrap();
+
+            let latest = frames.recv().await.unwrap().unwrap();
+            assert_eq!(latest.sequence, 2);
+            assert!(Arc::ptr_eq(&latest.state, &state));
+            assert_eq!(
+                latest.damage.full,
+                !matches!(policy, Some(Coalescing::Incremental))
+            );
+            assert!(latest.damage.cursor);
+            assert!(!latest.damage.layout);
+            assert!(!latest.damage.widgets);
+            assert_eq!(latest.damage.grids, []);
+            assert_eq!(latest.damage.removed_grids, []);
+            assert!(matches!(
+                latest.events.as_slice(),
+                [Event::SetTitle(first), Event::SetTitle(next)]
+                    if first.as_ref() == "1" && next.as_ref() == "2"
+            ));
+        }
+    }
+
+    #[tokio::test]
+    async fn policy_changes_affect_future_merges_without_recomputing_queued_damage() {
+        let (sender, mut frames) = Frames::channel(3, 2);
+        sender.send(frame(1)).unwrap();
+        sender.send(frame(2)).unwrap();
+        frames.set_coalescing(Coalescing::Incremental);
+        sender.send(frame(3)).unwrap();
+        let latest = frames.recv().await.unwrap().unwrap();
+        assert_eq!(latest.sequence, 3);
+        assert_eq!(latest.events.len(), 3);
+        assert!(latest.damage.full);
+
+        sender.send(frame(4)).unwrap();
+        sender.send(frame(5)).unwrap();
+        frames.set_coalescing(Coalescing::FullRepaint);
+        let latest = frames.recv().await.unwrap().unwrap();
+        assert_eq!(latest.sequence, 5);
+        assert!(!latest.damage.full);
+
+        sender.send(frame(6)).unwrap();
+        sender.send(frame(7)).unwrap();
+        assert!(frames.recv().await.unwrap().unwrap().damage.full);
+    }
+
+    #[tokio::test]
+    async fn incremental_event_limit_preserves_the_pending_frame() {
+        let (sender, mut frames) = Frames::channel(1, 2);
+        frames.set_coalescing(Coalescing::Incremental);
+        let mut first = frame(1);
+        first.damage.cursor = true;
+        let state = Arc::clone(&first.state);
+        sender.send(first).unwrap();
+        assert!(matches!(
+            sender.send(frame(2)),
+            Err(Error::Protocol(crate::ProtocolError::Limit(
+                "pending events"
+            )))
+        ));
+        let pending = frames.recv().await.unwrap().unwrap();
+        assert_eq!(pending.sequence, 1);
+        assert!(Arc::ptr_eq(&pending.state, &state));
+        assert!(pending.damage.cursor);
+        assert!(!pending.damage.full);
+        assert!(
+            matches!(pending.events.as_slice(), [Event::SetTitle(title)] if title.as_ref() == "1")
+        );
+    }
+
+    #[tokio::test]
+    async fn incremental_grid_limit_falls_back_to_full_repaint() {
+        let (sender, mut frames) = Frames::channel(2, 1);
+        frames.set_coalescing(Coalescing::Incremental);
+        let mut first = frame(1);
+        first.damage.removed_grids.push(GridId(1));
+        first.damage.layout = true;
+        let mut next = frame(2);
+        next.damage.removed_grids.push(GridId(2));
+        next.damage.layout = true;
+        sender.send(first).unwrap();
+        sender.send(next).unwrap();
+        let latest = frames.recv().await.unwrap().unwrap();
+        assert_eq!(latest.sequence, 2);
+        assert!(latest.damage.full);
+        assert!(latest.damage.layout);
+        assert!(latest.damage.removed_grids.len() <= 1);
+    }
+
+    #[tokio::test]
     async fn concurrent_delivery_never_overtakes_pending_events() {
-        let (sender, mut frames) = Frames::channel(2000);
+        let (sender, mut frames) = Frames::channel(2000, 512);
         let producer = std::thread::spawn(move || {
             for sequence in 1..=2000 {
                 sender.send(frame(sequence)).unwrap();
@@ -214,7 +354,7 @@ mod tests {
 
     #[tokio::test]
     async fn cancelling_reception_preserves_later_frames_and_pending_close() {
-        let (sender, mut frames) = Frames::channel(2);
+        let (sender, mut frames) = Frames::channel(2, 512);
         tokio::select! {
             result = frames.recv() => panic!("unexpected frame: {result:?}"),
             () = tokio::task::yield_now() => {}

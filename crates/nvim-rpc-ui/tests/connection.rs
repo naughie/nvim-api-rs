@@ -380,6 +380,93 @@ async fn coalescing_preserves_event_order_and_marks_full_damage() {
 }
 
 #[tokio::test]
+async fn incremental_coalescing_preserves_burst_damage_and_event_order() {
+    use nvim_rpc_ui::{Coalescing, GridDamage};
+
+    timeout(Duration::from_secs(2), async {
+        let (local, remote) = duplex(65536);
+        let (r, w) = split(local);
+        let mut connection = connect(r, w, ConnectionOptions::default()).unwrap();
+        connection.frames.set_coalescing(Coalescing::Incremental);
+        let (r, mut w) = split(remote);
+        let mut bytes = Vec::new();
+        bytes
+            .write_primitive((2u8, "redraw", (("grid_resize", (1, 8, 4)), ("flush", ()))))
+            .consume();
+        w.write_all(&bytes).await.unwrap();
+        let initial = connection.frames.recv().await.unwrap().unwrap();
+        assert_eq!(initial.sequence, 1);
+
+        bytes.clear();
+        bytes
+            .write_primitive((
+                2u8,
+                "redraw",
+                (
+                    ("grid_cursor_goto", (1, 0, 1)),
+                    ("flush", ()),
+                    ("grid_line", (1, 1, 2, (("x", 0),), false)),
+                    ("bell", ()),
+                    ("flush", ()),
+                    ("grid_line", (1, 3, 6, (("y", 0),), false)),
+                    ("grid_cursor_goto", (1, 3, 7)),
+                    ("visual_bell", ()),
+                    ("flush", ()),
+                ),
+            ))
+            .consume();
+        // The response proves all three flushes reached the pending slot before
+        // receiving it, independently of RPC task scheduling.
+        bytes.write_primitive((0u8, 99u32, "barrier", ())).consume();
+        w.write_all(&bytes).await.unwrap();
+        let mut receiver = Receiver::new(TokioRead(r), vec![0; 65536]);
+        let Message::Response(response) = receiver.recv_async().await.unwrap() else {
+            panic!("expected application method-error response");
+        };
+        assert_eq!(response.msgid.0, 99);
+        assert!(response.result.is_err());
+
+        let latest = connection.frames.recv().await.unwrap().unwrap();
+        assert_eq!(latest.sequence, 4);
+        assert!(!latest.damage.full);
+        assert!(!latest.damage.layout);
+        assert!(latest.damage.cursor);
+        assert!(!latest.damage.widgets);
+        assert_eq!(latest.damage.removed_grids, []);
+        assert_eq!(
+            latest.damage.grids,
+            [GridDamage {
+                grid: GridId(1),
+                top: 1,
+                bottom: 4,
+                left: 2,
+                right: 7,
+            }]
+        );
+        assert!(matches!(
+            latest.events.as_slice(),
+            [Event::Bell, Event::VisualBell]
+        ));
+        let cursor = latest.state.cursor.unwrap();
+        assert_eq!((cursor.grid, cursor.row, cursor.col), (GridId(1), 3, 7));
+        let grid = &latest.state.grids[&GridId(1)];
+        assert_eq!(grid.cell(1, 2).unwrap().text.as_ref(), "x");
+        assert_eq!(grid.cell(3, 6).unwrap().text.as_ref(), "y");
+        assert_eq!(
+            initial.state.grids[&GridId(1)]
+                .cell(1, 2)
+                .unwrap()
+                .text
+                .as_ref(),
+            " "
+        );
+        connection.close_and_wait().await.unwrap();
+    })
+    .await
+    .unwrap();
+}
+
+#[tokio::test]
 async fn coalescing_overflow_delivers_pending_events_before_the_ui_error() {
     timeout(Duration::from_secs(2), async {
         let (local, mut remote) = duplex(65536);

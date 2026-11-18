@@ -118,9 +118,11 @@ in a later frame.
 If your runtime and toolkit have separate event loops, receive frames with
 [`Frames::recv()`] and transfer them to the toolkit thread. Present the owned
 frame through your backend there. Receiving does not wait for painting.
-Unconsumed updates are combined into the latest state with full-repaint damage,
-while retaining their events in order. Exceeding [`Limits::max_pending_events`]
-ends UI processing and closes the shared connection.
+Unconsumed updates are combined into the latest state while retaining their
+events in order. Coalescing requests a full repaint by default; select
+[`Coalescing::Incremental`] with [`Frames::set_coalescing()`] to combine
+incremental damage. Exceeding [`Limits::max_pending_events`] ends UI processing
+and closes the shared connection.
 
 ## Add UI handling to a plugin
 
@@ -134,9 +136,10 @@ attachment on the same connection:
 # where R: tokio::io::AsyncRead + Unpin + Send + 'static,
 # W: tokio::io::AsyncWrite + Unpin + Send + 'static,
 # H: nvim_rpc_plugin::Handler<W> {
-use nvim_rpc_ui::{Limits, UiHandler, UiOptions, api};
+use nvim_rpc_ui::{Coalescing, Limits, UiHandler, UiOptions, api};
 
-let (handler, frames) = UiHandler::new(handler, Limits::default());
+let (handler, mut frames) = UiHandler::new(handler, Limits::default());
+frames.set_coalescing(Coalescing::Incremental);
 let mut connection = nvim_rpc_plugin::connect(reader, writer, handler, Default::default())?;
 let nvim = &connection.client;
 let options = UiOptions { ext_linegrid: true, ..UiOptions::default() };
@@ -184,10 +187,12 @@ clipping, IME preedit, and conversion to pixel coordinates belong to the backend
 
 ### Incremental painting
 
-`Frame::damage` records changes since the preceding published frame. Use its
-grid rectangles to update affected cell regions, and its flags to update layout,
-cursor, or widgets. With `damage.full`, redraw from the complete current state
-and remove grids or placements that are no longer present.
+An uncoalesced `Frame::damage` records changes since the preceding published
+frame. Coalesced damage covers all combined updates. Use its grid rectangles to
+update affected cell regions, its removed-grid IDs to discard obsolete grids,
+and its flags to update layout, cursor, or widgets. With `damage.full`, redraw
+from the complete current state and remove grids or placements that are no
+longer present.
 
 To skip painting intermediate states, retain the last painted `Arc<State>` and
 call `frame.state.diff_since(&last_painted)`. The returned damage describes
@@ -195,10 +200,31 @@ changes from that snapshot, including removed grids. It may conservatively
 include unchanged regions. Update the baseline after painting succeeds.
 
 This comparison covers state, not one-time events. Handle every frame's events
-in receive order, or combine pending frames with `Frame::coalesce()`. Coalescing
-retains the latest state and all events in order, requests a full repaint, and
-returns an error if the supplied event limit would be exceeded. Leave the
-existing pending frame available for handling when that happens.
+in receive order, or combine pending frames with [`Frame::coalesce()`] or
+[`Frame::coalesce_incremental()`]. Both retain the latest state and all events
+in order. They return an error without changing the pending frame if the
+supplied event limit would be exceeded; leave that frame available for handling.
+
+`Frame::coalesce()` requests a full repaint. To preserve incremental damage,
+use `Frame::coalesce_incremental()` for consecutive published frames from the
+same attachment. It combines flags and cell rectangles, retaining one bounding
+rectangle per grid. Bounding rectangles can include unchanged cells between
+distant edits. Regions are clipped to the latest grid dimensions, resized or
+recreated grids are repainted completely, and removal IDs are retained only
+while absent from the latest state. The method falls back to a full repaint if
+either input requires one, the sequences are nonconsecutive, or a damage list
+exceeds the supplied grid bound.
+
+For connection delivery, opt in with
+`connection.frames.set_coalescing(Coalescing::Incremental)` before attaching
+the UI. For an embedded editor use
+`editor.frames().set_coalescing(Coalescing::Incremental)`; initial frames may
+already have coalesced with full damage. For a plugin, configure the returned
+`Frames` before starting its dispatcher, as shown above. The handler uses
+[`Limits::max_grids`] to bound each damage list. Changing the policy affects
+future merges and does not recompute queued damage. After receiving a frame,
+paint it or keep combining every later frame; skipping received frames still
+requires `State::diff_since()` against the last painted snapshot.
 
 Window exposure, font or DPI changes, and graphics-device loss can also require
 repainting without receiving a new frame.

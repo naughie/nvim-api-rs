@@ -42,6 +42,10 @@ pub enum Value {
 #[derive(Debug, Clone, Copy)]
 pub struct Limits {
     /// Maximum number of grids present at once.
+    ///
+    /// Also bounds each damage list when connection delivery uses
+    /// [`crate::Coalescing::Incremental`]. Exceeding a damage-list bound requests
+    /// a full repaint rather than returning a protocol error.
     pub max_grids: usize,
     /// Maximum total number of cells across all current grids.
     pub max_cells: usize,
@@ -128,7 +132,8 @@ pub struct GridDamage {
 
 /// Repaint and layout changes between UI states.
 ///
-/// [`Frame::damage`] describes changes since the previous published frame.
+/// An uncoalesced [`Frame::damage`] describes changes since the previous
+/// published frame. Coalescing combines damage across the pending frames.
 /// [`State::diff_since()`] computes damage against a snapshot selected by the
 /// caller, including changes across skipped frames.
 #[derive(Debug, Clone, Default)]
@@ -200,8 +205,9 @@ pub enum Event {
 /// A UI state snapshot, repaint information, and ordered application events.
 ///
 /// The frame owns its data and remains valid after the input buffer, model, or
-/// connection is dropped. Damage is relative to the previous published frame.
-/// Process events in order even when drawing is deferred.
+/// connection is dropped. Uncoalesced damage is relative to the previous
+/// published frame; coalesced damage covers all combined frames. Process events
+/// in order even when drawing is deferred.
 #[derive(Debug, Clone)]
 pub struct Frame {
     pub sequence: u64,
