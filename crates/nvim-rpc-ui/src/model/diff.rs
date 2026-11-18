@@ -79,7 +79,7 @@ impl State {
                     }
                     None => {
                         damage.layout = true;
-                        Some(whole_grid(id, grid))
+                        Some(GridDamage::whole(id, grid))
                     }
                 };
                 if let Some(region) = region {
@@ -105,16 +105,6 @@ fn shares_optional<T>(a: &Option<Arc<T>>, b: &Option<Arc<T>>) -> bool {
     }
 }
 
-fn whole_grid(grid: GridId, content: &Grid) -> GridDamage {
-    GridDamage {
-        grid,
-        top: 0,
-        bottom: content.height,
-        left: 0,
-        right: content.width,
-    }
-}
-
 fn grid_damage(id: GridId, grid: &Grid, previous: &Grid) -> Option<GridDamage> {
     if grid.width != previous.width
         || grid.height != previous.height
@@ -122,7 +112,7 @@ fn grid_damage(id: GridId, grid: &Grid, previous: &Grid) -> Option<GridDamage> {
         || grid.rows.len() != grid.height
         || previous.rows.len() != previous.height
     {
-        return Some(whole_grid(id, grid));
+        return Some(GridDamage::whole(id, grid));
     }
     let mut changed = None;
     for (idx, (row, old)) in grid.rows.iter().zip(&previous.rows).enumerate() {

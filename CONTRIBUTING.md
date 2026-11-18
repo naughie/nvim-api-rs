@@ -78,125 +78,44 @@ transports must not acquire process ownership.
 
 ### UI redraw performance
 
-Measure decoding, redraw processing, frame publication, and synthetic CPU
-painting in a release build:
+Run the replay example in release mode to measure decoding, model updates, and
+frame delivery without a Neovim process:
 
 ```sh
 cargo run --release -p nvim-rpc-ui --example replay -- 100000
 ```
 
-The immediate-delivery workloads retain the previous frame and replay typing,
-whole-row scrolling, and 120-entry rows on a 120×40 grid. Rows cover ASCII,
-repeated CJK, combining sequences, emoji, and multi-character strings. CJK
-working sets of 256, 1,024, and 4,096 scalars show how reuse varies with
-vocabulary size. Two further streams draw from 15,360 CJK scalars to exercise
-cache churn; the mostly unique stream replaces every eighth entry with one
-recurring character. Each row entry is encoded separately, without a repeat
-run. Fixtures are encoded before measurement.
+The argument selects the measured frame count per workload. Immediate delivery
+retains the preceding frame and reports throughput and allocations per frame.
+Its workloads cover typing, scrolling, repeated Unicode text, and larger working
+sets with little reuse. Eight-frame bursts compare full and incremental
+coalescing with a CPU backend that visits the cells selected by damage. Their
+output includes total time, paint time, cells visited, and cursor updates; the
+frame count rounds up to complete bursts.
 
-These workloads measure decoding, model updates, and immediate frame delivery
-without painting. Throughput follows 1,000 warm-up frames. A separate pass of
-up to 1,000 frames counts allocation and reallocation calls on the current
-thread; setup and fixture encoding are excluded.
+Fixtures and warm-up are outside the measurements. Allocation counts come from
+a separate pass on the current thread. The synthetic painter does not measure
+text shaping, toolkit integration, GPU rendering, or RPC latency. Compare the
+same workloads and build configuration, and measure a real backend separately
+when evaluating GUI performance.
 
-The burst workloads use two 240×80 grids and paint once per eight flushes. They
-compare `Frame::coalesce()` with `Frame::coalesce_incremental()` for cursor-only
-updates and sparse cell updates. A CPU backend traverses every cell selected by
-the resulting damage and reads its text and highlight. The output reports total
-time, CPU paint time, cells visited, and cursor updates. Full repaint visits
-38,400 cells per paint; incremental cursor updates visit none, and the sparse
-updates visit two three-cell bounding regions. The frame count is rounded up
-to a multiple of eight for these workloads.
-
-These measurements exclude Neovim RPC latency, real text shaping, rasterization,
-FFI transfer, toolkit work, and GPU presentation. Burst timings reflect work
-selected by damage with a synthetic CPU cost. Measure a real backend separately
-for GUI frame rates. Record the workload and build configuration when comparing
-measurements.
-
-The UI allocation and sharing tests run with the regular test suite. When
-changing frame storage or grid updates, check that retained frames stay stable
-and that unchanged grids and rows remain shared.
-
-#### Cell text reuse
-
-Grid-line decoding uses a private per-model table of 512 slots for strings up to
-64 UTF-8 bytes. A borrowed string hashes to one slot; an exact match clones its
-`Arc<str>`, and a miss replaces that slot. Collisions affect reuse only. Cells
-and retained frames own their references, so replacement cannot invalidate them.
-The table is allocated lazily and retains at most 32 KiB of string payload, plus
-slot storage and `Arc` headers. Empty strings and single ASCII characters use
-the existing shared fast path. Longer strings use ordinary allocation. All
-strings still obey the model's string limit. These cache bounds are internal
-choices, not new protocol limits; text bytes are preserved without normalization.
-
-Reuse is sampled over 128 lookups. If fewer than 96 hit, the next 2,048 eligible
-entries bypass lookup and insertion before sampling resumes. Existing slots stay
-available for later probes. Empty strings, single ASCII characters, and strings
-longer than 64 bytes do not advance this sampling state. This policy favors
-strong reuse while limiting hashing and reference-counting work on unique text.
-
-The following representative comparison used the same instrumented replay
-example on baseline `8d0f27c` and the cache implementation: Linux x86_64,
-Intel Core i7-14700KF, rustc 1.99.1, release build, 100,000 measured frames per
-workload, pinned to CPU 0 with `taskset -c 0 target/release/examples/replay 100000`.
-The allocation column compares baseline and cache calls per frame. Repeat the
-cache comparison with the replay example from `0cfe6df` on both revisions;
-that source does not require the incremental-coalescing API. Timings vary with
-the machine and workload.
-
-| Workload | Baseline µs/frame | Cache µs/frame | Allocations/frame, baseline → cache |
-| --- | ---: | ---: | ---: |
-| ASCII row | 13.86 | 13.94 | 8 → 8 |
-| Repeated CJK | 15.96 | 15.39 | 128 → 8 |
-| Combining sequences | 16.26 | 15.57 | 128 → 8 |
-| Emoji | 16.50 | 15.72 | 128 → 8 |
-| Multi-character strings | 16.66 | 15.81 | 128 → 8 |
-| 256-scalar working set | 16.09 | 16.28 | 128 → 121.55 |
-| 1,024-scalar working set | 16.18 | 16.22 | 128 → 122.91 |
-| 4,096-scalar working set | 16.15 | 16.18 | 128 → 127.89 |
-| Mostly unique CJK | 16.19 | 16.19 | 128 → 127.13 |
-| CJK cache churn | 16.47 | 16.23 | 128 → 128 |
-
-Repeated Unicode rows removed 120 text allocations per frame with a small
-throughput improvement. Low-reuse workloads stayed close to the baseline in
-repeated pinned runs. The always-active table made mostly unique text and cache
-churn about 13% slower; a `HashSet` plus FIFO prototype had approximately 30%
-churn overhead. Sampling and bypassing avoids paying the lookup/replacement
-cost on every low-reuse entry. A shorter 512-entry bypass left up to about 3%
-overhead in the measured working sets; 2,048 entries reduced it further while
-retaining probes for a change in vocabulary.
-
-Capacity trials with bypass disabled used 256, 512, and 1,024 slots. At 256 slots,
-collisions in the combining-sequence fixture left 68 allocations per frame
-instead of 8. Increasing 512 to 1,024 slots reduced allocations for the 256-scalar
-working set from 52.01 to 35.67, and the 1,024-scalar set from 108.56 to 85.34,
-with similar throughput and twice the retention bound. The 512-slot choice keeps
-a 32 KiB payload budget while covering the tested small repeated vocabularies;
-it does not guarantee reuse for all text that would fit within that budget.
+The regular UI tests verify allocation and sharing contracts. When changing
+frame storage or grid updates, preserve retained snapshots and sharing of
+unchanged grids and rows.
 
 ### RPC reply-stack performance
 
-Measure incoming reply registration, completion, and retirement in a release
-build:
+Measure reply registration, completion, and retirement without transport I/O:
 
 ```sh
 cargo test -p nvim-rpc-plugin --release --lib benchmark_reply_stacks -- --ignored --nocapture
 ```
 
-The benchmark covers fresh and reused bursts at depths from 1 to 16,384, plus
-interleaved push/complete/pop operations above unfinished older requests. It
-includes the reply-state mutex and readiness notifications, but excludes RPC
-decoding, transport I/O, and handler tasks. Compare repeated runs with the same
-workload and build configuration.
-
-Reply registration scans shallow stacks and builds a standard `HashSet` when
-adding a request above 64 pending slots. Release-mode comparisons against linear
-scans and always-on indexing placed the sustained-depth crossover around 64
-slots; constructing the index can still cost more for bursts just above that
-depth. Membership includes completed replies until they are popped for writing.
-The index remains active until the stack drains, then shallow scans resume while
-the allocated set storage is retained for reuse.
+The benchmark covers fresh and reused request bursts at several depths and
+interleaved operations above unfinished older requests. It includes locking and
+readiness notifications; decoding and handler execution are outside the
+measurement. Compare repeated runs with the same workload and build
+configuration.
 
 ### Large boundary tests
 

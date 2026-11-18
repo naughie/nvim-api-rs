@@ -131,7 +131,7 @@ where
 {
 }
 
-impl<'s, T, F, B: BaseType, const N: usize> Like<sys::FixedArrayOf<B, N>> for Map<&'s [T; N], F>
+impl<T, F, B: BaseType, const N: usize> Like<sys::FixedArrayOf<B, N>> for Map<&[T; N], F>
 where
     Self: IntoIterator,
     <Self as IntoIterator>::IntoIter: ExactSizeIterator,
@@ -175,8 +175,7 @@ where
 {
 }
 
-impl<'s, T, F, B: BaseType, const N: usize> Like<sys::FixedArrayOf<B, N>>
-    for Map<Array<&'s [T; N]>, F>
+impl<T, F, B: BaseType, const N: usize> Like<sys::FixedArrayOf<B, N>> for Map<Array<&[T; N]>, F>
 where
     Self: IntoIterator,
     <Self as IntoIterator>::IntoIter: ExactSizeIterator,

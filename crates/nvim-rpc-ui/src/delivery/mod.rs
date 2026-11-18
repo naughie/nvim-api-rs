@@ -1,26 +1,4 @@
-//! UI frame delivery through an existing plugin RPC dispatcher.
-//!
-//! Wrap the application's [`Handler`] in [`UiHandler`] and pass it to
-//! [`nvim_rpc_plugin::spawn()`]. UI notifications update the retained model;
-//! other notifications and all requests reach the application handler. Use the
-//! returned [`Neovim`] for UI attachment, input, and ordinary API calls on the
-//! same connection. Attach with [`crate::UiOptions::ext_linegrid`] enabled.
-//!
-//! Receive frames through [`Frames::recv()`] or [`Frames::present_next()`] on
-//! the toolkit's owning thread. The backend needs no `Send` or `Sync` bounds.
-//! Frame delivery does not wait for drawing. Later frames are coalesced with
-//! any unconsumed frame, preserving ordered events. By default this requests
-//! a full repaint; select [`Coalescing::Incremental`] through
-//! [`Frames::set_coalescing()`] to combine bounded incremental damage. There
-//! is at most one pending frame with at most
-//! [`Limits::max_pending_events`] events. The model separately limits
-//! unflushed events. Application-retained frames are outside these limits.
-//!
-//! A UI protocol error, a pending-event limit, or invalid application
-//! notification arguments closes the shared connection. [`Frames::recv()`]
-//! returns the pending valid frame, then the concrete adapter error, then
-//! `None`. Await the task returned by `spawn()` to observe transport errors or
-//! handler failures; those errors do not appear in this frame stream.
+//! UI frame delivery through the plugin RPC dispatcher.
 
 mod error;
 pub use error::Error;
@@ -40,7 +18,9 @@ use std::sync::{Mutex, MutexGuard};
 ///
 /// Requests and non-UI notifications retain [`Handler`]'s execution order.
 /// `redraw` and `nvim_error_event` notifications are consumed by the UI model
-/// before later callbacks are dispatched. Construction starts no tasks.
+/// before later callbacks are dispatched. Invalid UI or application notification
+/// arguments close the shared connection; [`Frames::recv()`] drains the pending
+/// frame before reporting the error. Construction starts no tasks.
 pub struct UiHandler<H> {
     handler: H,
     model: Mutex<Model>,

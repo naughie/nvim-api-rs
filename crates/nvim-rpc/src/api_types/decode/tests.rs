@@ -79,6 +79,71 @@ fn integer_conversion_checks_the_destination_range() {
     );
 }
 
+fn check_integer<T>(bytes: &[u8], expected: Result<T, DecodeError>)
+where
+    T: std::fmt::Debug + PartialEq,
+    for<'a> T: Decode<sys::Int, &'a [u8]> + Decode<sys::Object, &'a [u8]>,
+{
+    assert_eq!(
+        <T as Decode<sys::Int, _>>::decode(object(bytes)),
+        expected,
+        "integer marker, {bytes:x?}"
+    );
+    assert_eq!(
+        <T as Decode<sys::Object, _>>::decode(object(bytes)),
+        expected,
+        "object marker, {bytes:x?}"
+    );
+}
+
+#[test]
+fn integer_conversion_accepts_all_encoded_widths() {
+    let encodings: &[&[u8]] = &[
+        &[0xcc, 42],
+        &[0xcd, 0, 42],
+        &[0xce, 0, 0, 0, 42],
+        &[0xcf, 0, 0, 0, 0, 0, 0, 0, 42],
+        &[0xd0, 42],
+        &[0xd1, 0, 42],
+        &[0xd2, 0, 0, 0, 42],
+        &[0xd3, 0, 0, 0, 0, 0, 0, 0, 42],
+    ];
+    for &bytes in encodings {
+        check_integer::<i8>(bytes, Ok(42));
+        check_integer::<i16>(bytes, Ok(42));
+        check_integer::<i32>(bytes, Ok(42));
+        check_integer::<i64>(bytes, Ok(42));
+        check_integer::<isize>(bytes, Ok(42));
+        check_integer::<u8>(bytes, Ok(42));
+        check_integer::<u16>(bytes, Ok(42));
+        check_integer::<u32>(bytes, Ok(42));
+        check_integer::<u64>(bytes, Ok(42));
+        check_integer::<usize>(bytes, Ok(42));
+    }
+}
+
+#[test]
+fn integer_conversion_preserves_negative_values_and_rejects_unsigned_outputs() {
+    let encodings: &[&[u8]] = &[
+        &[0xd0, 0xff],
+        &[0xd1, 0xff, 0xff],
+        &[0xd2, 0xff, 0xff, 0xff, 0xff],
+        &[0xd3, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff],
+    ];
+    for &bytes in encodings {
+        check_integer::<i8>(bytes, Ok(-1));
+        check_integer::<i16>(bytes, Ok(-1));
+        check_integer::<i32>(bytes, Ok(-1));
+        check_integer::<i64>(bytes, Ok(-1));
+        check_integer::<isize>(bytes, Ok(-1));
+        check_integer::<u8>(bytes, Err(DecodeError::IntegerOutOfRange));
+        check_integer::<u16>(bytes, Err(DecodeError::IntegerOutOfRange));
+        check_integer::<u32>(bytes, Err(DecodeError::IntegerOutOfRange));
+        check_integer::<u64>(bytes, Err(DecodeError::IntegerOutOfRange));
+        check_integer::<usize>(bytes, Err(DecodeError::IntegerOutOfRange));
+    }
+}
+
 #[test]
 fn strings_can_be_borrowed_owned_or_raw_bytes() {
     let bytes = b"\xa5hello";

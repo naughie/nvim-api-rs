@@ -9,7 +9,7 @@ use nvim_rpc::sys::{ext_types, types};
 use nvim_rpc::{Buffer, Tabpage, Window};
 
 use std::collections::BTreeMap;
-use std::sync::{Arc, OnceLock};
+use std::sync::Arc;
 
 pub(super) fn bad(event: &str, reason: &'static str) -> ProtocolError {
     ProtocolError::Invalid {
@@ -99,30 +99,7 @@ pub(super) fn string(v: Obj<'_>, limits: Limits) -> Result<&str> {
 }
 
 pub(super) fn text(v: Obj<'_>, limits: Limits) -> Result<Arc<str>> {
-    let text = string(v, limits)?;
-    Ok(ascii_text(text).unwrap_or_else(|| Arc::from(text)))
-}
-
-pub(super) fn ascii_text(text: &str) -> Option<Arc<str>> {
-    if text.is_empty() {
-        static EMPTY: OnceLock<Arc<str>> = OnceLock::new();
-        return Some(Arc::clone(EMPTY.get_or_init(|| Arc::from(""))));
-    }
-    if let [byte] = text.as_bytes()
-        && byte.is_ascii()
-    {
-        static ASCII: OnceLock<[Arc<str>; 128]> = OnceLock::new();
-        let chars = ASCII.get_or_init(|| {
-            std::array::from_fn(|n| {
-                let c = [n as u8];
-                // from_fn supplies 0 <= n < 128, so c is one valid ASCII byte.
-                Arc::from(std::str::from_utf8(&c).expect("ASCII is valid UTF-8"))
-            })
-        });
-        // is_ascii() proves byte < 128, the fixed array's length.
-        return Some(Arc::clone(&chars[usize::from(*byte)]));
-    }
-    None
+    Ok(super::text::shared(string(v, limits)?))
 }
 
 pub(super) fn array(v: Obj<'_>) -> Result<Args<'_>> {

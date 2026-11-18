@@ -139,8 +139,10 @@ impl Frames {
     /// Waits for the next frame or terminal UI processing error.
     ///
     /// Returns `None` after the handler is dropped and the pending frame has
-    /// been drained, or after returning a terminal error. Cancelling this wait
-    /// does not consume a frame.
+    /// been drained, or after returning a terminal UI processing error. A
+    /// pending valid frame is delivered before that error. Transport errors
+    /// and handler failures are reported by the plugin driver instead.
+    /// Cancelling this wait does not consume a frame.
     pub async fn recv(&mut self) -> Option<Result<Frame, Error>> {
         if self.finished {
             return None;

@@ -1,7 +1,5 @@
-use super::decode::ascii_text;
-
 use std::hash::{DefaultHasher, Hash as _, Hasher as _};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 const MAX_ENTRIES: usize = 512;
 const MAX_TEXT_BYTES: usize = 64;
@@ -9,13 +7,7 @@ const SAMPLE: u16 = 128;
 const MIN_HITS: u16 = 96;
 const BYPASS: u16 = 2048;
 
-/// Reuses short cell strings within one model.
-///
-/// Each hash selects one slot; a collision replaces its cache reference without
-/// affecting cells or retained frames. Lookup/replacement visits one slot even
-/// under collisions. The lazy table retains at most 512 strings of 64 bytes
-/// (32 KiB of text), plus slot storage and Arc headers. Empty and single-byte
-/// ASCII text bypasses the table. Low-reuse samples temporarily bypass lookup.
+/// Reuses short cell strings with one bounded, direct-mapped table per model.
 #[derive(Default)]
 pub(super) struct Cache {
     slots: Vec<Option<Arc<str>>>,
@@ -36,46 +28,25 @@ impl Default for Reuse {
     }
 }
 
-impl Reuse {
-    fn bypass(&mut self) -> bool {
-        let Self::Bypass(remaining) = self else {
-            return false;
-        };
-        if let Some(n) = remaining.checked_sub(1).filter(|&n| n > 0) {
-            *remaining = n;
-        } else {
-            *self = Self::default();
-        }
-        true
-    }
-
-    fn observe(&mut self, hit: bool) {
-        let Self::Sample { remaining, hits } = self else {
-            return;
-        };
-        // Samples start at SAMPLE and reset on the lookup that reaches zero.
-        // Thus remaining is in 1..=SAMPLE and hits <= SAMPLE - remaining;
-        // incrementing hits and decrementing remaining both fit u16.
-        *hits += u16::from(hit);
-        *remaining -= 1;
-        if *remaining == 0 {
-            *self = if *hits >= MIN_HITS {
-                Self::default()
-            } else {
-                Self::Bypass(BYPASS)
-            };
-        }
-    }
-}
-
 impl Cache {
     pub(super) fn intern(&mut self, text: &str) -> Arc<str> {
         if let Some(text) = ascii_text(text) {
             return text;
         }
-        if text.len() > MAX_TEXT_BYTES || self.reuse.bypass() {
+        if text.len() > MAX_TEXT_BYTES {
             return Arc::from(text);
         }
+        let (remaining, hits) = match &mut self.reuse {
+            Reuse::Bypass(remaining) => {
+                self.reuse = remaining
+                    .checked_sub(1)
+                    .filter(|&n| n > 0)
+                    .map(Reuse::Bypass)
+                    .unwrap_or_default();
+                return Arc::from(text);
+            }
+            Reuse::Sample { remaining, hits } => (remaining, hits),
+        };
         if self.slots.is_empty() {
             self.slots.resize_with(MAX_ENTRIES, || None);
         }
@@ -84,17 +55,56 @@ impl Cache {
         // MAX_ENTRIES is nonzero, and initialization sets exactly that many
         // slots. Modulo therefore selects an in-bounds slot on every call.
         let slot = &mut self.slots[hash.finish() as usize % MAX_ENTRIES];
-        if let Some(cached) = slot
-            && cached.as_ref() == text
-        {
-            self.reuse.observe(true);
-            return Arc::clone(cached);
+        // Replacing the cache's reference leaves cells and retained frames valid.
+        let (text, hit) = match slot {
+            Some(cached) if cached.as_ref() == text => (Arc::clone(cached), true),
+            slot => {
+                let text: Arc<str> = Arc::from(text);
+                *slot = Some(Arc::clone(&text));
+                (text, false)
+            }
+        };
+        // A sample starts with remaining = SAMPLE and hits = 0. Each lookup
+        // consumes one position, so 1 <= remaining <= SAMPLE and
+        // hits <= SAMPLE - remaining. Both operations therefore fit u16.
+        *remaining -= 1;
+        *hits += u16::from(hit);
+        if *remaining == 0 {
+            self.reuse = if *hits >= MIN_HITS {
+                Reuse::default()
+            } else {
+                Reuse::Bypass(BYPASS)
+            };
         }
-        self.reuse.observe(false);
-        let text: Arc<str> = Arc::from(text);
-        *slot = Some(Arc::clone(&text));
         text
     }
+}
+
+pub(super) fn shared(text: &str) -> Arc<str> {
+    ascii_text(text).unwrap_or_else(|| Arc::from(text))
+}
+
+fn ascii_text(text: &str) -> Option<Arc<str>> {
+    if text.is_empty() {
+        static EMPTY: OnceLock<Arc<str>> = OnceLock::new();
+        return Some(Arc::clone(EMPTY.get_or_init(|| Arc::from(""))));
+    }
+    let [byte] = text.as_bytes() else {
+        return None;
+    };
+    if !byte.is_ascii() {
+        return None;
+    }
+    static ASCII: OnceLock<[Arc<str>; 128]> = OnceLock::new();
+    let chars = ASCII.get_or_init(|| {
+        std::array::from_fn(|n| {
+            let c = [n as u8];
+            // from_fn supplies 0 <= n < 128, so c is one valid ASCII byte.
+            Arc::from(std::str::from_utf8(&c).expect("ASCII is valid UTF-8"))
+        })
+    });
+    // is_ascii() proves byte < 128, the fixed array's length.
+    Some(Arc::clone(&chars[usize::from(*byte)]))
 }
 
 #[cfg(test)]
@@ -104,8 +114,12 @@ mod tests {
     #[test]
     fn ascii_and_long_strings_do_not_populate_the_cache() {
         let mut cache = Cache::default();
-        for text in ["", "x", "\0", "\u{7f}"] {
+        assert!(Arc::ptr_eq(&cache.intern(""), &shared("")));
+        for byte in 0..=127 {
+            let bytes = [byte];
+            let text = std::str::from_utf8(&bytes).unwrap();
             assert!(Arc::ptr_eq(&cache.intern(text), &cache.intern(text)));
+            assert!(Arc::ptr_eq(&cache.intern(text), &shared(text)));
         }
         let text = "字".repeat(MAX_TEXT_BYTES);
         let first = cache.intern(&text);
@@ -174,12 +188,20 @@ mod tests {
     #[test]
     fn sample_hit_threshold_controls_bypass() {
         for (hits, bypass) in [(MIN_HITS - 1, true), (MIN_HITS, false)] {
-            let mut reuse = Reuse::default();
-            for n in 0..SAMPLE {
-                assert!(!reuse.bypass());
-                reuse.observe(n < hits);
+            let mut cache = Cache::default();
+            let cached = cache.intern("字");
+            cache.reuse = Reuse::default();
+            for _ in 0..hits {
+                assert!(Arc::ptr_eq(&cache.intern("字"), &cached));
             }
-            assert_eq!(reuse.bypass(), bypass, "{hits} hits");
+            for n in hits..SAMPLE {
+                cache.intern(&format!("字{n}"));
+            }
+            assert_eq!(
+                matches!(cache.reuse, Reuse::Bypass(_)),
+                bypass,
+                "{hits} hits"
+            );
         }
     }
 

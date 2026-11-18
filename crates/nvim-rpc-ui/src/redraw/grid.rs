@@ -142,14 +142,7 @@ impl Model {
                     Arc::make_mut(&mut self.state).cursor = None;
                     self.damage.cursor = true;
                 }
-                if !self.damage.removed_grids.contains(&id) {
-                    if self.damage.removed_grids.len() < limits.max_grids {
-                        self.damage.removed_grids.push(id);
-                    } else {
-                        self.damage.full = true;
-                    }
-                }
-                self.damage.layout = true;
+                self.damage.record_removal(id, limits.max_grids);
             }
             "grid_cursor_goto" => {
                 let id = grid_id(next(&mut a)?)?;

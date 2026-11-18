@@ -7,7 +7,9 @@ pub use widgets::{
     BufferItem, Chunk, Cmdline, CompletionItem, Content, HistoryEntry, Message, Messages,
     PopupAnchor, Popupmenu, Tab, Tabline, Wildmenu,
 };
+mod damage;
 mod diff;
+pub use damage::{Damage, GridDamage};
 mod frame;
 
 use nvim_rpc::Window;
@@ -116,40 +118,6 @@ pub struct State {
     pub cwd: Arc<str>,
     pub mouse_enabled: bool,
     pub busy: bool,
-}
-
-/// A rectangular region of grid cells that needs repainting.
-///
-/// `top..bottom` and `left..right` are half-open cell ranges.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct GridDamage {
-    pub grid: GridId,
-    pub top: usize,
-    pub bottom: usize,
-    pub left: usize,
-    pub right: usize,
-}
-
-/// Repaint and layout changes between UI states.
-///
-/// An uncoalesced [`Frame::damage`] describes changes since the previous
-/// published frame. Coalescing combines damage across the pending frames.
-/// [`State::diff_since()`] computes damage against a snapshot selected by the
-/// caller, including changes across skipped frames.
-#[derive(Debug, Clone, Default)]
-pub struct Damage {
-    /// Changed cell regions, with at most one bounding rectangle per grid.
-    pub grids: Vec<GridDamage>,
-    /// Grids removed between the compared states.
-    pub removed_grids: Vec<GridId>,
-    /// Requests a repaint of the complete current state.
-    pub full: bool,
-    /// Grid sizes, placements, visibility, or viewports changed.
-    pub layout: bool,
-    /// The cursor position, style, or busy state changed.
-    pub cursor: bool,
-    /// External UI components or highlight-group mappings changed.
-    pub widgets: bool,
 }
 
 /// An application event received from Neovim.

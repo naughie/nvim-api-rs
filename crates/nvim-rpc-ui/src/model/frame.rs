@@ -1,4 +1,4 @@
-use super::{Damage, Frame, GridDamage, GridId, State};
+use super::Frame;
 
 use crate::ProtocolError;
 
@@ -16,9 +16,10 @@ impl Frame {
     pub fn coalesce(&mut self, mut next: Self, max_events: usize) -> Result<(), ProtocolError> {
         self.check_events(&next, max_events)?;
         self.events.append(&mut next.events);
-        next.events = std::mem::take(&mut self.events);
-        next.damage.full = true;
-        *self = next;
+        self.sequence = next.sequence;
+        self.state = next.state;
+        self.damage = next.damage;
+        self.damage.full = true;
         Ok(())
     }
 
@@ -47,18 +48,12 @@ impl Frame {
         max_grids: usize,
     ) -> Result<(), ProtocolError> {
         self.check_events(&next, max_events)?;
-        let mut damage = std::mem::take(&mut self.damage);
-        damage.full |= self.sequence.checked_add(1) != Some(next.sequence);
-        next.damage = merge_damage(
-            damage,
-            std::mem::take(&mut next.damage),
-            &self.state,
-            &next.state,
-            max_grids,
-        );
+        self.damage.full |= self.sequence.checked_add(1) != Some(next.sequence);
+        self.damage
+            .merge(next.damage, &self.state, &next.state, max_grids);
         self.events.append(&mut next.events);
-        next.events = std::mem::take(&mut self.events);
-        *self = next;
+        self.sequence = next.sequence;
+        self.state = next.state;
         Ok(())
     }
 
@@ -72,163 +67,10 @@ impl Frame {
     }
 }
 
-fn merge_damage(
-    mut damage: Damage,
-    next: Damage,
-    previous: &State,
-    state: &State,
-    max_grids: usize,
-) -> Damage {
-    damage.full |= next.full;
-    damage.layout |= next.layout;
-    damage.cursor |= next.cursor;
-    damage.widgets |= next.widgets;
-    if !damage.full {
-        // Reuse pending storage; normalize public damage lists before merging.
-        damage.grids.retain_mut(|d| clip(d, state));
-        damage.grids.sort_unstable_by_key(|d| d.grid);
-        damage.grids.dedup_by(|a, b| {
-            if a.grid != b.grid {
-                return false;
-            }
-            union(b, a);
-            true
-        });
-        damage.full = damage.grids.len() > max_grids;
-        for mut d in next.grids {
-            if damage.full {
-                break;
-            }
-            if clip(&mut d, state) {
-                damage.full = !merge_region(&mut damage.grids, d, max_grids);
-            }
-        }
-
-        // A destroyed ID may already name a new grid, including when both
-        // operations occurred before one flush. Never remove that new grid.
-        for id in damage.removed_grids.iter().chain(&next.removed_grids) {
-            if damage.full {
-                break;
-            }
-            if let Some(grid) = state.grids.get(id) {
-                damage.layout = true;
-                damage.full = !merge_region(
-                    &mut damage.grids,
-                    GridDamage {
-                        grid: *id,
-                        top: 0,
-                        bottom: grid.height,
-                        left: 0,
-                        right: grid.width,
-                    },
-                    max_grids,
-                );
-            }
-        }
-        damage
-            .removed_grids
-            .retain(|id| !state.grids.contains_key(id));
-        damage.removed_grids.sort_unstable();
-        damage.removed_grids.dedup();
-        damage.full |= damage.removed_grids.len() > max_grids;
-        for id in next.removed_grids {
-            if damage.full {
-                break;
-            }
-            if !state.grids.contains_key(&id) {
-                damage.full = !merge_removal(&mut damage.removed_grids, id, max_grids);
-            }
-        }
-
-        if !damage.full && !std::sync::Arc::ptr_eq(&previous.grids, &state.grids) {
-            for (&id, grid) in state.grids.iter() {
-                if previous
-                    .grids
-                    .get(&id)
-                    .is_some_and(|old| old.width == grid.width && old.height == grid.height)
-                {
-                    continue;
-                }
-                damage.layout = true;
-                if !merge_region(
-                    &mut damage.grids,
-                    GridDamage {
-                        grid: id,
-                        top: 0,
-                        bottom: grid.height,
-                        left: 0,
-                        right: grid.width,
-                    },
-                    max_grids,
-                ) {
-                    damage.full = true;
-                    break;
-                }
-            }
-            for &id in previous.grids.keys() {
-                if !state.grids.contains_key(&id) {
-                    damage.layout = true;
-                    if !merge_removal(&mut damage.removed_grids, id, max_grids) {
-                        damage.full = true;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-    if damage.full {
-        damage.grids.clear();
-        damage.removed_grids.clear();
-    }
-    damage
-}
-
-fn clip(d: &mut GridDamage, state: &State) -> bool {
-    let Some(grid) = state.grids.get(&d.grid) else {
-        return false;
-    };
-    d.top = d.top.min(grid.height);
-    d.bottom = d.bottom.min(grid.height);
-    d.left = d.left.min(grid.width);
-    d.right = d.right.min(grid.width);
-    d.top < d.bottom && d.left < d.right
-}
-
-fn union(dst: &mut GridDamage, src: &GridDamage) {
-    dst.top = dst.top.min(src.top);
-    dst.bottom = dst.bottom.max(src.bottom);
-    dst.left = dst.left.min(src.left);
-    dst.right = dst.right.max(src.right);
-}
-
-fn merge_region(regions: &mut Vec<GridDamage>, d: GridDamage, max_grids: usize) -> bool {
-    if d.top == d.bottom || d.left == d.right {
-        return true;
-    }
-    if let Some(old) = regions.iter_mut().find(|old| old.grid == d.grid) {
-        union(old, &d);
-    } else if regions.len() < max_grids {
-        regions.push(d);
-    } else {
-        return false;
-    }
-    true
-}
-
-fn merge_removal(ids: &mut Vec<GridId>, id: GridId, max_grids: usize) -> bool {
-    if !ids.contains(&id) {
-        if ids.len() >= max_grids {
-            return false;
-        }
-        ids.push(id);
-    }
-    true
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{Event, Model};
+    use crate::{Damage, Event, GridDamage, GridId, Model, State};
 
     use nvim_rpc::mp::encode::{Primitive, WriterSyncExt as _};
     use nvim_rpc::rpc::Message;
