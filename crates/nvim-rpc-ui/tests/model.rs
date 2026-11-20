@@ -277,6 +277,160 @@ fn messages_preserve_channels_replace_append_and_history() {
     assert!(!frames[0].state.messages.showmode.is_empty());
 }
 
+fn replay_message_bytes(
+    model: &mut Model,
+    name: &str,
+    text: &[u8],
+) -> Result<Vec<Frame>, ProtocolError> {
+    let placeholder = "X".repeat(text.len());
+    let mut bytes = Vec::new();
+    bytes
+        .write_primitive((
+            2u8,
+            "redraw",
+            (
+                (name, (((7, placeholder.as_str(), 42), (3, "界")),)),
+                ("set_title", ("after showcmd",)),
+                ("flush", ()),
+            ),
+        ))
+        .consume();
+
+    if !text.is_empty() {
+        let pos = bytes
+            .windows(text.len())
+            .position(|v| v == placeholder.as_bytes())
+            .unwrap();
+        bytes[pos..pos + text.len()].copy_from_slice(text);
+    }
+
+    let Message::Notification(notification) = nvim_rpc::rpc::decode(&mut bytes.as_slice()).unwrap()
+    else {
+        panic!("expected redraw notification");
+    };
+
+    let mut frames = Vec::new();
+    model.apply_redraw(notification, |frame| frames.push(frame))?;
+
+    Ok(frames)
+}
+
+#[test]
+fn showcmd_escapes_invalid_bytes_and_preserves_utf8_and_chunk_metadata() {
+    for (bytes, expected) in [
+        (b"".as_slice(), ""),
+        (b"g\\q\n\0", "g\\q\n\0"),
+        ("界😀".as_bytes(), "界😀"),
+        (b"~@\xfd", r"~@\xfd"),
+        (b"\xffend", r"\xffend"),
+        (
+            b"\xe7\x95\x8c\xfd\xc3\xa9\x80\xf0\x9f\x98\x80",
+            "界\\xfdé\\x80😀",
+        ),
+        (b"\xe2(\xa1", r"\xe2(\xa1"),
+        (b"\xf0\x9f", r"\xf0\x9f"),
+        (b"\xed\xa0\x80", r"\xed\xa0\x80"),
+    ] {
+        let mut model = Model::default();
+        let frames = replay_message_bytes(&mut model, "msg_showcmd", bytes).unwrap();
+
+        assert!(!model.is_failed(), "{bytes:?}");
+        assert_eq!(frames.len(), 1);
+        assert_eq!(
+            frames[0].state.messages.showcmd,
+            [
+                Chunk {
+                    highlight: HighlightId(7),
+                    text: Arc::from(expected),
+                    hl_id: Some(42),
+                },
+                Chunk {
+                    highlight: HighlightId(3),
+                    text: Arc::from("界"),
+                    hl_id: None,
+                },
+            ],
+            "{bytes:?}"
+        );
+        assert!(frames[0].damage.widgets);
+        assert_eq!(frames[0].state.title.as_ref(), "after showcmd");
+        assert!(matches!(
+            frames[0].events.as_slice(),
+            [Event::SetTitle(title)] if &**title == "after showcmd"
+        ));
+    }
+}
+
+#[test]
+fn invalid_showcmd_does_not_stop_later_redraws_or_change_retained_frames() {
+    let mut model = Model::default();
+    let first = replay_message_bytes(&mut model, "msg_showcmd", b"~@\xfd").unwrap();
+    let frames = replay(
+        &mut model,
+        (
+            ("msg_showcmd", ((),)),
+            ("set_title", ("next redraw",)),
+            ("flush", ()),
+        ),
+    )
+    .unwrap();
+
+    assert!(!model.is_failed());
+    assert_eq!(frames.len(), 1);
+    assert_eq!(frames[0].sequence, 2);
+    assert!(frames[0].state.messages.showcmd.is_empty());
+    assert_eq!(frames[0].state.title.as_ref(), "next redraw");
+    assert_eq!(first[0].state.messages.showcmd[0].text.as_ref(), r"~@\xfd");
+}
+
+#[test]
+fn showcmd_checks_string_limits_after_escaping() {
+    let limits = Limits {
+        max_string_bytes: 16,
+        ..Limits::default()
+    };
+
+    for (bytes, expected) in [
+        (b"123456789012\xfd".as_slice(), r"123456789012\xfd"),
+        (b"\xfd\xfd\xfd\xfd", r"\xfd\xfd\xfd\xfd"),
+    ] {
+        let mut model = Model::new(limits);
+        let frames = replay_message_bytes(&mut model, "msg_showcmd", bytes).unwrap();
+
+        assert_eq!(frames[0].state.messages.showcmd[0].text.as_ref(), expected);
+    }
+
+    for bytes in [
+        b"1234567890123\xfd".as_slice(),
+        b"\xfd\xfd\xfd\xfd\xfd",
+        b"12345678901234567",
+        b"1234567890123456\xfd",
+    ] {
+        let mut model = Model::new(limits);
+
+        assert!(matches!(
+            replay_message_bytes(&mut model, "msg_showcmd", bytes),
+            Err(ProtocolError::Limit("string bytes"))
+        ));
+        assert!(model.is_failed());
+    }
+}
+
+#[test]
+fn other_message_displays_still_reject_invalid_utf8() {
+    for name in ["msg_showmode", "msg_ruler"] {
+        let mut model = Model::default();
+
+        assert!(matches!(
+            replay_message_bytes(&mut model, name, b"~@\xfd"),
+            Err(ProtocolError::Decode(
+                nvim_rpc::api_types::DecodeError::InvalidUtf8(_)
+            ))
+        ));
+        assert!(model.is_failed());
+    }
+}
+
 #[test]
 fn unknown_events_and_appended_arguments_are_forward_compatible() {
     let mut model = Model::default();

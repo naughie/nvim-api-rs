@@ -273,7 +273,12 @@ impl Model {
                 self.damage.widgets = true;
             }
             "msg_showmode" | "msg_showcmd" | "msg_ruler" => {
-                let content = content(next(&mut a)?, limits)?;
+                let content = if name == "msg_showcmd" {
+                    showcmd_content(next(&mut a)?, limits)?
+                } else {
+                    content(next(&mut a)?, limits)?
+                };
+
                 let messages = Arc::make_mut(&mut Arc::make_mut(&mut self.state).messages);
                 match name {
                     "msg_showmode" => messages.showmode = content,

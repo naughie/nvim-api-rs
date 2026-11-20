@@ -101,6 +101,11 @@ pub struct HistoryEntry {
 pub struct Messages {
     pub visible: Vec<Message>,
     pub showmode: Content,
+    /// Command-key display from `msg_showcmd`.
+    ///
+    /// Valid UTF-8 is preserved. Each invalid byte is displayed as `\xNN` with
+    /// lowercase hexadecimal digits. The expanded text in each chunk must fit
+    /// [`Limits::max_string_bytes`](super::Limits::max_string_bytes).
     pub showcmd: Content,
     pub ruler: Content,
     pub history: Option<Vec<HistoryEntry>>,

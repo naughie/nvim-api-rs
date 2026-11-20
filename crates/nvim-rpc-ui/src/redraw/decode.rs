@@ -1,3 +1,4 @@
+use super::text::shared;
 use super::{Args, Obj, Result};
 
 use crate::ProtocolError;
@@ -8,7 +9,9 @@ use nvim_rpc::mp::decode::Object;
 use nvim_rpc::sys::{ext_types, types};
 use nvim_rpc::{Buffer, Tabpage, Window};
 
+use std::ascii;
 use std::collections::BTreeMap;
+use std::str;
 use std::sync::Arc;
 
 pub(super) fn bad(event: &str, reason: &'static str) -> ProtocolError {
@@ -99,7 +102,7 @@ pub(super) fn string(v: Obj<'_>, limits: Limits) -> Result<&str> {
 }
 
 pub(super) fn text(v: Obj<'_>, limits: Limits) -> Result<Arc<str>> {
-    Ok(super::text::shared(string(v, limits)?))
+    Ok(shared(string(v, limits)?))
 }
 
 pub(super) fn array(v: Obj<'_>) -> Result<Args<'_>> {
@@ -256,8 +259,63 @@ pub(super) fn attributes(v: Obj<'_>, limits: Limits) -> Result<HighlightAttribut
 }
 
 pub(super) fn content(v: Obj<'_>, limits: Limits) -> Result<Content> {
+    content_with(v, limits, text)
+}
+
+pub(super) fn showcmd_content(v: Obj<'_>, limits: Limits) -> Result<Content> {
+    fn text(v: Obj<'_>, limits: Limits) -> Result<Arc<str>> {
+        let bytes = <&[u8] as Decode<types::String, _>>::decode(v)?;
+        let max_len = limits.max_string_bytes.min(isize::MAX as usize);
+
+        if bytes.len() > max_len {
+            return Err(ProtocolError::Limit("string bytes"));
+        }
+
+        if let Ok(text) = str::from_utf8(bytes) {
+            return Ok(shared(text));
+        }
+
+        // Invalid UTF-8 chunks contain only non-ASCII bytes. escape_default()
+        // renders each as four ASCII bytes (\xNN), adding three to its size.
+        // Check the complete output size before allocating the expanded text.
+        let len = bytes.utf8_chunks().try_fold(bytes.len(), |len, chunk| {
+            chunk
+                .invalid()
+                .len()
+                .checked_mul(3)
+                .and_then(|n| len.checked_add(n))
+                .filter(|&n| n <= max_len)
+                .ok_or(ProtocolError::Limit("string bytes"))
+        })?;
+
+        // len <= max_len <= isize::MAX, so this byte capacity cannot overflow.
+        let mut text = String::with_capacity(len);
+
+        for chunk in bytes.utf8_chunks() {
+            text.push_str(chunk.valid());
+            text.extend(
+                chunk
+                    .invalid()
+                    .iter()
+                    .flat_map(|&b| ascii::escape_default(b))
+                    .map(char::from),
+            );
+        }
+
+        Ok(Arc::from(text))
+    }
+
+    content_with(v, limits, text)
+}
+
+fn content_with(
+    v: Obj<'_>,
+    limits: Limits,
+    text: impl Fn(Obj<'_>, Limits) -> Result<Arc<str>>,
+) -> Result<Content> {
     let a = array(v)?;
     bounded_len(a.len(), limits)?;
+
     a.map(|v| {
         let mut a = array(v)?;
         Ok(Chunk {
