@@ -120,6 +120,96 @@ async fn live_all_extensions_input_widgets_and_shutdown() {
 
 #[tokio::test]
 #[ignore = "requires NVIM_BIN pointing to Neovim"]
+async fn live_transient_float_closed_before_redraw_keeps_ui_and_rpc_available() {
+    let mut command =
+        tokio::process::Command::new(std::env::var_os("NVIM_BIN").expect("set NVIM_BIN"));
+    command.args(["-u", "NONE", "-i", "NONE", "-n"]).env(
+        "NVIM_LOG_FILE",
+        std::env::temp_dir().join("nvim-rpc-ui-transient-float.log"),
+    );
+
+    let options = UiOptions {
+        rgb: true,
+        ext_linegrid: true,
+        ext_multigrid: true,
+        ext_cmdline: true,
+        ext_popupmenu: true,
+        ext_tabline: true,
+        ext_messages: true,
+        ..UiOptions::default()
+    };
+    let mut editor = timeout(
+        Duration::from_secs(15),
+        Embedded::spawn(&mut command, 80, 24, options),
+    )
+    .await
+    .unwrap()
+    .unwrap();
+
+    timeout(Duration::from_secs(10), async {
+        let initial = editor.frames().recv().await.unwrap().unwrap();
+        let client = editor.client().clone();
+        let closed = client
+            .nvim()
+            .request::<api::NvimExecLua, bool>((
+                r#"
+local buf = vim.api.nvim_create_buf(false, true)
+local win = vim.api.nvim_open_win(buf, false, {
+    relative = "editor",
+    row = 1,
+    col = 1,
+    width = 10,
+    height = 3,
+    style = "minimal",
+})
+vim.api.nvim_win_close(win, true)
+return not vim.api.nvim_win_is_valid(win)
+"#,
+                (),
+            ))
+            .await
+            .unwrap();
+        assert!(closed);
+
+        client
+            .command("call setline(1, 'after transient float') | redraw")
+            .await
+            .unwrap();
+        let line: String = client
+            .nvim()
+            .request::<api::NvimGetCurrentLine, String>(())
+            .await
+            .unwrap();
+        assert_eq!(line, "after transient float");
+
+        loop {
+            let frame = editor.frames().recv().await.unwrap().unwrap();
+            assert!(frame.sequence > initial.sequence);
+
+            if frame.state.grids.values().any(|grid| {
+                grid.rows.iter().any(|row| {
+                    row.cells
+                        .iter()
+                        .map(|cell| cell.text.as_ref())
+                        .collect::<String>()
+                        .contains("after transient float")
+                })
+            }) {
+                break;
+            }
+        }
+    })
+    .await
+    .expect("transient float interrupted UI or RPC delivery");
+
+    timeout(Duration::from_secs(5), editor.shutdown())
+        .await
+        .unwrap()
+        .unwrap();
+}
+
+#[tokio::test]
+#[ignore = "requires NVIM_BIN pointing to Neovim"]
 async fn live_implicit_linegrid_and_natural_exit_are_reaped() {
     let mut command =
         tokio::process::Command::new(std::env::var_os("NVIM_BIN").expect("set NVIM_BIN"));

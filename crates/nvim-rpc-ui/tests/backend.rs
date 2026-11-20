@@ -149,7 +149,7 @@ fn backend_failure_preserves_its_error_and_stops_before_later_events() {
             ("bell", ()),
             ("flush", ()),
             // This invalid event must not replace the backend's earlier error.
-            ("grid_destroy", (99,)),
+            ("grid_destroy", (0,)),
             ("flush", ()),
         ),
     )

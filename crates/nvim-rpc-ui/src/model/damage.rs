@@ -54,7 +54,10 @@ impl GridDamage {
 pub struct Damage {
     /// Changed cell regions, with at most one bounding rectangle per grid.
     pub grids: Vec<GridDamage>,
-    /// Grids removed between the compared states.
+    /// Grids removed from the UI.
+    ///
+    /// A redraw can destroy a transient grid before its first resize. Such an
+    /// ID need not be present in the preceding state.
     pub removed_grids: Vec<GridId>,
     /// Requests a repaint of the complete current state.
     pub full: bool,

@@ -257,7 +257,7 @@ async fn malformed_ui_notification_wakes_the_frame_receiver_with_its_error() {
         let (_, driver) = spawn(reader, writer, handler);
         let waiting = frames.recv();
         let mut bytes = Vec::new();
-        bytes.write_primitive((2u8, "redraw", (("grid_destroy", (99,)), ("flush", ())))).consume();
+        bytes.write_primitive((2u8, "redraw", (("grid_destroy", (0,)), ("flush", ())))).consume();
         let send = async { peer.write_all(&bytes).await.unwrap(); };
         let (frame, ()) = tokio::join!(waiting, send);
         assert!(matches!(frame, Some(Err(Error::Protocol(ProtocolError::Invalid { ref event, .. }))) if event == "grid_destroy"));
