@@ -242,6 +242,113 @@ async fn asynchronous_neovim_errors_are_events_and_leave_rpc_usable() {
 }
 
 #[tokio::test]
+async fn unseen_grid_destruction_keeps_frames_and_rpc_responses_available() {
+    timeout(Duration::from_secs(2), async {
+        let (local, remote) = duplex(65536);
+        let (reader, writer) = split(local);
+        let mut connection = connect(reader, writer, ConnectionOptions::default()).unwrap();
+        let (reader, writer) = split(remote);
+
+        let peer = tokio::spawn(async move {
+            let mut receiver = Receiver::new(TokioRead(reader), vec![0; 65536]);
+            let mut sender = Neovim::new(TokioWrite::new(writer));
+
+            for result in [42, 43] {
+                let Message::Request(request) = receiver.recv_async().await.unwrap() else {
+                    panic!("expected evaluation request");
+                };
+                assert_eq!(request.method.as_slice(), b"nvim_eval");
+
+                if result == 42 {
+                    sender
+                        .send_async(
+                            nvim_rpc::mp::encode::rpc::Notification {
+                                method: "redraw",
+                                params: (
+                                    ("grid_resize", (1, 2, 2)),
+                                    ("flush", ()),
+                                    ("win_close", (4,)),
+                                    ("grid_destroy", (4,)),
+                                    ("set_title", ("after destroy",)),
+                                    ("flush", ()),
+                                ),
+                            }
+                            .to_primitive(),
+                        )
+                        .await
+                        .unwrap();
+                } else {
+                    sender
+                        .send_async(
+                            nvim_rpc::mp::encode::rpc::Notification {
+                                method: "redraw",
+                                params: (
+                                    ("grid_line", (1, 0, 0, (("x", 0),), false)),
+                                    ("bell", ()),
+                                    ("flush", ()),
+                                ),
+                            }
+                            .to_primitive(),
+                        )
+                        .await
+                        .unwrap();
+                }
+
+                sender
+                    .send_async(
+                        nvim_rpc::mp::encode::rpc::Response {
+                            msgid: request.msgid,
+                            result: Ok::<_, &str>(result),
+                        }
+                        .to_primitive(),
+                    )
+                    .await
+                    .unwrap();
+                sender.flush_async().await.unwrap();
+            }
+
+            receiver.recv_async().await.ok();
+        });
+
+        for (expression, expected) in [("6 * 7", 42), ("40 + 3", 43)] {
+            let result = connection
+                .client
+                .nvim()
+                .request::<api::NvimEval, i64>((expression,))
+                .await
+                .unwrap();
+            assert_eq!(result, expected);
+
+            let frame = connection.frames.recv().await.unwrap().unwrap();
+
+            if expected == 42 {
+                assert_eq!(frame.sequence, 2);
+                assert!(matches!(
+                    frame.events.as_slice(),
+                    [Event::SetTitle(title)] if &**title == "after destroy"
+                ));
+            } else {
+                assert_eq!(frame.sequence, 3);
+                assert!(matches!(frame.events.as_slice(), [Event::Bell]));
+                assert_eq!(
+                    frame.state.grids[&GridId(1)]
+                        .cell(0, 0)
+                        .unwrap()
+                        .text
+                        .as_ref(),
+                    "x"
+                );
+            }
+        }
+
+        connection.close_and_wait().await.unwrap();
+        peer.await.unwrap();
+    })
+    .await
+    .expect("unseen grid destruction interrupted the connection");
+}
+
+#[tokio::test]
 async fn buffered_incoming_requests_are_rejected_in_reverse_order() {
     let (local, mut remote) = duplex(65536);
     let (r, w) = split(local);

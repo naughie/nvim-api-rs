@@ -545,6 +545,114 @@ fn multigrid_layout_viewport_and_window_lifecycle_are_independent_of_cells() {
 }
 
 #[test]
+fn unseen_grid_destruction_preserves_later_frames_and_events() {
+    let mut model = Model::default();
+    let frames = replay(
+        &mut model,
+        (
+            ("grid_resize", (1, 80, 24)),
+            ("flush", ()),
+            ("win_close", (4,)),
+            ("grid_destroy", (4,)),
+            ("set_title", ("after destroy",)),
+            ("flush", ()),
+        ),
+    )
+    .unwrap();
+
+    assert!(!model.is_failed());
+    assert_eq!(frames.len(), 2);
+    assert_eq!(frames[1].sequence, 2);
+    assert!(!frames[1].state.grids.contains_key(&GridId(4)));
+    assert!(Arc::ptr_eq(
+        &frames[0].state.grids[&GridId(1)],
+        &frames[1].state.grids[&GridId(1)],
+    ));
+    assert_eq!(frames[1].damage.removed_grids, [GridId(4)]);
+    assert!(frames[1].damage.layout);
+    assert!(matches!(
+        frames[1].events.as_slice(),
+        [Event::SetTitle(title)] if &**title == "after destroy"
+    ));
+
+    let later = replay(
+        &mut model,
+        (
+            ("grid_line", (1, 0, 0, (("x", 0),), false)),
+            ("bell", ()),
+            ("flush", ()),
+        ),
+    )
+    .unwrap();
+
+    assert_eq!(later.len(), 1);
+    assert_eq!(later[0].sequence, 3);
+    assert_eq!(
+        later[0].state.grids[&GridId(1)]
+            .cell(0, 0)
+            .unwrap()
+            .text
+            .as_ref(),
+        "x"
+    );
+    assert!(matches!(later[0].events.as_slice(), [Event::Bell]));
+    assert_eq!(
+        frames[0].state.grids[&GridId(1)]
+            .cell(0, 0)
+            .unwrap()
+            .text
+            .as_ref(),
+        " "
+    );
+}
+
+#[test]
+fn grid_destruction_clears_window_state_with_or_without_cells() {
+    for resized in [false, true] {
+        let mut model = Model::default();
+        replay(
+            &mut model,
+            (("grid_resize", (1, 2, 2)), ("grid_cursor_goto", (1, 0, 0))),
+        )
+        .unwrap();
+
+        if resized {
+            replay(
+                &mut model,
+                (("grid_resize", (4, 2, 2)), ("grid_cursor_goto", (4, 0, 0))),
+            )
+            .unwrap();
+        }
+
+        let before = replay(
+            &mut model,
+            (
+                ("win_float_pos", (4, 1000, "NW", 1, 1.0, 1.0, true, 50)),
+                ("win_viewport", (4, 1000, 0, 2, 0, 0, 2, 0)),
+                ("flush", ()),
+            ),
+        )
+        .unwrap();
+        let after = replay(&mut model, (("grid_destroy", (4,)), ("flush", ()))).unwrap();
+
+        assert!(!model.is_failed());
+        assert!(!after[0].state.grids.contains_key(&GridId(4)));
+        assert!(!after[0].state.placements.contains_key(&GridId(4)));
+        assert!(!after[0].state.viewports.contains_key(&GridId(4)));
+        assert_eq!(
+            after[0].state.cursor.map(|c| c.grid),
+            if resized { None } else { Some(GridId(1)) }
+        );
+        assert_eq!(after[0].damage.cursor, resized);
+        assert_eq!(after[0].damage.removed_grids, [GridId(4)]);
+        assert!(after[0].damage.layout);
+        assert_eq!(before[0].state.grids.contains_key(&GridId(4)), resized);
+        assert!(before[0].state.placements.contains_key(&GridId(4)));
+        assert!(before[0].state.viewports.contains_key(&GridId(4)));
+    }
+}
+
+#[test]
 fn highlights_modes_tabline_options_and_global_events_are_typed() {
     use nvim_rpc::mp::encode::primitive::Map;
     let mut m = Model::default();

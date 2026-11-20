@@ -130,18 +130,17 @@ impl Model {
             }
             "grid_destroy" => {
                 let id = grid_id(next(&mut a)?)?;
-                if Arc::make_mut(&mut Arc::make_mut(&mut self.state).grids)
-                    .remove(&id)
-                    .is_none()
-                {
-                    return invalid(name, "unknown grid");
-                }
+
+                // A floating window can close before its grid's first resize.
+                Arc::make_mut(&mut Arc::make_mut(&mut self.state).grids).remove(&id);
                 Arc::make_mut(&mut Arc::make_mut(&mut self.state).placements).remove(&id);
                 Arc::make_mut(&mut Arc::make_mut(&mut self.state).viewports).remove(&id);
+
                 if self.state.cursor.is_some_and(|c| c.grid == id) {
                     Arc::make_mut(&mut self.state).cursor = None;
                     self.damage.cursor = true;
                 }
+
                 self.damage.record_removal(id, limits.max_grids);
             }
             "grid_cursor_goto" => {
